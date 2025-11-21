@@ -16,13 +16,17 @@ IOccultCalc è una libreria completa per astronomi amatoriali e professionisti c
 - ✨ **Download automatico** elementi orbitali equinoziali da AstDyS2
 - 🌟 **Query intelligenti Gaia DR3** - scarica solo le stelle necessarie
 - 🛰️ **Propagazione orbitale precisa** usando elementi equinoziali (non singolari)
+- 🪐 **Modello N-body completo** - perturbazioni di tutti i pianeti e corpi maggiori
+- 🌍 **VSOP87D completo** - effemeridi planetarie con ~3000 termini per pianeta (0.1 km precisione)
 - 🔬 **Orbit determination** - miglioramento orbitale con osservazioni astrometriche
 - 📡 **Download osservazioni MPC** - formato standard 80 colonne
 - 📈 **Differential correction** - metodo Gauss-Newton con least squares
-- 🌍 **Calcolo shadow path** sulla superficie terrestre
+- � **Calcolo shadow path** sulla superficie terrestre
 - 📊 **Calcolo probabilità** con incertezze orbitali
+- ⚡ **RKF78/DOPRI853** - integratori high-order con step adattivo
+- 🔭 **Correzioni relativistiche** - light-time, aberrazione, deflessione gravitazionale
 - 🗺️ **Export KML/KMZ** per visualizzazione in Google Earth
-- ⚡ **Performance ottimizzate** con ricerche parallele
+- ⚙️ **Performance ottimizzate** con ricerche parallele e caching
 - 📚 **Documentazione completa** ed esempi
 
 ## 🚀 Quick Start

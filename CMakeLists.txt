@@ -33,6 +33,7 @@ set(SOURCES
     src/observation.cpp
     src/mpc_client.cpp
     src/orbit_determination.cpp
+    src/force_model.cpp
 )
 
 # Header files
@@ -49,6 +50,13 @@ set(HEADERS
     include/ioccultcalc/observation.h
     include/ioccultcalc/mpc_client.h
     include/ioccultcalc/orbit_determination.h
+    include/ioccultcalc/force_model.h
+    include/ioccultcalc/vsop87.h
+    include/ioccultcalc/numerical_integrator.h
+    include/ioccultcalc/relativistic_corrections.h
+    include/ioccultcalc/star_catalog.h
+    include/ioccultcalc/asteroid_shape.h
+    include/ioccultcalc/uncertainty_propagation.h
 )
 
 # Create library

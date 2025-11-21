@@ -17,6 +17,7 @@
 
 #include "ioccultcalc/types.h"
 #include "ioccultcalc/orbital_elements.h"
+#include "ioccultcalc/force_model.h"
 #include <vector>
 #include <functional>
 
@@ -333,6 +334,55 @@ private:
     static constexpr double MIN_SCALE = 0.2;
     static constexpr double MAX_SCALE = 5.0;
 };
+
+/**
+ * @namespace IntegratorUtils
+ * @brief Utility per integrazione orbitale con modelli di forze
+ */
+namespace IntegratorUtils {
+    /**
+     * @brief Crea ForceFunction da ForceModel
+     * 
+     * Wrapper che converte ForceModel::computeAcceleration in ForceFunction
+     * utilizzabile dagli integratori numerici
+     * 
+     * @param model Modello di forze (deve rimanere valido durante integrazione)
+     * @return ForceFunction compatibile con integratori
+     */
+    ForceFunction createForceFunctionFromModel(const class ForceModel& model);
+    
+    /**
+     * @brief Propaga orbita usando ForceModel completo
+     * 
+     * High-level function che combina integratore + force model
+     * 
+     * @param initialState Stato orbitale iniziale
+     * @param finalTime Tempo finale
+     * @param forceConfig Configurazione force model
+     * @param integOptions Opzioni integratore
+     * @return Risultato integrazione
+     */
+    IntegrationResult propagateWithForceModel(
+        const OrbitalState& initialState,
+        const JulianDate& finalTime,
+        const class ForceModelConfig& forceConfig,
+        const IntegratorOptions& integOptions = IntegratorOptions());
+    
+    /**
+     * @brief Propaga con output intermedi usando ForceModel
+     * 
+     * @param initialState Stato iniziale
+     * @param outputTimes Tempi di output
+     * @param forceConfig Configurazione force model
+     * @param integOptions Opzioni integratore
+     * @return Stati ai tempi richiesti
+     */
+    std::vector<OrbitalState> propagateWithOutputAndForceModel(
+        const OrbitalState& initialState,
+        const std::vector<JulianDate>& outputTimes,
+        const class ForceModelConfig& forceConfig,
+        const IntegratorOptions& integOptions = IntegratorOptions());
+}
 
 } // namespace ioccultcalc
 
