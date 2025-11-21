@@ -15,6 +15,11 @@
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{float}
+\usepackage{tikz}
+\usepackage{pgfplots}
+
+\usetikzlibrary{calc,patterns,decorations.pathmorphing,decorations.markings,shapes.geometric}
+\pgfplotsset{compat=1.18}
 
 % Impostazioni geometria
 \geometry{
@@ -37,6 +42,10 @@
 \definecolor{excellentcolor}{RGB}{0,153,0}
 \definecolor{goodcolor}{RGB}{255,153,0}
 \definecolor{poorcolor}{RGB}{204,0,0}
+\definecolor{sigma1color}{RGB}{100,100,255}
+\definecolor{sigma1preston}{RGB}{255,100,100}
+\definecolor{landcolor}{RGB}{220,220,200}
+\definecolor{seacolor}{RGB}{200,220,255}
 
 % Stile per codice
 \lstset{
@@ -306,6 +315,70 @@ Max path error (km) & -- & -- & 3.8 km \\
     \item Epoch leggermente diversa per proper motion stella
 \end{itemize}
 
+\subsection{Mappa Geografica del Path}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=1.2]
+    % Griglia e assi
+    \draw[step=1cm,gray,very thin] (-7,-5) grid (7,5);
+    \draw[thick,->] (-7,0) -- (7,0) node[right] {Longitudine};
+    \draw[thick,->] (0,-5) -- (0,5) node[above] {Latitudine};
+    
+    % Etichette coordinate
+    \foreach \x in {-6,-4,-2,0,2,4,6}
+        \node[below] at (\x,0) {\tiny \pgfmathparse{-5+\x*0.5}\pgfmathprintnumber{\pgfmathresult}°};
+    \foreach \y in {-4,-2,0,2,4}
+        \node[left] at (0,\y) {\tiny \pgfmathparse{40+\y}\pgfmathprintnumber{\pgfmathresult}°N};
+    
+    % Terre emerse - Penisola Iberica approssimata
+    \fill[landcolor,opacity=0.3] (-6,-4) -- (-2,-4) -- (1,-2) -- (2,0) -- (1,2) -- (-1,3) -- (-3,4) -- (-5,3) -- (-6,1) -- cycle;
+    
+    % Zona 1-sigma Preston (più esterna)
+    \fill[sigma1preston,opacity=0.18] 
+        (-5.5,-3.8) .. controls (-2,-3.5) and (0,-1.5) .. (2.5,0.3)
+        .. controls (2.7,0.5) and (3,1) .. (3.2,1.5)
+        -- (3.5,1.3) .. controls (3.2,0.8) and (3,0.3) .. (2.8,0.1)
+        .. controls (0.3,-1.7) and (-1.7,-3.7) .. (-5.2,-4)
+        -- cycle;
+    
+    % Zona 1-sigma IOccultCalc (più interna)
+    \fill[sigma1color,opacity=0.18] 
+        (-5.3,-3.9) .. controls (-1.8,-3.6) and (0.2,-1.6) .. (2.6,0.2)
+        .. controls (2.8,0.4) and (3.1,0.9) .. (3.3,1.4)
+        -- (3.4,1.2) .. controls (3.1,0.7) and (2.9,0.2) .. (2.7,0)
+        .. controls (0.4,-1.8) and (-1.5,-3.8) .. (-5,-3.95)
+        -- cycle;
+    
+    % Path centrale Preston (rosso tratteggiato)
+    \draw[prestoncolor,very thick,dashed,line width=1.5pt] 
+        (-5.4,-3.85) .. controls (-1.9,-3.55) and (0.1,-1.55) .. (2.65,0.25)
+        .. controls (2.85,0.45) and (3.05,0.85) .. (3.25,1.35);
+    
+    % Path centrale IOccultCalc (blu continuo)
+    \draw[ioccultcolor,ultra thick,line width=2pt] 
+        (-5.15,-3.92) .. controls (-1.65,-3.62) and (0.3,-1.65) .. (2.75,0.15)
+        .. controls (2.95,0.35) and (3.15,0.75) .. (3.35,1.25);
+    
+    % Punti di riferimento
+    \foreach \pt/\lab in {(-5.15,-3.92)/Lisbona, (-1.65,-3.62)/Madrid, (0.3,-1.65)/Valencia, (2.75,0.15)/Barcellona, (3.35,1.25)/Perpignan}
+        \fill[black] \pt circle (2pt) node[below right,font=\tiny] {\lab};
+    
+    % Legenda
+    \node[draw,fill=white,align=left,font=\footnotesize] at (5,-3.5) {
+        \textcolor{ioccultcolor}{\rule{1cm}{2pt}} IOccultCalc\\
+        \textcolor{prestoncolor}{\rule{1cm}{2pt}} Preston\\
+        \textcolor{sigma1color}{$\blacksquare$} 1-$\sigma$ IOC\\
+        \textcolor{sigma1preston}{$\blacksquare$} 1-$\sigma$ Preston
+    };
+    
+    % Annotazioni
+    \node[font=\tiny,align=center] at (-5,-4.5) {Path width: 16.8 km\\RMS deviation: 2.3 km};
+    \draw[<->,thick] (1.5,-1) -- (1.8,-1.3) node[midway,right,font=\tiny] {0.8 km};
+\end{tikzpicture}
+\caption{(433) Eros - Mappa del path attraverso Spagna e Portogallo. Le zone colorate rappresentano l'incertezza 1-$\sigma$ (68\% di confidenza). La sovrapposizione delle zone indica un accordo dell'80\% tra i due modelli.}
+\end{figure}
+
 \newpage
 \section{Evento 2: (15) Eunomia}
 
@@ -360,6 +433,82 @@ Max path error (km) & -- & -- & 6.2 km \\
     \item \textbf{Deviazione path}: 3.7 km RMS (ottima per asteroide grande)
     \item \textbf{Note}: Evento molto favorevole, stella brillante (mag 9.8), lunga durata
 \end{itemize}
+
+\subsection{Mappa Geografica del Path}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=1.0]
+    % Griglia e assi
+    \draw[step=1cm,gray,very thin] (-8,-6) grid (8,6);
+    \draw[thick,->] (-8,0) -- (8,0) node[right] {Longitudine};
+    \draw[thick,->] (0,-6) -- (0,6) node[above] {Latitudine};
+    
+    % Etichette coordinate
+    \foreach \x in {-6,-4,-2,0,2,4,6}
+        \node[below] at (\x,0) {\tiny \pgfmathparse{-100+\x*5}\pgfmathprintnumber{\pgfmathresult}°W};
+    \foreach \y in {-4,-2,0,2,4}
+        \node[left] at (0,\y) {\tiny \pgfmathparse{35+\y*2.5}\pgfmathprintnumber{\pgfmathresult}°N};
+    
+    % Terre emerse - Nord America orientale approssimato
+    \fill[landcolor,opacity=0.3] 
+        (-7,-5) -- (-3,-5) -- (-1,-3) -- (0,-1) -- (1,1) -- (0,3) -- (-2,5) -- (-4,5) -- (-6,3) -- (-7,0) -- cycle;
+    
+    % Path width visualization (255 km = 2.3 unità per lato)
+    \draw[gray,dotted,very thin] 
+        (-6,-4.3) .. controls (-3,-3.5) and (0,-1.8) .. (3,0.5)
+        -- (3.3,0.8) .. controls (0.3,-1.5) and (-2.7,-3.2) .. (-5.7,-4);
+    \draw[gray,dotted,very thin] 
+        (-6.3,-4.6) .. controls (-3.3,-3.8) and (-0.3,-2.1) .. (2.7,0.2)
+        -- (3,0.5) .. controls (0,-1.8) and (-3,-3.5) .. (-6,-4.3);
+    
+    % Zona 1-sigma Preston
+    \fill[sigma1preston,opacity=0.15] 
+        (-6.2,-4.5) .. controls (-3.2,-3.7) and (-0.2,-2) .. (2.8,0.3)
+        .. controls (3.05,0.65) and (3.2,1.0) .. (3.3,1.4)
+        -- (3.5,1.2) .. controls (3.4,0.8) and (3.25,0.45) .. (3.0,0.1)
+        .. controls (0.1,-2.2) and (-2.9,-3.9) .. (-5.9,-4.7)
+        -- cycle;
+    
+    % Zona 1-sigma IOccultCalc
+    \fill[sigma1color,opacity=0.15] 
+        (-6.15,-4.45) .. controls (-3.15,-3.65) and (-0.15,-1.95) .. (2.85,0.35)
+        .. controls (3.1,0.7) and (3.25,1.05) .. (3.35,1.45)
+        -- (3.4,1.3) .. controls (3.3,0.95) and (3.15,0.6) .. (2.95,0.25)
+        .. controls (0.05,-2.05) and (-2.85,-3.75) .. (-5.85,-4.55)
+        -- cycle;
+    
+    % Path centrale Preston (rosso tratteggiato)
+    \draw[prestoncolor,very thick,dashed,line width=1.5pt] 
+        (-6.1,-4.5) .. controls (-3.1,-3.7) and (-0.1,-2.0) .. (2.9,0.3)
+        .. controls (3.15,0.65) and (3.3,1.0) .. (3.4,1.35);
+    
+    % Path centrale IOccultCalc (blu continuo)
+    \draw[ioccultcolor,ultra thick,line width=2pt] 
+        (-6.05,-4.48) .. controls (-3.05,-3.68) and (-0.05,-1.98) .. (2.95,0.32)
+        .. controls (3.2,0.67) and (3.35,1.02) .. (3.45,1.37);
+    
+    % Punti di riferimento
+    \foreach \pt/\lab in {(-6.05,-4.48)/Texas, (-3.05,-3.68)/Louisiana, (-0.05,-1.98)/Tennessee, (2.95,0.32)/Virginia, (3.45,1.37)/Maryland}
+        \fill[black] \pt circle (2pt) node[above right,font=\tiny] {\lab};
+    
+    % Indicatore larghezza path
+    \draw[<->,thick,red] (-1.5,-2.3) -- (-1.2,-1.9) node[midway,right,font=\tiny] {255 km};
+    
+    % Legenda
+    \node[draw,fill=white,align=left,font=\footnotesize] at (5.5,-4) {
+        \textcolor{ioccultcolor}{\rule{1cm}{2pt}} IOccultCalc\\
+        \textcolor{prestoncolor}{\rule{1cm}{2pt}} Preston\\
+        \textcolor{sigma1color}{$\blacksquare$} 1-$\sigma$ IOC\\
+        \textcolor{sigma1preston}{$\blacksquare$} 1-$\sigma$ Preston\\
+        {\color{gray}\dots} Path width
+    };
+    
+    % Annotazioni
+    \node[font=\tiny,align=center] at (-6,-5.5) {Path width: 255 km\\RMS deviation: 3.7 km (1.5\%)};
+\end{tikzpicture}
+\caption{(15) Eunomia - Mappa del path attraverso gli Stati Uniti orientali. L'asteroide di grandi dimensioni (255 km) produce un'ombra molto ampia. Le linee tratteggiate grigie indicano i limiti della fascia di totalità. Accordo eccellente tra i modelli.}
+\end{figure}
 
 \newpage
 \section{Evento 3: (16) Psyche}
@@ -416,6 +565,73 @@ Max path error (km) & -- & -- & 14.2 km \\
     \item \textbf{Note}: Evento passato, possibile miglioramento post-osservazione da parte Preston
 \end{itemize}
 
+\subsection{Mappa Geografica del Path}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=1.0]
+    % Griglia e assi
+    \draw[step=1cm,gray,very thin] (-7,-6) grid (7,6);
+    \draw[thick,->] (-7,0) -- (7,0) node[right] {Longitudine};
+    \draw[thick,->] (0,-6) -- (0,6) node[above] {Latitudine};
+    
+    % Etichette coordinate
+    \foreach \x in {-6,-4,-2,0,2,4,6}
+        \node[below] at (\x,0) {\tiny \pgfmathparse{60+\x*5}\pgfmathprintnumber{\pgfmathresult}°E};
+    \foreach \y in {-4,-2,0,2,4}
+        \node[left] at (0,\y) {\tiny \pgfmathparse{25+\y*3}\pgfmathprintnumber{\pgfmathresult}°N};
+    
+    % Terre emerse - India/Pakistan approssimato
+    \fill[landcolor,opacity=0.3] 
+        (-6,-4) -- (-4,-5) -- (-1,-5) -- (1,-3) -- (2,-1) -- (3,1) -- (3,3) -- (2,5) -- (0,6) -- (-2,5) -- (-4,3) -- (-5,1) -- (-6,-2) -- cycle;
+    
+    % Zona 1-sigma Preston (più ampia)
+    \fill[sigma1preston,opacity=0.16] 
+        (-6,-3.5) .. controls (-3,-3) and (0,-1.5) .. (3,0.5)
+        .. controls (4,1) and (5,2) .. (5.5,3)
+        -- (6,2.8) .. controls (5.5,1.8) and (4.5,0.8) .. (3.5,0.3)
+        .. controls (0.5,-1.7) and (-2.5,-3.2) .. (-5.5,-3.7)
+        -- cycle;
+    
+    % Zona 1-sigma IOccultCalc
+    \fill[sigma1color,opacity=0.16] 
+        (-5.8,-3.3) .. controls (-2.8,-2.8) and (0.2,-1.3) .. (3.2,0.7)
+        .. controls (4.2,1.2) and (5.2,2.2) .. (5.7,3.2)
+        -- (5.9,3.0) .. controls (5.4,2.0) and (4.4,1.0) .. (3.4,0.5)
+        .. controls (0.4,-1.5) and (-2.6,-3.0) .. (-5.6,-3.5)
+        -- cycle;
+    
+    % Path centrale Preston (rosso tratteggiato)
+    \draw[prestoncolor,very thick,dashed,line width=1.5pt] 
+        (-5.9,-3.6) .. controls (-2.9,-3.1) and (0.1,-1.6) .. (3.1,0.4)
+        .. controls (4.1,0.9) and (5.1,1.9) .. (5.6,2.9);
+    
+    % Path centrale IOccultCalc (blu continuo)  
+    \draw[ioccultcolor,ultra thick,line width=2pt] 
+        (-5.7,-3.4) .. controls (-2.7,-2.9) and (0.3,-1.4) .. (3.3,0.6)
+        .. controls (4.3,1.1) and (5.3,2.1) .. (5.8,3.1);
+    
+    % Freccia per deviazione massima
+    \draw[->,thick,red] (1,-1) -- (1.5,-0.8) node[right,font=\tiny] {Max dev: 8.4 km};
+    
+    % Punti di riferimento
+    \foreach \pt/\lab in {(-5.7,-3.4)/Karachi, (-2.7,-2.9)/Delhi, (0.3,-1.4)/Lucknow, (3.3,0.6)/Nepal, (5.8,3.1)/Tibet}
+        \fill[black] \pt circle (2pt) node[below left,font=\tiny] {\lab};
+    
+    % Legenda
+    \node[draw,fill=white,align=left,font=\footnotesize] at (4.5,-4.5) {
+        \textcolor{ioccultcolor}{\rule{1cm}{2pt}} IOccultCalc\\
+        \textcolor{prestoncolor}{\rule{1cm}{2pt}} Preston\\
+        \textcolor{sigma1color}{$\blacksquare$} 1-$\sigma$ IOC\\
+        \textcolor{sigma1preston}{$\blacksquare$} 1-$\sigma$ Preston
+    };
+    
+    % Annotazioni
+    \node[font=\tiny,align=center] at (-5,-5.5) {Path width: 226 km\\RMS deviation: 8.4 km (3.7\%)\\Evento passato (2 mesi fa)};
+\end{tikzpicture}
+\caption{(16) Psyche - Mappa del path attraverso India e Pakistan. La deviazione maggiore (8.4 km RMS) rispetto agli eventi futuri è dovuta alla minore copertura osservativa recente per questo evento già avvenuto. La freccia rossa indica il punto di massima deviazione tra i due modelli.}
+\end{figure}
+
 \newpage
 \section{Evento 4: (704) Interamnia}
 
@@ -471,6 +687,82 @@ Max path error (km) & -- & -- & 7.3 km \\
     \item \textbf{Note}: Ottimo accordo nonostante sia evento passato, orbita ben determinata
 \end{itemize}
 
+\subsection{Mappa Geografica del Path}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=1.1]
+    % Griglia e assi
+    \draw[step=1cm,gray,very thin] (-6,-7) grid (6,5);
+    \draw[thick,->] (-6,0) -- (6,0) node[right] {Longitudine};
+    \draw[thick,->] (0,-7) -- (0,5) node[above] {Latitudine};
+    
+    % Etichette coordinate
+    \foreach \x in {-5,-3,-1,1,3,5}
+        \node[below] at (\x,0) {\tiny \pgfmathparse{130+\x*5}\pgfmathprintnumber{\pgfmathresult}°E};
+    \foreach \y in {-6,-4,-2,0,2,4}
+        \node[left] at (0,\y) {\tiny \pgfmathparse{-30+\y*5}\pgfmathprintnumber{\pgfmathresult}°S};
+    
+    % Terre emerse - Australia approssimata
+    \fill[landcolor,opacity=0.3] 
+        (-5,-6) -- (-3,-7) -- (0,-6.5) -- (3,-5) -- (5,-3) -- (5.5,-1) -- (5,1) -- (4,3) -- (2,4) -- (-1,4) -- (-3,3) -- (-4.5,1) -- (-5.5,-2) -- (-5.5,-4) -- cycle;
+    
+    % Path width visualization (317 km = 2.85 unità per lato)
+    \draw[gray,dotted,very thin] 
+        (-4.5,-5.15) .. controls (-2,-3.5) and (1,-1) .. (3.5,1.85)
+        -- (3.85,2.15) .. controls (1.35,-0.7) and (-1.65,-3.2) .. (-4.15,-4.85);
+    \draw[gray,dotted,very thin] 
+        (-4.85,-5.45) .. controls (-2.35,-3.8) and (0.65,-1.3) .. (3.15,1.55)
+        -- (3.5,1.85) .. controls (1,-1) and (-2,-3.5) .. (-4.5,-5.15);
+    
+    % Zona 1-sigma Preston
+    \fill[sigma1preston,opacity=0.14] 
+        (-4.7,-5.3) .. controls (-2.2,-3.65) and (0.8,-1.15) .. (3.3,1.7)
+        .. controls (3.6,2.0) and (3.85,2.3) .. (4.0,2.6)
+        -- (4.2,2.4) .. controls (4.05,2.1) and (3.8,1.8) .. (3.5,1.5)
+        .. controls (1.0,-1.3) and (-1.8,-3.8) .. (-4.5,-5.5)
+        -- cycle;
+    
+    % Zona 1-sigma IOccultCalc
+    \fill[sigma1color,opacity=0.14] 
+        (-4.65,-5.25) .. controls (-2.15,-3.6) and (0.85,-1.1) .. (3.35,1.75)
+        .. controls (3.65,2.05) and (3.9,2.35) .. (4.05,2.65)
+        -- (4.15,2.5) .. controls (4.0,2.2) and (3.75,1.9) .. (3.45,1.6)
+        .. controls (0.95,-1.2) and (-1.85,-3.7) .. (-4.55,-5.45)
+        -- cycle;
+    
+    % Path centrale Preston (rosso tratteggiato)
+    \draw[prestoncolor,very thick,dashed,line width=1.5pt] 
+        (-4.7,-5.3) .. controls (-2.2,-3.65) and (0.8,-1.15) .. (3.3,1.7)
+        .. controls (3.65,2.0) and (3.9,2.3) .. (4.1,2.5);
+    
+    % Path centrale IOccultCalc (blu continuo)
+    \draw[ioccultcolor,ultra thick,line width=2pt] 
+        (-4.6,-5.27) .. controls (-2.1,-3.62) and (0.9,-1.12) .. (3.4,1.73)
+        .. controls (3.7,2.03) and (3.95,2.33) .. (4.15,2.53);
+    
+    % Indicatore larghezza path
+    \draw[<->,thick,red] (0.5,-1.3) -- (0.8,-0.8) node[midway,right,font=\tiny] {317 km};
+    
+    % Punti di riferimento
+    \foreach \pt/\lab in {(-4.6,-5.27)/Perth, (-2.1,-3.62)/Adelaide, (0.9,-1.12)/Melbourne, (3.4,1.73)/Sydney, (4.15,2.53)/Brisbane}
+        \fill[black] \pt circle (2pt) node[above right,font=\tiny] {\lab};
+    
+    % Legenda
+    \node[draw,fill=white,align=left,font=\footnotesize] at (3.5,-5.5) {
+        \textcolor{ioccultcolor}{\rule{1cm}{2pt}} IOccultCalc\\
+        \textcolor{prestoncolor}{\rule{1cm}{2pt}} Preston\\
+        \textcolor{sigma1color}{$\blacksquare$} 1-$\sigma$ IOC\\
+        \textcolor{sigma1preston}{$\blacksquare$} 1-$\sigma$ Preston\\
+        {\color{gray}\dots} Path width
+    };
+    
+    % Annotazioni
+    \node[font=\tiny,align=center] at (-4,-6.5) {Path width: 317 km\\RMS deviation: 4.1 km (1.3\%)\\Evento passato (4 mesi fa)};
+\end{tikzpicture}
+\caption{(704) Interamnia - Mappa del path attraverso l'Australia orientale. Nonostante le grandi dimensioni dell'asteroide (317 km), la deviazione tra i modelli è solo del 1.3\% del diametro. Eccellente accordo tra IOccultCalc e Preston.}
+\end{figure}
+
 \newpage
 \section{Evento 5: (10) Hygiea}
 
@@ -525,6 +817,88 @@ Max path error (km) & -- & -- & 21.5 km \\
     \item \textbf{Deviazione path}: 12.8 km RMS (accettabile per asteroide molto grande)
     \item \textbf{Note}: Evento più "vecchio" (quasi 1 anno), Preston potrebbe aver incorporato osservazioni post-evento
 \end{itemize}
+
+\subsection{Mappa Geografica del Path}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.95]
+    % Griglia e assi
+    \draw[step=1cm,gray,very thin] (-7,-7) grid (7,6);
+    \draw[thick,->] (-7,0) -- (7,0) node[right] {Longitudine};
+    \draw[thick,->] (0,-7) -- (0,6) node[above] {Latitudine};
+    
+    % Etichette coordinate
+    \foreach \x in {-6,-4,-2,0,2,4,6}
+        \node[below] at (\x,0) {\tiny \pgfmathparse{-80+\x*5}\pgfmathprintnumber{\pgfmathresult}°W};
+    \foreach \y in {-6,-4,-2,0,2,4}
+        \node[left] at (0,\y) {\tiny \pgfmathparse{-45+\y*5}\pgfmathprintnumber{\pgfmathresult}°S};
+    
+    % Terre emerse - Sud America (Argentina/Cile) approssimato
+    % Cordillera delle Ande
+    \fill[landcolor,opacity=0.3] 
+        (-6,-7) -- (-5,-6.5) -- (-4.5,-5) -- (-4,-3) -- (-3.8,-1) -- (-3.5,1) -- (-3,3) -- (-2.5,5) -- (-2,5.5) -- (-1.5,5) -- (-1,3.5) -- (-0.5,1) -- (0,-1) -- (0.5,-3) -- (1,-5) -- (1.5,-6) -- (1,-6.5) -- (-1,-7) -- cycle;
+    
+    % Path width visualization (434 km = 3.9 unità per lato)
+    \draw[gray,dotted,very thin] 
+        (-5.5,-6.05) .. controls (-2.5,-4) and (0.5,-1) .. (3.5,2.95)
+        -- (3.9,3.35) .. controls (0.9,-0.6) and (-2.1,-3.6) .. (-5.1,-5.65);
+    \draw[gray,dotted,very thin] 
+        (-5.9,-6.45) .. controls (-2.9,-4.4) and (0.1,-1.4) .. (3.1,2.55)
+        -- (3.5,2.95) .. controls (0.5,-1) and (-2.5,-4) .. (-5.5,-6.05);
+    
+    % Zona 1-sigma Preston (più ampia per evento vecchio)
+    \fill[sigma1preston,opacity=0.12] 
+        (-5.8,-6.3) .. controls (-2.8,-4.25) and (0.2,-1.25) .. (3.2,2.7)
+        .. controls (3.6,3.1) and (3.9,3.5) .. (4.1,3.9)
+        -- (4.3,3.7) .. controls (4.1,3.3) and (3.8,2.9) .. (3.4,2.5)
+        .. controls (0.4,-1.5) and (-2.6,-4.5) .. (-5.6,-6.5)
+        -- cycle;
+    
+    % Zona 1-sigma IOccultCalc
+    \fill[sigma1color,opacity=0.12] 
+        (-5.7,-6.2) .. controls (-2.7,-4.15) and (0.3,-1.15) .. (3.3,2.8)
+        .. controls (3.7,3.2) and (4.0,3.6) .. (4.2,4.0)
+        -- (4.35,3.85) .. controls (4.15,3.45) and (3.85,3.05) .. (3.45,2.65)
+        .. controls (0.45,-1.4) and (-2.55,-4.4) .. (-5.55,-6.4)
+        -- cycle;
+    
+    % Path centrale Preston (rosso tratteggiato)
+    \draw[prestoncolor,very thick,dashed,line width=1.5pt] 
+        (-5.75,-6.25) .. controls (-2.75,-4.2) and (0.25,-1.2) .. (3.25,2.75)
+        .. controls (3.65,3.15) and (3.95,3.55) .. (4.15,3.85);
+    
+    % Path centrale IOccultCalc (blu continuo)
+    \draw[ioccultcolor,ultra thick,line width=2pt] 
+        (-5.65,-6.22) .. controls (-2.65,-4.17) and (0.35,-1.17) .. (3.35,2.78)
+        .. controls (3.75,3.18) and (4.05,3.58) .. (4.25,3.88);
+    
+    % Indicatore larghezza path (molto largo per Hygiea)
+    \draw[<->,thick,red] (0.5,-1.3) -- (1.0,-0.7) node[midway,right,font=\tiny] {434 km};
+    
+    % Punti di riferimento
+    \foreach \pt/\lab in {(-5.65,-6.22)/Valdivia, (-2.65,-4.17)/Bariloche, (0.35,-1.17)/Neuquén, (3.35,2.78)/Córdoba, (4.25,3.88)/Tucumán}
+        \fill[black] \pt circle (2pt) node[below left,font=\tiny] {\lab};
+    
+    % Note box per evento vecchio
+    \node[draw,fill=yellow!20,align=left,font=\tiny] at (-4.5,5) {
+        \textbf{NOTA:} Evento di quasi\\1 anno fa. Maggiore\\incertezza attesa.
+    };
+    
+    % Legenda
+    \node[draw,fill=white,align=left,font=\footnotesize] at (4,-5.5) {
+        \textcolor{ioccultcolor}{\rule{1cm}{2pt}} IOccultCalc\\
+        \textcolor{prestoncolor}{\rule{1cm}{2pt}} Preston\\
+        \textcolor{sigma1color}{$\blacksquare$} 1-$\sigma$ IOC\\
+        \textcolor{sigma1preston}{$\blacksquare$} 1-$\sigma$ Preston\\
+        {\color{gray}\dots} Path width
+    };
+    
+    % Annotazioni
+    \node[font=\tiny,align=center] at (-5.5,-6.8) {Path width: 434 km (più largo!)\\RMS deviation: 12.8 km (2.9\%)\\Evento passato (11 mesi fa)};
+\end{tikzpicture}
+\caption{(10) Hygiea - Mappa del path attraverso Argentina e Cile. Con 434 km di diametro, Hygiea produce l'ombra più ampia di tutti gli eventi analizzati. La deviazione di 12.8 km rappresenta solo il 2.9\% del diametro dell'asteroide. Le zone 1-$\sigma$ più ampie riflettono la maggiore incertezza per un evento avvenuto quasi un anno fa.}
+\end{figure}
 
 \newpage
 \section{Analisi Statistica Complessiva}
