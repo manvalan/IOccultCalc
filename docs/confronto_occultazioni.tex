@@ -1,5 +1,5 @@
 %!TEX program = pdflatex
-\documentclass[a4paper,11pt]{article}
+\documentclass[a4paper,11pt,oneside]{report}
 
 % Pacchetti
 \usepackage[italian]{babel}
@@ -18,8 +18,57 @@
 \usepackage{tikz}
 \usepackage{pgfplots}
 
-\usetikzlibrary{calc,patterns,decorations.pathmorphing,decorations.markings,shapes.geometric}
+\usetikzlibrary{calc,patterns,decorations.pathmorphing,decorations.markings,shapes.geometric,backgrounds}
 \pgfplotsset{compat=1.18}
+
+% Comando per disegnare continenti semplificati
+\newcommand{\drawEurope}{
+    \fill[landcolor,opacity=0.4] 
+        % Penisola Iberica
+        (-2.5,-1.5) -- (-1.5,-2) -- (-0.5,-1.8) -- (0,-1.2) -- (0.5,-0.5) 
+        -- (0.2,0) -- (-0.5,0.3) -- (-1.2,0.5) -- (-2,-0.2) -- (-2.5,-1) -- cycle
+        % Francia
+        (-0.5,0.3) -- (0.5,0.5) -- (1,1.2) -- (0.8,1.8) -- (0.2,2) 
+        -- (-0.3,1.5) -- (-0.8,1) -- cycle
+        % Italia
+        (1,0.5) -- (1.5,0) -- (1.8,-0.8) -- (1.6,-1.5) -- (1.3,-1.2) 
+        -- (1.2,-0.5) -- (0.8,0.2) -- cycle;
+}
+
+\newcommand{\drawNorthAmerica}{
+    \fill[landcolor,opacity=0.4]
+        % Costa est USA
+        (-2,-3) -- (-1,-3.5) -- (0,-3.8) -- (1,-3.5) -- (2,-2.5)
+        -- (2.5,-1) -- (2.8,0.5) -- (2.5,2) -- (2,3) -- (1,3.5)
+        -- (-0.5,3.8) -- (-2,3) -- (-3,1.5) -- (-3.5,-0.5) -- (-3,-2) -- cycle;
+}
+
+\newcommand{\drawAsia}{
+    \fill[landcolor,opacity=0.4]
+        % India e Pakistan
+        (-2,-2.5) -- (-1,-3) -- (0.5,-3.2) -- (1.5,-2.8) -- (2,-2)
+        -- (2.5,-0.5) -- (2.8,1) -- (2.5,2.5) -- (1.5,3.5) -- (0,3.8)
+        -- (-1.5,3.5) -- (-2.5,2) -- (-2.8,0) -- (-2.5,-1.5) -- cycle;
+}
+
+\newcommand{\drawAustralia}{
+    \fill[landcolor,opacity=0.4]
+        % Australia
+        (-2.5,-3) -- (-1,-3.5) -- (1,-3.5) -- (2.5,-2.5) -- (3.5,-1)
+        -- (3.8,0.5) -- (3.5,2) -- (2.5,3) -- (1,3.5) -- (-0.5,3.5)
+        -- (-2,2.5) -- (-2.8,0.5) -- (-3,-1.5) -- cycle;
+}
+
+\newcommand{\drawSouthAmerica}{
+    \fill[landcolor,opacity=0.4]
+        % Costa Pacifica (Cile - stretto)
+        (-2.5,-3.5) -- (-2.3,-2) -- (-2.2,0) -- (-2.1,2) -- (-2,3.5)
+        -- (-1.7,3.5) -- (-1.5,2) -- (-1.3,0) -- (-1.2,-2) -- (-1,-3.5) -- cycle
+        % Parte orientale (Argentina/Brasile)
+        (-1.7,3.5) -- (-0.5,4) -- (1,4) -- (2,3.5) -- (2.5,2)
+        -- (3,0) -- (3,-2) -- (2.5,-3) -- (1,-3.5) -- (-1,-3.5)
+        -- (-1.2,-2) -- (-1.3,0) -- (-1.5,2) -- cycle;
+}
 
 % Impostazioni geometria
 \geometry{
@@ -70,39 +119,50 @@
 % Frontespizio
 \begin{titlepage}
     \centering
-    \vspace*{2cm}
+    \vspace*{1.5cm}
     
-    {\Huge\bfseries Confronto Previsioni\\[0.3cm]Occultazioni Asteroidali\par}
+    {\Huge\bfseries Validazione di IOccultCalc\par}
+    \vspace{0.5cm}
+    {\LARGE Confronto con le Previsioni di Riferimento\par}
+    \vspace{0.3cm}
+    {\LARGE di Steve Preston\par}
     \vspace{1.5cm}
     
-    {\Large\bfseries IOccultCalc vs Steve Preston\par}
-    \vspace{2cm}
+    {\Large\itshape Analisi Comparativa su Occultazioni Asteroidali\par}
+    \vspace{2.5cm}
     
-    {\large Validazione Metodologia di Calcolo\par}
-    \vspace{0.5cm}
-    {\large Analisi Comparativa su 5 Eventi\par}
-    \vspace{3cm}
-    
-    {\Large Michele Bigi\par}
+    {\Large\textbf{Michele Bigi}\par}
     \vspace{0.3cm}
     {\large Gruppo Astrofili Massesi\par}
-    \vspace{0.3cm}
-    {\large \texttt{mikbigi@gmail.com}\par}
+    \vspace{0.2cm}
+    {\normalsize \texttt{mikbigi@gmail.com}\par}
+    
+    \vspace{2cm}
+    
+    \begin{abstract}
+    \noindent Questo documento presenta una validazione rigorosa del software IOccultCalc attraverso il confronto con le previsioni di Steve Preston, riferimento riconosciuto dalla comunità scientifica internazionale per le occultazioni asteroidali. L'analisi si basa su 5 eventi rappresentativi che coprono diverse configurazioni: asteroidi Near-Earth (Eros) e Main Belt (Eunomia, Psyche, Interamnia, Hygiea), eventi futuri e passati, geometrie variabili. I risultati mostrano un eccellente accordo complessivo con agreement score medio del 92.4\%, RMS temporale di 9.2 secondi e deviazione path media di 6.3 km (< 5\% del diametro). Le piccole differenze sono attribuibili alle diverse versioni di effemeridi planetarie (JPL DE441 vs \#48) e alle specifiche implementazioni degli algoritmi numerici. IOccultCalc risulta validato per uso operativo nelle campagne osservative di occultazioni asteroidali.
+    \end{abstract}
     
     \vfill
     
     {\large 21 Novembre 2025\par}
+    \vspace{0.3cm}
+    {\small Versione 1.0\par}
 \end{titlepage}
 
 \newpage
 \tableofcontents
-\newpage
 
-\section{Introduzione}
+\newpage
+\listoffigures
+
+\newpage
+\listoftables
+\chapter{Introduzione}
 
 Questo documento presenta un'analisi comparativa dettagliata tra le previsioni di occultazioni asteroidali generate da \textbf{IOccultCalc} e quelle di riferimento di \textbf{Steve Preston} (asteroidoccultation.com).
 
-\subsection{Obiettivi dell'Analisi}
+\section{Obiettivi dell'Analisi}
 
 \begin{itemize}
     \item Validare la metodologia di calcolo di IOccultCalc
@@ -142,10 +202,9 @@ Correzioni relativistiche & Light-time, aberrazione, deflessione \\
 \caption{Parametri di calcolo}
 \end{table}
 
-\newpage
-\section{Eventi Analizzati}
+\chapter{Selezione degli Eventi}
 
-\subsection{Selezione degli Eventi}
+\section{Criteri di Selezione}
 
 Sono stati selezionati 5 eventi rappresentativi:
 
@@ -167,10 +226,9 @@ Sono stati selezionati 5 eventi rappresentativi:
     \item Copertura geografica diversificata
 \end{itemize}
 
-\newpage
-\section{Evento 1: (433) Eros}
+\chapter{(433) Eros: Validazione su Asteroide NEO}
 
-\subsection{Informazioni Generali}
+\section{Informazioni Generali}
 
 \begin{table}[H]
 \centering
@@ -320,19 +378,49 @@ Max path error (km) & -- & -- & 3.8 km \\
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[scale=1.2]
-    % Griglia e assi
-    \draw[step=1cm,gray,very thin] (-7,-5) grid (7,5);
-    \draw[thick,->] (-7,0) -- (7,0) node[right] {Longitudine};
-    \draw[thick,->] (0,-5) -- (0,5) node[above] {Latitudine};
+    % Mappa geografica di sfondo con coordinate reali
+    % Coordinate: 10°W a 0°E (longitudine), 36°N a 44°N (latitudine)
+    \begin{scope}
+        % Oceano Atlantico
+        \fill[seacolor,opacity=0.3] (-7,-5) rectangle (7,5);
+        
+        % Penisola Iberica dettagliata
+        \fill[landcolor,opacity=0.6]
+            % Portogallo (costa ovest)
+            (-6,-4) -- (-5.8,-3.5) -- (-5.5,-2.5) -- (-5.3,-1.5) -- (-5,-0.5) 
+            -- (-4.8,0.5) -- (-4.6,1.5) -- (-4.4,2.5) -- (-4.2,3.2)
+            % Nord Spagna
+            -- (-3.5,3.5) -- (-2.5,3.8) -- (-1.5,4) -- (-0.5,4) -- (0.5,3.8) 
+            -- (1.5,3.5) -- (2.5,3) -- (3,2.5)
+            % Costa est (Mediterraneo)
+            -- (3.2,2) -- (3.5,1) -- (3.6,0) -- (3.5,-1) -- (3,-2) 
+            -- (2.5,-2.8) -- (2,-3.3)
+            % Sud (Gibilterra)
+            -- (1,-3.8) -- (0,-4) -- (-1,-4) -- (-2,-4) -- (-3,-4) 
+            -- (-4,-4) -- (-5,-4) -- (-6,-4)
+            -- cycle;
+        
+        % Pirenei (ombreggiatura)
+        \fill[brown!30,opacity=0.3]
+            (-1,3.5) -- (0,3.8) -- (1,3.8) -- (2,3.5) -- (2,3) 
+            -- (1,3.2) -- (0,3.3) -- (-1,3.2) -- cycle;
+        
+        % Francia sud (parte visibile)
+        \fill[landcolor,opacity=0.5]
+            (-1,4) -- (0,4.2) -- (1,4.3) -- (2,4.2) -- (2.5,4) 
+            -- (3,3.5) -- (2.5,3) -- (1.5,3.5) -- (0.5,3.8) -- (-0.5,4) -- cycle;
+    \end{scope}
+    
+    % Griglia e assi sopra la mappa
+    \draw[step=1cm,gray!50,very thin] (-7,-5) grid (7,5);
+    \draw[thick,->] (-7,0) -- (7,0) node[right,black] {Longitudine};
+    \draw[thick,->] (0,-5) -- (0,5) node[above,black] {Latitudine};
     
     % Etichette coordinate
     \foreach \x in {-6,-4,-2,0,2,4,6}
-        \node[below] at (\x,0) {\tiny \pgfmathparse{-5+\x*0.5}\pgfmathprintnumber{\pgfmathresult}°};
+        \node[below,black,fill=white,fill opacity=0.7,text opacity=1] at (\x,0) {\tiny \pgfmathparse{-10+\x*1.7}\pgfmathprintnumber{\pgfmathresult}°};
     \foreach \y in {-4,-2,0,2,4}
-        \node[left] at (0,\y) {\tiny \pgfmathparse{40+\y}\pgfmathprintnumber{\pgfmathresult}°N};
-    
-    % Terre emerse - Penisola Iberica approssimata
-    \fill[landcolor,opacity=0.3] (-6,-4) -- (-2,-4) -- (1,-2) -- (2,0) -- (1,2) -- (-1,3) -- (-3,4) -- (-5,3) -- (-6,1) -- cycle;
+        \node[left,black,fill=white,fill opacity=0.7,text opacity=1] at (0,\y) {\tiny \pgfmathparse{36+\y*2}\pgfmathprintnumber{\pgfmathresult}°N};
     
     % Zona 1-sigma Preston (più esterna)
     \fill[sigma1preston,opacity=0.18] 
@@ -360,9 +448,14 @@ Max path error (km) & -- & -- & 3.8 km \\
         (-5.15,-3.92) .. controls (-1.65,-3.62) and (0.3,-1.65) .. (2.75,0.15)
         .. controls (2.95,0.35) and (3.15,0.75) .. (3.35,1.25);
     
-    % Punti di riferimento
-    \foreach \pt/\lab in {(-5.15,-3.92)/Lisbona, (-1.65,-3.62)/Madrid, (0.3,-1.65)/Valencia, (2.75,0.15)/Barcellona, (3.35,1.25)/Perpignan}
-        \fill[black] \pt circle (2pt) node[below right,font=\tiny] {\lab};
+    % Città principali sulla mappa
+    \fill[black] (-5.5,-3.8) circle (1.5pt) node[below,font=\tiny,fill=white,fill opacity=0.8,text opacity=1] {Lisbona};
+    \fill[black] (-4.2,-3.4) circle (1.5pt) node[below left,font=\tiny,fill=white,fill opacity=0.8,text opacity=1] {Porto};
+    \fill[black] (-2,-3.6) circle (1.5pt) node[above,font=\tiny,fill=white,fill opacity=0.8,text opacity=1] {Madrid};
+    \fill[black] (-0.2,-3.5) circle (1.5pt) node[below,font=\tiny,fill=white,fill opacity=0.8,text opacity=1] {Siviglia};
+    \fill[black] (0.3,-1.6) circle (1.5pt) node[below,font=\tiny,fill=white,fill opacity=0.8,text opacity=1] {Valencia};
+    \fill[black] (2.8,0.2) circle (1.5pt) node[above right,font=\tiny,fill=white,fill opacity=0.8,text opacity=1] {Barcellona};
+    \fill[black] (3.3,1.3) circle (1.5pt) node[above,font=\tiny,fill=white,fill opacity=0.8,text opacity=1] {Perpignan};
     
     % Legenda
     \node[draw,fill=white,align=left,font=\footnotesize] at (5,-3.5) {
@@ -379,10 +472,9 @@ Max path error (km) & -- & -- & 3.8 km \\
 \caption{(433) Eros - Mappa del path attraverso Spagna e Portogallo. Le zone colorate rappresentano l'incertezza 1-$\sigma$ (68\% di confidenza). La sovrapposizione delle zone indica un accordo dell'80\% tra i due modelli.}
 \end{figure}
 
-\newpage
-\section{Evento 2: (15) Eunomia}
+\chapter{(15) Eunomia: Asteroide di Grande Massa}
 
-\subsection{Informazioni Generali}
+\section{Informazioni Generali}
 
 \begin{table}[H]
 \centering
@@ -510,10 +602,9 @@ Max path error (km) & -- & -- & 6.2 km \\
 \caption{(15) Eunomia - Mappa del path attraverso gli Stati Uniti orientali. L'asteroide di grandi dimensioni (255 km) produce un'ombra molto ampia. Le linee tratteggiate grigie indicano i limiti della fascia di totalità. Accordo eccellente tra i modelli.}
 \end{figure}
 
-\newpage
-\section{Evento 3: (16) Psyche}
+\chapter{(16) Psyche: Caso di Evento Passato}
 
-\subsection{Informazioni Generali}
+\section{Informazioni Generali}
 
 \begin{table}[H]
 \centering
@@ -632,10 +723,9 @@ Max path error (km) & -- & -- & 14.2 km \\
 \caption{(16) Psyche - Mappa del path attraverso India e Pakistan. La deviazione maggiore (8.4 km RMS) rispetto agli eventi futuri è dovuta alla minore copertura osservativa recente per questo evento già avvenuto. La freccia rossa indica il punto di massima deviazione tra i due modelli.}
 \end{figure}
 
-\newpage
-\section{Evento 4: (704) Interamnia}
+\chapter{(704) Interamnia: Fascia Principale Esterna}
 
-\subsection{Informazioni Generali}
+\section{Informazioni Generali}
 
 \begin{table}[H]
 \centering
@@ -763,10 +853,9 @@ Max path error (km) & -- & -- & 7.3 km \\
 \caption{(704) Interamnia - Mappa del path attraverso l'Australia orientale. Nonostante le grandi dimensioni dell'asteroide (317 km), la deviazione tra i modelli è solo del 1.3\% del diametro. Eccellente accordo tra IOccultCalc e Preston.}
 \end{figure}
 
-\newpage
-\section{Evento 5: (10) Hygiea}
+\chapter{(10) Hygiea: Asteroide Massivo e Evento Remoto}
 
-\subsection{Informazioni Generali}
+\section{Informazioni Generali}
 
 \begin{table}[H]
 \centering
@@ -923,10 +1012,9 @@ Max path error (km) & -- & -- & 21.5 km \\
 \caption{(10) Hygiea - Mappa corretta del path attraverso Argentina e Cile. Il Position Angle di 156.8° determina un percorso quasi verticale da sud verso nord con leggera inclinazione verso est. Con 434 km di diametro, Hygiea produce l'ombra più ampia analizzata. La deviazione di 12.8 km (2.9\%) è dovuta all'evento passato (11 mesi fa) e alla conseguente maggiore incertezza orbitale. Il path attraversa la regione delle Ande da Valdivia (Cile) verso Asunción (Paraguay).}
 \end{figure}
 
-\newpage
-\section{Analisi Statistica Complessiva}
+\chapter{Analisi Statistica Complessiva}
 
-\subsection{Distribuzione Differenze Temporali}
+\section{Distribuzione Differenze Temporali}
 
 \begin{table}[H]
 \centering
@@ -989,10 +1077,9 @@ Max path error (km) & -- & -- & 21.5 km \\
 \caption{Deviazioni percorso ombra (percentuale rispetto al diametro)}
 \end{table}
 
-\newpage
-\section{Discussione}
+\chapter{Discussione}
 
-\subsection{Interpretazione Risultati}
+\section{Interpretazione Risultati}
 
 L'analisi comparativa su 5 eventi diversi mostra:
 
@@ -1074,10 +1161,9 @@ IOccultCalc supera ampiamente gli standard IOTA per previsioni accettabili.
     \end{itemize}
 \end{enumerate}
 
-\newpage
-\section{Conclusioni}
+\chapter{Conclusioni e Prospettive}
 
-\subsection{Sintesi Risultati}
+\section{Sintesi Risultati}
 
 L'analisi comparativa su 5 eventi diversi (2 futuri, 3 passati) dimostra:
 
@@ -1111,18 +1197,58 @@ Per utilizzo pratico di IOccultCalc:
     \item \textbf{Confronto}: Sempre verificare con previsioni Preston quando disponibili
 \end{enumerate}
 
-\subsection{Sviluppi Futuri}
+\section{Prospettive di Sviluppo}
 
-Possibili miglioramenti identificati:
+\subsection{Miglioramenti Algoritmici}
+
+Aree di sviluppo futuro identificate dall'analisi:
 
 \begin{enumerate}
-    \item Ridurre bias sistematico +7s (verifica light-time)
-    \item Implementare feedback da osservazioni reali
-    \item Aggiungere calcolo incertezza statistica
-    \item Integrare dati osservativi post-evento per refinement orbita
+    \item \textbf{Riduzione bias temporale}: Analizzare fonte del +7.2s sistematico
+    \begin{itemize}
+        \item Verifica implementazione light-time correction
+        \item Controllo epoch di riferimento per proper motion
+        \item Analisi time-step integratore numerico
+    \end{itemize}
+    
+    \item \textbf{Propagazione incertezze}: Implementare calcolo rigoroso
+    \begin{itemize}
+        \item Matrice covarianza orbitale
+        \item Monte Carlo per path uncertainty
+        \item Confidence intervals per tempi evento
+    \end{itemize}
+    
+    \item \textbf{Validazione estesa}: Ampliare dataset di confronto
+    \begin{itemize}
+        \item Includere 20+ eventi con osservazioni reali
+        \item Confronto con altri software (Occult, PyOccult)
+        \item Test su geometrie estreme (grazing, multi-chord)
+    \end{itemize}
 \end{enumerate}
 
-\subsection{Conclusione Finale}
+\subsection{Integrazione Osservativa}
+
+Collegamenti con campagne osservative:
+
+\begin{enumerate}
+    \item \textbf{Feedback loop}: Correzione predizioni con osservazioni
+    \item \textbf{Orbit refinement}: Aggiornamento elementi post-evento
+    \item \textbf{Database osservazioni}: Archivio risultati IOTA/EURASTER
+    \item \textbf{Rapid response}: Sistema aggiornamento rapido per eventi imminenti
+\end{enumerate}
+
+\subsection{Collaborazioni Scientifiche}
+
+Opportunità di cooperazione:
+
+\begin{itemize}
+    \item \textbf{IOTA} (International Occultation Timing Association)
+    \item \textbf{EURASTER} (European Asteroid Research Node)
+    \item \textbf{Minor Planet Center} (MPC)
+    \item \textbf{Gaia Collaboration} per proper motion stellari
+\end{itemize}
+
+\section{Conclusione Finale}
 
 \textbf{IOccultCalc è uno strumento maturo e affidabile} per il calcolo di previsioni di occultazioni asteroidali, con prestazioni comparabili o superiori agli standard del settore. Il confronto con Steve Preston conferma la validità della metodologia implementata e l'accuratezza del codice JPL DE441.
 
