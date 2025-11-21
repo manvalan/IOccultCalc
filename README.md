@@ -26,6 +26,7 @@ IOccultCalc è una libreria completa per astronomi amatoriali e professionisti c
 - ⚡ **RKF78/DOPRI853** - integratori high-order con step adattivo
 - 🔭 **Correzioni relativistiche** - light-time, aberrazione, deflessione gravitazionale
 - 🗺️ **Export KML/KMZ** per visualizzazione in Google Earth
+- 📄 **Compatibilità Occult4 XML** - import/export previsioni formato Dave Herald
 - ⚙️ **Performance ottimizzate** con ricerche parallele e caching
 - 📚 **Documentazione completa** ed esempi
 
@@ -132,6 +133,26 @@ Scarica osservazioni da MPC, esegue differential correction, mostra:
 - Ellisse di errore effemeridi
 - Condition code qualità orbita
 
+### Occult4 XML Import/Export
+Compatibilità bidirezionale con Occult4 di Dave Herald:
+```bash
+# Export previsioni IOccultCalc → Occult4 XML
+./build/examples/example_occult4_xml export 433 2026-01-01 2026-06-30 eros.xml
+
+# Import previsioni Occult4 XML → IOccultCalc
+./build/examples/example_occult4_xml import predictions.xml
+
+# Valida file XML Occult4
+./build/examples/example_occult4_xml validate occultations.xml
+```
+Funzionalità:
+- Import previsioni da Occult4/Steve Preston/IOTA
+- Export previsioni IOccultCalc per Occult4
+- Conversione bidirezionale formati evento
+- Supporto Gaia DR3 e UCAC4 catalog IDs
+- Shadow path con bande incertezza
+- Metadati completi (tempo, geometria, probabilità)
+
 Output: file KML visualizzabili in Google Earth con:
 - Traccia centrale occultazione (rossa)
 - Bande di incertezza 1-sigma (blu)
@@ -152,6 +173,7 @@ IOccultCalc/
 │   ├── ephemeris.h                        # Calcolo effemeridi
 │   ├── occultation_predictor.h            # Core prediction engine
 │   ├── kml_exporter.h                     # Export KML
+│   ├── occult4_xml.h                      # Import/Export XML Occult4
 │   ├── observation.h                      # Osservazioni astrometriche
 │   ├── mpc_client.h                       # Client MPC
 │   ├── orbit_determination.h              # Orbit fitting e differential correction

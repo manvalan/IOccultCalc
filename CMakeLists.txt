@@ -28,6 +28,7 @@ set(SOURCES
     src/ephemeris.cpp
     src/occultation_predictor.cpp
     src/kml_exporter.cpp
+    src/occult4_xml.cpp
     src/coordinates.cpp
     src/time_utils.cpp
     src/observation.cpp
@@ -44,6 +45,7 @@ set(HEADERS
     include/ioccultcalc/ephemeris.h
     include/ioccultcalc/occultation_predictor.h
     include/ioccultcalc/kml_exporter.h
+    include/ioccultcalc/occult4_xml.h
     include/ioccultcalc/coordinates.h
     include/ioccultcalc/time_utils.h
     include/ioccultcalc/types.h

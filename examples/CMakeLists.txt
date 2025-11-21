@@ -6,3 +6,6 @@ target_link_libraries(example_search ioccultcalc)
 
 add_executable(example_orbit_improvement orbit_improvement.cpp)
 target_link_libraries(example_orbit_improvement ioccultcalc)
+
+add_executable(example_occult4_xml occult4_xml_example.cpp)
+target_link_libraries(example_occult4_xml ioccultcalc)
