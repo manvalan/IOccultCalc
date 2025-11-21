@@ -1,0 +1,35 @@
+\babel@toc {italian}{}\relax 
+\babel@toc {italian}{}\relax 
+\contentsline {chapter}{Prefazione}{iii}{chapter*.1}%
+\contentsline {chapter}{\numberline {1}Introduzione}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Cosa sono le Occultazioni Asteroidali}{1}{section.1.1}%
+\contentsline {subsection}{\numberline {1.1.1}Importanza Scientifica}{1}{subsection.1.1.1}%
+\contentsline {section}{\numberline {1.2}Stato dell'Arte}{1}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}Software Esistenti}{1}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}Precisione Richiesta}{2}{subsection.1.2.2}%
+\contentsline {section}{\numberline {1.3}Architettura di IOccultCalc}{2}{section.1.3}%
+\contentsline {subsection}{\numberline {1.3.1}Filosofia di Design}{2}{subsection.1.3.1}%
+\contentsline {subsection}{\numberline {1.3.2}Componenti Principali}{3}{subsection.1.3.2}%
+\contentsline {subsection}{\numberline {1.3.3}Workflow Tipico}{3}{subsection.1.3.3}%
+\contentsline {section}{\numberline {1.4}Fondamenti Matematici}{3}{section.1.4}%
+\contentsline {subsection}{\numberline {1.4.1}Sistema di Riferimento}{3}{subsection.1.4.1}%
+\contentsline {subsection}{\numberline {1.4.2}Equazioni del Moto}{4}{subsection.1.4.2}%
+\contentsline {subsection}{\numberline {1.4.3}Perturbazioni Incluse}{4}{subsection.1.4.3}%
+\contentsline {subsection}{\numberline {1.4.4}Integrazione Numerica}{4}{subsection.1.4.4}%
+\contentsline {section}{\numberline {1.5}Validazione}{5}{section.1.5}%
+\contentsline {section}{\numberline {1.6}Struttura del Manuale}{5}{section.1.6}%
+\contentsline {section}{\numberline {1.7}Requisiti e Installazione}{5}{section.1.7}%
+\contentsline {subsection}{\numberline {1.7.1}Requisiti Software}{5}{subsection.1.7.1}%
+\contentsline {subsection}{\numberline {1.7.2}Installazione}{6}{subsection.1.7.2}%
+\contentsline {subsection}{\numberline {1.7.3}Primo Utilizzo}{6}{subsection.1.7.3}%
+\contentsline {section}{\numberline {1.8}Convenzioni e Notazioni}{6}{section.1.8}%
+\contentsline {subsection}{\numberline {1.8.1}Notazione Matematica}{6}{subsection.1.8.1}%
+\contentsline {subsection}{\numberline {1.8.2}Sistemi di Coordinate}{7}{subsection.1.8.2}%
+\contentsline {subsection}{\numberline {1.8.3}Tempi}{7}{subsection.1.8.3}%
+\contentsline {section}{\numberline {1.9}Risorse Aggiuntive}{7}{section.1.9}%
+\contentsline {subsection}{\numberline {1.9.1}Dati}{7}{subsection.1.9.1}%
+\contentsline {subsection}{\numberline {1.9.2}Software}{7}{subsection.1.9.2}%
+\contentsline {subsection}{\numberline {1.9.3}Comunità}{8}{subsection.1.9.3}%
+\contentsline {section}{\numberline {1.10}Come Contribuire}{8}{section.1.10}%
+\contentsline {section}{\numberline {1.11}Licenza}{8}{section.1.11}%
+\contentsline {chapter}{Ringraziamenti}{9}{appendix*.7}%

@@ -1,0 +1,240 @@
+% IOccultCalc Manuale Scientifico
+% Documento LaTeX principale
+\documentclass[11pt,a4paper,twoside]{book}
+
+% Pacchetti
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[italian]{babel}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{natbib}
+\usepackage{siunitx}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows,shapes,positioning}
+
+% Geometria
+\geometry{
+    a4paper,
+    left=25mm,
+    right=25mm,
+    top=30mm,
+    bottom=30mm,
+}
+
+% Configurazione hyperref
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    citecolor=green,
+    pdftitle={IOccultCalc - Manuale Scientifico},
+    pdfauthor={Michele Bigi - Gruppo Astrofili Massesi},
+    pdfsubject={Previsione di Occultazioni Asteroidali ad Alta Precisione},
+    pdfkeywords={occultazioni, asteroidi, astrometria, effemeridi}
+}
+
+% Configurazione listings
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    language=C++
+}
+
+% Stile pagina
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[LO]{\nouppercase{\rightmark}}
+\fancyhead[RE]{\nouppercase{\leftmark}}
+
+% Comandi personalizzati
+\newcommand{\ioccultcalc}{\texttt{IOccultCalc}}
+\newcommand{\vsop}{\texttt{VSOP87}}
+\newcommand{\gaia}{\textit{Gaia}}
+% \unit è già definito dal pacchetto siunitx
+\newcommand{\deriv}[2]{\frac{\mathrm{d}#1}{\mathrm{d}#2}}
+\newcommand{\pderiv}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\vect}[1]{\boldsymbol{#1}}
+\newcommand{\mat}[1]{\boldsymbol{#1}}
+
+% Informazioni frontespizio
+\title{
+    \huge\textbf{IOccultCalc} \\
+    \vspace{0.5cm}
+    \Large Manuale Scientifico \\
+    \vspace{0.3cm}
+    \large Previsione di Occultazioni Asteroidali ad Alta Precisione
+}
+
+\author{
+    \textbf{Michele Bigi} \\
+    \texttt{mikbigi@gmail.com} \\
+    \vspace{0.5cm}
+    Gruppo Astrofili Massesi \\
+    \vspace{0.5cm}
+    \textit{Con contributi da:} \\
+    Comunità Astrofili Italiana \\
+    International Occultation Timing Association (IOTA)
+}
+
+\date{Novembre 2025 \\ Versione 1.0}
+
+\begin{document}
+
+% Frontespizio
+\frontmatter
+\maketitle
+
+% Pagina copyright
+\thispagestyle{empty}
+\vspace*{\fill}
+\begin{center}
+\textbf{IOccultCalc - Manuale Scientifico}
+
+\vspace{1cm}
+
+Copyright \copyright\ 2025 Michele Bigi
+
+\vspace{0.5cm}
+
+\textbf{Gruppo Astrofili Massesi} \\
+\url{http://www.astrofilimassesi.it}
+
+\vspace{1cm}
+
+Questo documento è rilasciato sotto licenza MIT. \\
+Il software IOccultCalc è disponibile su GitHub: \\
+\url{https://github.com/manvalan/IOccultCalc}
+
+\vspace{1cm}
+
+\textbf{Contatti:} \\
+Email: \texttt{mikbigi@gmail.com}
+
+\vspace{1cm}
+
+\textit{Dedica:} \\
+Questo lavoro è dedicato a tutti gli astrofili che, con passione e dedizione, \\
+contribuiscono alla scienza attraverso l'osservazione delle occultazioni asteroidali.
+
+\end{center}
+\vspace*{\fill}
+\clearpage
+
+% Prefazione
+\chapter*{Prefazione}
+\addcontentsline{toc}{chapter}{Prefazione}
+
+Le occultazioni asteroidali rappresentano uno degli strumenti più potenti per caratterizzare gli oggetti del Sistema Solare. Quando un asteroide passa davanti a una stella, la misura precisa del tempo di occultazione fornisce informazioni uniche su dimensioni, forma e posizione dell'asteroide con una precisione altrimenti irraggiungibile.
+
+\textbf{IOccultCalc} nasce dall'esigenza di fornire alla comunità scientifica e agli astrofili uno strumento di calcolo ad alta precisione per la previsione delle occultazioni asteroidali, superando le limitazioni dei software esistenti come Occult4.
+
+\section*{Obiettivi del Progetto}
+
+Questo manuale documenta i fondamenti scientifici e matematici alla base di IOccultCalc, con particolare attenzione a:
+
+\begin{enumerate}
+    \item Precisione superiore rispetto agli strumenti esistenti (es. Occult4)
+    \item Implementazione open-source con documentazione completa
+    \item Architettura software moderna adatta all'integrazione
+    \item Quantificazione rigorosa delle incertezze
+\end{enumerate}
+
+Speriamo che questo manuale possa servire sia come riferimento per gli utenti della libreria, sia come risorsa educativa per chi è interessato agli aspetti matematici e computazionali dell'astronomia di posizione.
+
+\vspace{1cm}
+\noindent
+\textit{Michele Bigi} \\
+\textit{Gruppo Astrofili Massesi} \\
+\textit{Novembre 2025}
+
+% Indice
+\tableofcontents
+
+% Elenco figure
+\listoffigures
+
+% Elenco tabelle
+\listoftables
+
+% Elenco algoritmi
+\listofalgorithms
+
+% Contenuto principale
+\mainmatter
+
+% Include capitoli
+\include{chapters/01_introduzione}
+\include{chapters/02_sistemi_coordinate}
+\include{chapters/03_sistemi_temporali}
+\include{chapters/04_effemeridi_planetarie}
+\include{chapters/05_meccanica_orbitale}
+\include{chapters/06_integrazione_numerica}
+\include{chapters/07_perturbazioni}
+\include{chapters/08_correzioni_relativistiche}
+\include{chapters/09_precessione_nutazione}
+\include{chapters/10_astrometria_stellare}
+\include{chapters/11_determinazione_orbite}
+\include{chapters/12_forma_asteroidi}
+\include{chapters/13_metodo_besseliano}
+\include{chapters/14_propagazione_incertezze}
+\include{chapters/15_implementazione}
+\include{chapters/16_validazione}
+
+% Appendici
+\appendix
+\include{chapters/appendice_a_costanti}
+\include{chapters/appendice_b_algoritmi}
+\include{chapters/appendice_c_jpl_tables}
+
+% Bibliografia
+\backmatter
+\bibliographystyle{apalike}
+\bibliography{../manual/references}
+
+% Ringraziamenti
+\chapter*{Ringraziamenti}
+\addcontentsline{toc}{chapter}{Ringraziamenti}
+
+Questo progetto non sarebbe stato possibile senza il contributo e il supporto di numerose persone e organizzazioni:
+
+\begin{itemize}
+    \item Il \textbf{Gruppo Astrofili Massesi} per il supporto continuo e l'ambiente stimolante
+    \item La \textbf{International Occultation Timing Association (IOTA)} per i dati e le risorse
+    \item Il \textbf{Minor Planet Center (MPC)} per gli elementi orbitali e le osservazioni
+    \item L'\textbf{ESA Gaia Mission} per il catalogo stellare Gaia DR3
+    \item Il \textbf{JPL/NASA} per le effemeridi DE441 e il sistema SPICE
+    \item \textbf{Dave Herald} per il lavoro pionieristico con Occult4
+    \item \textbf{Steve Preston} per i contributi alla comunità delle occultazioni
+    \item La comunità \textbf{astrofili italiana} per le osservazioni e il feedback
+    \item Tutti i contributori del progetto open-source su GitHub
+\end{itemize}
+
+Un ringraziamento speciale a tutti gli osservatori di occultazioni che, con le loro osservazioni pazienti e precise, forniscono dati preziosi per la scienza.
+
+\vspace{1cm}
+\noindent
+\textit{Ad astra per aspera}
+
+\end{document}

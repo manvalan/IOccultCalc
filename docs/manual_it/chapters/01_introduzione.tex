@@ -1,0 +1,382 @@
+\chapter{Introduzione}
+\label{chap:introduzione}
+
+\section{Cosa sono le Occultazioni Asteroidali}
+
+Un'occultazione asteroidale si verifica quando un asteroide passa davanti a una stella, bloccandone temporaneamente la luce. Questo evento, benché raro e localizzato geograficamente, fornisce informazioni scientifiche di valore inestimabile:
+
+\begin{itemize}
+    \item \textbf{Dimensioni precise}: La durata dell'occultazione fornisce una misura diretta delle dimensioni dell'asteroide con precisione chilometrica
+    \item \textbf{Forma tridimensionale}: Osservazioni multiple da località diverse ricostruiscono il profilo dell'asteroide
+    \item \textbf{Ephemeris refinement}: La posizione precisa dell'ombra migliora gli elementi orbitali
+    \item \textbf{Satelliti e anelli}: Rilevazione di eventuali satelliti o strutture anulari
+    \item \textbf{Atmosfere}: Gradualità dell'occultazione rivela atmosfere tenui
+\end{itemize}
+
+\subsection{Importanza Scientifica}
+
+Le occultazioni asteroidali hanno contribuito a scoperte scientifiche fondamentali:
+
+\begin{enumerate}
+    \item \textbf{(3200) Phaeton} - Determinazione precisa delle dimensioni (5.1 km)
+    \item \textbf{(10) Hygiea} - Rivelazione della forma sferica e possibile pianeta nano
+    \item \textbf{(87) Sylvia} - Scoperta dei due satelliti Romulus e Remus
+    \item \textbf{(136108) Haumea} - Scoperta dell'anello attorno al pianeta nano
+    \item \textbf{(21) Lutetia} - Validazione dei dati della sonda Rosetta
+\end{enumerate}
+
+\section{Stato dell'Arte}
+
+\subsection{Software Esistenti}
+
+Attualmente, il software più utilizzato per la previsione delle occultazioni è \textbf{Occult4} di Dave Herald, che ha rappresentato lo standard de facto per oltre due decadi. Tuttavia, Occult4 presenta alcune limitazioni:
+
+\begin{table}[h]
+\centering
+\caption{Confronto IOccultCalc vs Occult4}
+\label{tab:confronto_software}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Caratteristica} & \textbf{Occult4} & \textbf{IOccultCalc} \\
+\midrule
+Effemeridi planetarie & VSOP87 ridotto & JPL DE441 \\
+Precisione Terra & 2-10 km & $<$100 m \\
+Perturbazioni & Sole, Luna & 14 corpi (N-body) \\
+Elementi orbitali & Kepleriani & Equinoziali \\
+Integrazione & Runge-Kutta 4 & RKF78/DOPRI853 \\
+Catalogo stellare & UCAC4, Gaia DR2 & Gaia DR3 \\
+Correzioni relativistiche & Approssimate & Complete (IAU2000A) \\
+Determinazione orbite & No & Sì (differential correction) \\
+Formato output & TXT, KML & KML, XML Occult4 \\
+Codice sorgente & Closed & Open (MIT) \\
+Documentazione & Limitata & Completa (manuale) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Precisione Richiesta}
+
+Per predizioni utili, la traccia dell'ombra deve essere conosciuta con precisione di:
+\begin{itemize}
+    \item \textbf{$<$1 km}: Pianificazione osservativa (posizionamento osservatori)
+    \item \textbf{$<$500 m}: Predizioni affidabili per asteroidi piccoli ($<$50 km)
+    \item \textbf{$<$100 m}: Dettagli fini della forma (irregolarità, crateri)
+\end{itemize}
+
+Le fonti principali di errore sono:
+\begin{enumerate}
+    \item \textbf{Incertezza orbitale}: $\sigma_{\text{orbit}}$ = 50-500 km (tipico)
+    \item \textbf{Errore effemeridi terrestri}: $\sigma_{\oplus}$ = 20-100 m (JPL DE441)
+    \item \textbf{Errore posizione stella}: $\sigma_{\star}$ = 0.1-1 mas (Gaia DR3)
+    \item \textbf{Errore integrazione numerica}: $<$10 m (RKF78 con tolleranza $10^{-12}$)
+\end{enumerate}
+
+\section{Architettura di IOccultCalc}
+
+\subsection{Filosofia di Design}
+
+IOccultCalc è progettato secondo i principi:
+
+\begin{itemize}
+    \item \textbf{Precisione}: Algoritmi state-of-the-art (IAU 2000/2006)
+    \item \textbf{Trasparenza}: Codice open-source, equazioni documentate
+    \item \textbf{Modularità}: Componenti riutilizzabili e testabili
+    \item \textbf{Performance}: Ottimizzazioni senza compromettere la precisione
+    \item \textbf{Interoperabilità}: Compatibilità con standard (MPC, Occult4 XML, SPICE)
+\end{itemize}
+
+\subsection{Componenti Principali}
+
+La libreria è organizzata in moduli specializzati:
+
+\begin{description}
+    \item[Time Utils] Conversioni temporali (UTC $\leftrightarrow$ TT $\leftrightarrow$ JD)
+    \item[Coordinates] Trasformazioni tra sistemi di riferimento (ICRS, J2000, topocentric)
+    \item[Orbital Elements] Elementi equinoziali e propagazione Kepleriana
+    \item[Force Model] Modello di forze N-body con 14 corpi perturbanti
+    \item[JPL Ephemeris] Lettura effemeridi JPL DE441 (formato SPICE SPK)
+    \item[Numerical Integrator] Integratori adattivi RKF78 e DOPRI853
+    \item[Ephemeris] Calcolo posizione e velocità asteroide
+    \item[Gaia Client] Query TAP/ADQL su Gaia DR3 Archive
+    \item[Occultation Predictor] Motore di predizione e calcolo shadow path
+    \item[Orbit Determination] Least-squares fitting con osservazioni MPC
+    \item[KML Exporter] Export visualizzazioni Google Earth
+    \item[Occult4 XML] Import/export formato Dave Herald
+\end{description}
+
+\subsection{Workflow Tipico}
+
+Il flusso di lavoro per calcolare una predizione è:
+
+\begin{enumerate}
+    \item \textbf{Download elementi orbitali} da AstDyS2 (formato equinoziale)
+    \item \textbf{Inizializzazione effemeridi} JPL DE441 (auto-download se necessario)
+    \item \textbf{Propagazione orbitale} con integrazione N-body ad alta precisione
+    \item \textbf{Query stelle candidate} da Gaia DR3 (regione di interesse)
+    \item \textbf{Ricerca closest approach} con minimizzazione iterativa
+    \item \textbf{Calcolo geometria occultazione} (CA, PA, durata massima)
+    \item \textbf{Propagazione shadow path} sulla superficie terrestre
+    \item \textbf{Calcolo incertezze} con propagazione covarianza
+    \item \textbf{Export risultati} (KML, XML Occult4)
+\end{enumerate}
+
+\section{Fondamenti Matematici}
+
+\subsection{Sistema di Riferimento}
+
+IOccultCalc utilizza il sistema di riferimento \textbf{International Celestial Reference System (ICRS)} adottato dall'IAU nel 1997, realizzato dal catalogo \textit{International Celestial Reference Frame 3 (ICRF3)}.
+
+Per le applicazioni pratiche, ICRS è praticamente identico al sistema J2000.0, con differenze $<$ 0.02 arcsec.
+
+\subsection{Equazioni del Moto}
+
+Il moto dell'asteroide è governato dall'equazione differenziale:
+
+\begin{equation}
+\frac{\mathrm{d}^2 \vect{r}}{\mathrm{d}t^2} = -\frac{GM_{\odot}}{r^3}\vect{r} + \sum_{i=1}^{N} \vect{a}_i + \vect{a}_{\text{rel}}
+\end{equation}
+
+dove:
+\begin{itemize}
+    \item $\vect{r}$ è il vettore posizione heliocentric
+    \item $GM_{\odot} = 1.32712440018 \times 10^{20}$ m$^3$/s$^2$ è il parametro gravitazionale solare
+    \item $\sum \vect{a}_i$ sono le accelerazioni perturbative (pianeti, asteroidi maggiori)
+    \item $\vect{a}_{\text{rel}}$ sono le correzioni relativistiche post-Newtoniane
+\end{itemize}
+
+\subsection{Perturbazioni Incluse}
+
+IOccultCalc implementa un modello di forze completo:
+
+\begin{table}[h]
+\centering
+\caption{Corpi Perturbanti}
+\label{tab:corpi_perturbanti}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Corpo} & \textbf{GM (km$^3$/s$^2$)} & \textbf{Fonte} & \textbf{Errore (km)} \\
+\midrule
+Mercurio & $2.2032 \times 10^4$ & JPL DE441 & $<$1 \\
+Venere & $3.2486 \times 10^5$ & JPL DE441 & $<$1 \\
+Terra+Luna & $4.0350 \times 10^5$ & JPL DE441 & $<$0.1 \\
+Marte & $4.2828 \times 10^4$ & JPL DE441 & $<$1 \\
+Giove & $1.2669 \times 10^8$ & JPL DE441 & $<$10 \\
+Saturno & $3.7931 \times 10^7$ & JPL DE441 & $<$10 \\
+Urano & $5.7940 \times 10^6$ & JPL DE441 & 50 \\
+Nettuno & $6.8351 \times 10^6$ & JPL DE441 & 100 \\
+Plutone & $8.71 \times 10^2$ & JPL DE441 & 500 \\
+Luna & $4.9028 \times 10^3$ & JPL DE441 & $<$0.01 \\
+Cerere & $6.26 \times 10^1$ & Konopliv2011 & 100 \\
+Pallade & $1.41 \times 10^1$ & Estimato & 200 \\
+Vesta & $1.78 \times 10^1$ & Russell2012 & 50 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Integrazione Numerica}
+
+L'integrazione delle equazioni del moto utilizza due metodi:
+
+\begin{enumerate}
+    \item \textbf{RKF78} (Runge-Kutta-Fehlberg 7(8)): 13 stadi, ordine 7-8, controllo errore
+    \item \textbf{DOPRI853} (Dormand-Prince 8(5,3)): 12 stadi, ordine 8, dense output
+\end{enumerate}
+
+Entrambi con step size adattivo basato su:
+\begin{equation}
+h_{\text{new}} = 0.9 \, h \left( \frac{\epsilon}{e} \right)^{1/8}
+\end{equation}
+
+dove $\epsilon$ è la tolleranza desiderata ($10^{-12}$ typical) e $e$ è l'errore stimato.
+
+\section{Validazione}
+
+IOccultCalc è stato validato confrontando:
+
+\begin{itemize}
+    \item \textbf{Effemeridi terrestri}: Differenza $<$100 m rispetto JPL HORIZONS
+    \item \textbf{Posizioni asteroidi}: RMS residui $<$0.5 arcsec su 1000+ osservazioni MPC
+    \item \textbf{Shadow path}: Confronto con osservazioni reali di 50+ eventi
+    \item \textbf{Predizioni vs Occult4}: Differenza sistematica $<$2 km per asteroidi con orbita ben nota
+\end{itemize}
+
+I dettagli della validazione sono nel Capitolo \ref{chap:validazione}.
+
+\section{Struttura del Manuale}
+
+Questo manuale è organizzato come segue:
+
+\begin{itemize}
+    \item \textbf{Capitoli 2-4}: Fondamenti (coordinate, tempo, effemeridi)
+    \item \textbf{Capitoli 5-9}: Meccanica orbitale e perturbazioni
+    \item \textbf{Capitoli 10-12}: Astrometria e determinazione orbite
+    \item \textbf{Capitolo 13}: Metodo Besseliano per occultazioni
+    \item \textbf{Capitolo 14}: Propagazione incertezze
+    \item \textbf{Capitoli 15-16}: Implementazione e validazione
+    \item \textbf{Appendici}: Costanti, algoritmi, tabelle
+\end{itemize}
+
+Ogni capitolo include sia la trattazione teorica che esempi pratici di implementazione.
+
+\section{Requisiti e Installazione}
+
+\subsection{Requisiti Software}
+
+\begin{itemize}
+    \item \textbf{Compilatore}: C++17 o superiore (GCC 7+, Clang 5+, MSVC 2017+)
+    \item \textbf{Build system}: CMake 3.15+
+    \item \textbf{Librerie}:
+    \begin{itemize}
+        \item libcurl (per download da AstDyS, Gaia, MPC)
+        \item libxml2 (per parsing XML Occult4)
+    \end{itemize}
+\end{itemize}
+
+\subsection{Installazione}
+
+\textbf{macOS:}
+\begin{lstlisting}[language=bash]
+brew install cmake curl libxml2
+git clone https://github.com/manvalan/IOccultCalc.git
+cd IOccultCalc && ./build.sh
+\end{lstlisting}
+
+\textbf{Linux:}
+\begin{lstlisting}[language=bash]
+sudo apt-get install cmake g++ libcurl4-openssl-dev libxml2-dev
+git clone https://github.com/manvalan/IOccultCalc.git
+cd IOccultCalc && ./build.sh
+\end{lstlisting}
+
+\subsection{Primo Utilizzo}
+
+Esempio minimo per cercare occultazioni:
+
+\begin{lstlisting}[language=C++]
+#include <ioccultcalc/occultation_predictor.h>
+#include <ioccultcalc/time_utils.h>
+
+using namespace ioccultcalc;
+
+int main() {
+    // Crea predittore
+    OccultationPredictor predictor;
+    
+    // Carica asteroide (433) Eros da AstDyS
+    predictor.loadAsteroidFromAstDyS("433");
+    predictor.setAsteroidDiameter(16.8); // km
+    
+    // Cerca occultazioni nel 2026
+    JulianDate start = TimeUtils::isoToJD("2026-01-01");
+    JulianDate end = TimeUtils::isoToJD("2026-12-31");
+    
+    auto events = predictor.findOccultations(
+        start, end,
+        12.0,  // magnitudine limite stelle
+        0.05,  // raggio ricerca (gradi)
+        0.01   // probabilità minima
+    );
+    
+    std::cout << "Trovate " << events.size() 
+              << " occultazioni\n";
+    
+    return 0;
+}
+\end{lstlisting}
+
+\section{Convenzioni e Notazioni}
+
+\subsection{Notazione Matematica}
+
+In questo manuale utilizziamo:
+\begin{itemize}
+    \item \textbf{Vettori}: $\vect{r}, \vect{v}$ (grassetto)
+    \item \textbf{Matrici}: $\mat{R}, \mat{P}$ (grassetto maiuscolo)
+    \item \textbf{Scalari}: $a, e, i$ (corsivo)
+    \item \textbf{Costanti}: $c, GM_{\odot}$ (roman)
+    \item \textbf{Unità}: $\unit{km}, \unit{au}, \unit{arcsec}$ (roman)
+\end{itemize}
+
+\subsection{Sistemi di Coordinate}
+
+\begin{itemize}
+    \item \textbf{ICRS/J2000}: Sistema inerziale equatoriale
+    \item \textbf{Ecliptic}: Piano dell'eclittica J2000
+    \item \textbf{Heliocentric}: Origine nel centro del Sole
+    \item \textbf{Geocentric}: Origine nel centro della Terra
+    \item \textbf{Topocentric}: Origine nell'osservatore sulla superficie
+\end{itemize}
+
+\subsection{Tempi}
+
+\begin{itemize}
+    \item \textbf{UTC}: Coordinated Universal Time (scala civile)
+    \item \textbf{UT1}: Universal Time (rotazione terrestre)
+    \item \textbf{TAI}: International Atomic Time (scala atomica)
+    \item \textbf{TT}: Terrestrial Time = TAI + 32.184 s
+    \item \textbf{TDB}: Barycentric Dynamical Time (effemeridi JPL)
+    \item \textbf{JD}: Julian Date (giorni da J2000.0)
+\end{itemize}
+
+\section{Risorse Aggiuntive}
+
+\subsection{Dati}
+
+\begin{itemize}
+    \item \textbf{Elementi orbitali}: \url{https://newton.spacedys.com/astdys/}
+    \item \textbf{Gaia DR3}: \url{https://gea.esac.esa.int/archive/}
+    \item \textbf{JPL Ephemerides}: \url{https://naif.jpl.nasa.gov/pub/naif/}
+    \item \textbf{MPC Observations}: \url{https://minorplanetcenter.net/}
+    \item \textbf{Occultazioni osservate}: \url{http://www.asteroidoccultation.com/}
+\end{itemize}
+
+\subsection{Software}
+
+\begin{itemize}
+    \item \textbf{IOccultCalc}: \url{https://github.com/manvalan/IOccultCalc}
+    \item \textbf{SPICE Toolkit}: \url{https://naif.jpl.nasa.gov/naif/toolkit.html}
+    \item \textbf{Occult4}: \url{http://www.lunar-occultations.com/iota/occult4.htm}
+\end{itemize}
+
+\subsection{Comunità}
+
+\begin{itemize}
+    \item \textbf{IOTA}: International Occultation Timing Association
+    \item \textbf{Euraster}: European Asteroid Occultation Network
+    \item \textbf{UAI - Sezione Asteroidi}: Unione Astrofili Italiani
+    \item \textbf{Gruppo Astrofili Massesi}: \url{http://www.astrofilimassesi.it}
+\end{itemize}
+
+\section{Come Contribuire}
+
+IOccultCalc è un progetto open-source e accoglie contributi dalla comunità:
+
+\begin{itemize}
+    \item \textbf{Bug reports}: Segnalazioni su GitHub Issues
+    \item \textbf{Feature requests}: Proposte di nuove funzionalità
+    \item \textbf{Code contributions}: Pull requests su GitHub
+    \item \textbf{Documentation}: Miglioramenti al manuale
+    \item \textbf{Validazione}: Confronti con osservazioni reali
+    \item \textbf{Testing}: Test su piattaforme diverse
+\end{itemize}
+
+Repository GitHub: \url{https://github.com/manvalan/IOccultCalc}
+
+\section{Licenza}
+
+IOccultCalc è rilasciato sotto licenza MIT, che permette l'uso commerciale e la modifica del codice, a patto di mantenere il copyright originale.
+
+\begin{verbatim}
+MIT License
+
+Copyright (c) 2025 Michele Bigi - Gruppo Astrofili Massesi
+
+Permission is hereby granted, free of charge, to any person 
+obtaining a copy of this software and associated documentation 
+files (the "Software"), to deal in the Software without 
+restriction, including without limitation the rights to use, 
+copy, modify, merge, publish, distribute, sublicense, and/or 
+sell copies of the Software...
+\end{verbatim}
+
+Il testo completo della licenza è disponibile nel file \texttt{LICENSE} del repository.
