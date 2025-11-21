@@ -1,0 +1,78 @@
+================================================================================
+                        ASTEROID OCCULTATION PREDICTION
+================================================================================
+
+                  (433) Eros occults Gaia DR3 1234567890123456
+                            2025-03-14 23:45:30 UTC
+
+--------------------------------------------------------------------------------
+EVENT DETAILS
+--------------------------------------------------------------------------------
+Event time (UTC):                  2025-03-14 23:45:30 UTC
+Julian Date:                       2460749.489940
+
+Asteroid:                          (433) Eros
+Estimated diameter:                16.8 km
+
+Close approach distance:           0.035 arcsec
+Position angle:                    125.5° (from N to E)
+Shadow velocity:                   18.20 km/s
+Path width:                        16.8 km
+Maximum duration:                  0.9 seconds
+Probability:                       95%
+
+--------------------------------------------------------------------------------
+STAR DATA
+--------------------------------------------------------------------------------
+Catalog:                           Gaia DR3 1234567890123456
+Right Ascension (J2000):           12h 30m 00.000s
+Declination (J2000):               +15° 18' 00.00"
+Magnitude:                         11.20 (Gaia G)
+Proper motion (RA):                5.20 mas/yr
+Proper motion (Dec):               -3.10 mas/yr
+Parallax:                          2.50 mas
+
+--------------------------------------------------------------------------------
+SHADOW PATH
+--------------------------------------------------------------------------------
+
+Center Line:
+  Latitude    Longitude   Time (UTC)        Duration
+  ----------------------------------------------------------------------
+  40°00'00"N  005°00'00"W  2025-03-14 23:45:26 UTC  0.7s
+  41°00'00"N  004°24'00"W  2025-03-14 23:45:28 UTC  0.8s
+  42°00'00"N  003°47'59"W  2025-03-14 23:45:29 UTC  0.9s
+  43°00'00"N  003°12'00"W  2025-03-14 23:45:31 UTC  0.9s
+  44°00'00"N  002°36'00"W  2025-03-14 23:45:33 UTC  0.8s
+
+North Limit:
+  Latitude    Longitude
+  ------------------------------
+  40°06'00"N  005°00'00"W
+  42°06'00"N  003°47'59"W
+  44°06'00"N  002°36'00"W
+
+South Limit:
+  Latitude    Longitude
+  ------------------------------
+  39°53'59"N  005°00'00"W
+  41°53'59"N  003°47'59"W
+  43°53'59"N  002°36'00"W
+
+--------------------------------------------------------------------------------
+UNCERTAINTY ANALYSIS
+--------------------------------------------------------------------------------
+Cross-track uncertainty:           5.2 km
+Uncertainty ellipse (1-sigma):     
+  Semi-major axis:                 0.045 arcsec
+  Semi-minor axis:                 0.015 arcsec
+  Position angle:                  132.0°
+
+Note: The predicted path may shift by up to the uncertainty amount.
+      Always observe several path widths to the north and south.
+
+================================================================================
+Calculated by IOccultCalc using JPL DE441
+Calculation date: 2025-11-21
+Observer: Michele Bigi - Gruppo Astrofili Massesi
+================================================================================
