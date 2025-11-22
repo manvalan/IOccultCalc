@@ -1,0 +1,126 @@
+#!/bin/bash
+# Script per confrontare risultati IOccultCalc vs OrbFit
+
+echo "================================================================="
+echo "CONFRONTO IOccultCalc vs OrbFit @ MJD 60300.0"
+echo "================================================================="
+echo ""
+
+# Valori IOccultCalc (Equatoriale J2000)
+IOCC_RX=0.937883408459
+IOCC_RY=0.737295472196
+IOCC_RZ=0.587643701820
+IOCC_VX=-0.012788897061
+IOCC_VY=0.008496252348
+IOCC_VZ=0.002519906038
+
+echo "IOccultCalc @ MJD 60300.0 (Equatoriale J2000):"
+echo "  r = ($IOCC_RX, $IOCC_RY, $IOCC_RZ) AU"
+echo "  v = ($IOCC_VX, $IOCC_VY, $IOCC_VZ) AU/d"
+echo ""
+
+# Estrai valori OrbFit
+ORBFIT_DIR="/Users/michelebigi/Astro/OrbFit/tests/orbfit/433-Eros"
+ORBFIT_FILE="$ORBFIT_DIR/433.oel"
+
+if [ ! -f "$ORBFIT_FILE" ]; then
+    echo "❌ File $ORBFIT_FILE non trovato!"
+    echo ""
+    echo "Esegui prima OrbFit:"
+    echo "  cd $ORBFIT_DIR"
+    echo "  echo '433_test' | /Users/michelebigi/Astro/OrbFit/bin/orbfit.x"
+    echo ""
+    exit 1
+fi
+
+echo "OrbFit output trovato, estrazione valori..."
+echo ""
+
+# Estrai riga CAR
+CAR_LINE=$(grep "^ CAR" "$ORBFIT_FILE" | head -1)
+MJD_LINE=$(grep "^ MJD" "$ORBFIT_FILE" | head -1)
+
+if [ -z "$CAR_LINE" ]; then
+    echo "❌ Riga CAR non trovata in $ORBFIT_FILE"
+    exit 1
+fi
+
+echo "OrbFit @ MJD 60300.0 (Equatoriale J2000):"
+echo "$CAR_LINE"
+echo "$MJD_LINE"
+echo ""
+
+# Estrai valori numerici (assume formato: CAR rx ry rz vx vy vz)
+ORBFIT_VALUES=$(echo "$CAR_LINE" | awk '{print $2, $3, $4, $5, $6, $7}')
+read ORBF_RX ORBF_RY ORBF_RZ ORBF_VX ORBF_VY ORBF_VZ <<< "$ORBFIT_VALUES"
+
+echo "OrbFit valori estratti:"
+echo "  r = ($ORBF_RX, $ORBF_RY, $ORBF_RZ) AU"
+echo "  v = ($ORBF_VX, $ORBF_VY, $ORBF_VZ) AU/d"
+echo ""
+
+# Calcola differenze con Python
+python3 << PYTHON_EOF
+import math
+
+# IOccultCalc
+iocc_r = [$IOCC_RX, $IOCC_RY, $IOCC_RZ]
+iocc_v = [$IOCC_VX, $IOCC_VY, $IOCC_VZ]
+
+# OrbFit
+orbf_r = [$ORBF_RX, $ORBF_RY, $ORBF_RZ]
+orbf_v = [$ORBF_VX, $ORBF_VY, $ORBF_VZ]
+
+# Differenze in AU
+dr = [iocc_r[i] - orbf_r[i] for i in range(3)]
+dv = [iocc_v[i] - orbf_v[i] for i in range(3)]
+
+# Conversione a km e m/s
+AU_TO_KM = 149597870.7
+AU_D_TO_MS = 149597870.7 / 86400.0
+
+dr_km = [d * AU_TO_KM for d in dr]
+dv_ms = [d * AU_D_TO_MS for d in dv]
+
+# Magnitude
+diff_pos = math.sqrt(sum(d**2 for d in dr_km))
+diff_vel = math.sqrt(sum(d**2 for d in dv_ms))
+
+print("================================================================")
+print("DIFFERENZA IOccultCalc - OrbFit")
+print("================================================================")
+print("")
+print(f"  ΔX = {dr_km[0]:12.1f} km ({dr_km[0]/diff_pos*100:5.1f}%)")
+print(f"  ΔY = {dr_km[1]:12.1f} km ({dr_km[1]/diff_pos*100:5.1f}%)")
+print(f"  ΔZ = {dr_km[2]:12.1f} km ({dr_km[2]/diff_pos*100:5.1f}%)")
+print(f"  |Δr| = {diff_pos:10.1f} km")
+print(f"  |Δv| = {diff_vel:10.3f} m/s")
+print("")
+print(f"  Errore/anno = {diff_pos/12.0:.1f} km/anno")
+print("")
+
+# Analisi
+if diff_pos < 1000:
+    print("✅ ECCELLENTE! Errore <1000 km dopo 12 anni!")
+    print("   IOccultCalc concorda con OrbFit a livello professionale.")
+elif diff_pos < 10000:
+    print("✓ BUONO. Errore ~{:.0f} km dopo 12 anni.".format(diff_pos))
+    print(f"   ~{diff_pos/12.0:.0f} km/anno è accettabile.")
+    print("   Differenze attese da: integratore (RK4 vs RA15), asteroide #17")
+elif diff_pos < 100000:
+    print("⚠ MODERATO. Errore ~{:.0f} km dopo 12 anni.".format(diff_pos))
+    print("   Possibili cause: step size RK4, asteroide #17 mancante")
+else:
+    print("❌ ERRORE ELEVATO: {:.0f} km dopo 12 anni!".format(diff_pos))
+    print("   Problemi con: frame, modello forze, o accumulo errore")
+
+print("")
+print("Note:")
+print("• IOccultCalc: 16 asteroidi + RK4 step=0.1d")
+print("• OrbFit: 17 asteroidi + RA15 multistep adattivo")
+print("• Propagazione: 12.0 anni (4381 giorni)")
+
+PYTHON_EOF
+
+echo ""
+echo "================================================================="

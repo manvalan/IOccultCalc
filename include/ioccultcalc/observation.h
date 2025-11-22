@@ -40,10 +40,12 @@ struct AstrometricObservation {
     double decResidual;  // O-C Dec (arcsec)
     double totalResidual; // Residuo totale (arcsec)
     bool outlier;        // Flagged as outlier
+    bool excluded;       // Esclusa dal fit
     
     AstrometricObservation() 
         : raError(1.0), decError(1.0), magnitude(99.9),
-          raResidual(0), decResidual(0), totalResidual(0), outlier(false) {}
+          raResidual(0), decResidual(0), totalResidual(0), 
+          outlier(false), excluded(false) {}
     
     // Peso dell'osservazione per il fit
     double getWeight() const {

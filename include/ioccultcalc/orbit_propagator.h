@@ -27,10 +27,10 @@ namespace ioccultcalc {
  * @brief Tipo di integratore numerico
  */
 enum class IntegratorType {
-    RK4,        // Runge-Kutta 4° ordine (veloce, accurato per step fissi)
+    RK4,        // Runge-Kutta 4° ordine (step fisso) - CONSIGLIATO: ΔE/E~10⁻¹⁴
     RKF78,      // Runge-Kutta-Fehlberg 7/8 (adattivo, alta precisione)
     GAUSS_RADAU, // Gauss-Radau (implicito, per problemi stiff)
-    RA15        // Radau 15° ordine di Everhart (da OrbFit, massima precisione)
+    RA15        // ⚠ BUGGY: non conserva energia (ΔE/E~10⁻⁶, 323km errore/anno)
 };
 
 /**
@@ -50,7 +50,7 @@ struct PropagatorOptions {
     
     PropagatorOptions() 
         : integrator(IntegratorType::RK4),
-          stepSize(1.0),
+          stepSize(0.1),  // 0.1 giorni = miglior trade-off velocità/precisione
           tolerance(1e-12),
           usePlanetaryPerturbations(true),
           useRelativisticCorrections(false),
@@ -192,6 +192,7 @@ private:
     OrbitState integrateRKF78(const OrbitState& state0, double dt, double& errorEst);
     OrbitState integrateRA15(const OrbitState& state0, const JulianDate& targetEpoch);
     
+public:  // ← TEMPORANEO per test validazione
     // Calcola accelerazione totale (gravitazione + perturbazioni)
     Vector3D computeAcceleration(const JulianDate& jd,
                                  const Vector3D& pos,

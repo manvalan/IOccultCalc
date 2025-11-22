@@ -66,6 +66,22 @@ struct Vector3D {
         return Vector3D(x * scalar, y * scalar, z * scalar);
     }
     
+    Vector3D operator/(double scalar) const {
+        return Vector3D(x / scalar, y / scalar, z / scalar);
+    }
+    
+    double operator[](int i) const {
+        if (i == 0) return x;
+        if (i == 1) return y;
+        return z;
+    }
+    
+    double& operator[](int i) {
+        if (i == 0) return x;
+        if (i == 1) return y;
+        return z;
+    }
+    
     double dot(const Vector3D& other) const {
         return x * other.x + y * other.y + z * other.z;
     }

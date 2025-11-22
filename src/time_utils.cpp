@@ -133,4 +133,96 @@ double TimeUtils::lst(const JulianDate& jd, double longitude) {
     return lstRad;
 }
 
+// ============================================================================
+// Time Scale Conversions
+// ============================================================================
+
+JulianDate TimeUtils::ttToTDB(const JulianDate& jd_tt) {
+    // TDB - TT = formula di Fairhead & Bretagnon (1990)
+    // Oscillazione periodica dovuta all'orbita terrestre
+    
+    // Secoli giuliani da J2000.0
+    double T = (jd_tt.jd - 2451545.0) / 36525.0;
+    
+    // Formula approssimata (accurata a ~10 µs)
+    // Termine principale: oscillazione annuale
+    double g = 357.53 + 35999.050 * T;  // anomalia media Terra (gradi)
+    g *= M_PI / 180.0;  // → radianti
+    
+    // TDB - TT in secondi
+    double tdb_tt_sec = 0.001657 * std::sin(g) + 0.000014 * std::sin(2.0 * g);
+    
+    // Converti secondi → giorni
+    double tdb_tt_days = tdb_tt_sec / 86400.0;
+    
+    JulianDate jd_tdb;
+    jd_tdb.jd = jd_tt.jd + tdb_tt_days;
+    return jd_tdb;
+}
+
+JulianDate TimeUtils::tdbToTT(const JulianDate& jd_tdb) {
+    // Inversione approssimata (iterazione non necessaria per accuratezza ms)
+    double T = (jd_tdb.jd - 2451545.0) / 36525.0;
+    double g = 357.53 + 35999.050 * T;
+    g *= M_PI / 180.0;
+    
+    double tdb_tt_sec = 0.001657 * std::sin(g) + 0.000014 * std::sin(2.0 * g);
+    double tdb_tt_days = tdb_tt_sec / 86400.0;
+    
+    JulianDate jd_tt;
+    jd_tt.jd = jd_tdb.jd - tdb_tt_days;
+    return jd_tt;
+}
+
+int TimeUtils::getLeapSeconds(const JulianDate& jd) {
+    // Tabella leap seconds storica
+    // TAI - UTC = numero di secondi intercalari
+    
+    // Dal 2017-01-01 (JD 2457754.5) → 37 secondi
+    if (jd.jd >= 2457754.5) return 37;
+    
+    // Dal 2015-07-01 (JD 2457204.5) → 36 secondi
+    if (jd.jd >= 2457204.5) return 36;
+    
+    // Dal 2012-07-01 (JD 2456109.5) → 35 secondi
+    if (jd.jd >= 2456109.5) return 35;
+    
+    // Dal 2009-01-01 (JD 2454832.5) → 34 secondi
+    if (jd.jd >= 2454832.5) return 34;
+    
+    // Dal 2006-01-01 (JD 2453736.5) → 33 secondi
+    if (jd.jd >= 2453736.5) return 33;
+    
+    // Default per date antecedenti (approssimato)
+    if (jd.jd >= 2441317.5) {  // 1972-01-01
+        // Formula empirica per 1972-2006
+        double years = (jd.jd - 2441317.5) / 365.25;
+        return static_cast<int>(10 + years * 0.5);  // Circa 1 sec ogni 2 anni
+    }
+    
+    // Prima del 1972 (TAI non ancora definito)
+    return 0;
+}
+
+JulianDate TimeUtils::utcToTT(const JulianDate& jd_utc) {
+    // TT = TAI + 32.184 secondi (definizione)
+    // TAI = UTC + ΔAT (leap seconds)
+    // Quindi: TT = UTC + ΔAT + 32.184
+    
+    int leap_seconds = getLeapSeconds(jd_utc);
+    double tt_utc_sec = leap_seconds + 32.184;
+    double tt_utc_days = tt_utc_sec / 86400.0;
+    
+    JulianDate jd_tt;
+    jd_tt.jd = jd_utc.jd + tt_utc_days;
+    return jd_tt;
+}
+
+JulianDate TimeUtils::utcToTDB(const JulianDate& jd_utc) {
+    // Conversione diretta UTC → TDB
+    // UTC → TT → TDB
+    JulianDate jd_tt = utcToTT(jd_utc);
+    return ttToTDB(jd_tt);
+}
+
 } // namespace ioccultcalc

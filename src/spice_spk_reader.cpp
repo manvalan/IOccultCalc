@@ -35,10 +35,10 @@ public:
             close();
         }
         
-        // Carica frames kernel se necessario (per ECLIPJ2000_DE405)
+        // Carica frames kernel per ECLIPJ2000_DE441 (IAU 2006 obliquity, DE441-compatible)
         const char* home = getenv("HOME");
         if (home) {
-            std::string framesPath = std::string(home) + "/.ioccultcalc/ephemerides/eclipj2000_de405.tf";
+            std::string framesPath = std::string(home) + "/.ioccultcalc/ephemerides/eclipj2000_de441.tf";
             FILE* f = fopen(framesPath.c_str(), "r");
             if (f) {
                 fclose(f);
@@ -89,7 +89,7 @@ public:
         snprintf(targetStr, sizeof(targetStr), "%d", bodyId);
         snprintf(observerStr, sizeof(observerStr), "%d", centerId);
         
-        spkezr_c(targetStr, et, "ECLIPJ2000_DE405", "NONE", observerStr, state, &lt);
+        spkezr_c(targetStr, et, "ECLIPJ2000_DE441", "NONE", observerStr, state, &lt);
         
         if (failed_c()) {
             char msg[1841];

@@ -18,6 +18,7 @@
 
 #include "ioccultcalc/types.h"
 #include "ioccultcalc/jpl_ephemeris.h"
+#include "ioccultcalc/spice_spk_reader.h"
 #include <vector>
 #include <string>
 #include <memory>
@@ -276,6 +277,10 @@ private:
     // JPL DE ephemerides engine (sostituisce VSOP87)
     mutable JPLEphemerisReader jplReader_;
     bool jplInitialized_;
+    
+    // SPICE SPK reader per asteroidi (SB441-N16)
+    mutable SPICESPKReader spkReader_;
+    bool spkInitialized_;
     
     // Cache per posizioni planetarie (ottimizzazione)
     mutable std::map<std::pair<PerturbingBody, double>, Vector3D> positionCache_;

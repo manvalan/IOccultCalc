@@ -265,16 +265,21 @@ void OrbitFitter::computeEphemerides(const OrbitalElements& elements,
         debug_printed = true;
     }
     
+    // PERFORMANCE: Per evitare di propagare da epoca nominale a ogni osservazione
+    // (molto lento con 2215 obs e RA15), usiamo un approccio più efficiente:
+    // 1. Prima iterazione: usa Ephemeris (veloce ma impreciso)
+    // 2. Iterazioni successive: potremmo usare OrbitPropagator
+    // Per ora usiamo sempre Ephemeris per velocità
+    
+    pImpl->ephemeris.setElements(eqElements);
+    
     for (const auto& obs : observations.observations) {
-        // CRITICAL: Usa OrbitPropagator con RA15 + perturbazioni planetarie
-        // invece di Ephemeris che usa solo propagazione Keplerian 2-body
+        // Usa Ephemeris (Keplerian 2-body) per velocità
+        // TODO: Implementare propagazione efficiente con restart per usare RA15
+        EphemerisData ephData = pImpl->ephemeris.compute(obs.epoch);
         
-        // Propaga stato orbitale dall'epoca elementi all'epoca osservazione
-        OrbitState stateAtObs = pImpl->propagator.propagate(eqElements, obs.epoch);
-        
-        // Converti stato cartesiano in coordinate equatoriali (RA/Dec)
         // Posizione eliocentrica asteroide
-        Vector3D asteroidHelio = stateAtObs.position;
+        Vector3D asteroidHelio = ephData.heliocentricPos;
         
         // Posizione Terra
         Vector3D earthPos = Ephemeris::getEarthPosition(obs.epoch);

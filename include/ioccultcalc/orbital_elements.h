@@ -88,6 +88,37 @@ struct EquinoctialElements {
     static EquinoctialElements fromKeplerian(const OrbitalElements& orb);
 };
 
+// ===== FUNZIONI PER ORBIT DETERMINATION =====
+
+/**
+ * @brief Converte stato cartesiano (posizione + velocità) in elementi orbitali
+ * 
+ * @param position Posizione heliocentric [x, y, z] in AU
+ * @param velocity Velocità [vx, vy, vz] in AU/day
+ * @param mu Parametro gravitazionale (default: k² per Sole)
+ * @param epoch Epoca degli elementi
+ * @return OrbitalElements Elementi orbitali Kepleriani
+ */
+OrbitalElements cartesianToOrbitalElements(
+    const Vector3D& position,
+    const Vector3D& velocity,
+    double mu = 0.01720209895 * 0.01720209895,  // GAUSS_K²
+    const JulianDate& epoch = JulianDate());
+
+/**
+ * @brief Converte elementi orbitali in stato cartesiano
+ * 
+ * @param elements Elementi orbitali Kepleriani
+ * @param position Output: posizione [x, y, z] in AU
+ * @param velocity Output: velocità [vx, vy, vz] in AU/day
+ * @param mu Parametro gravitazionale (default: k² per Sole)
+ */
+void orbitalElementsToCartesian(
+    const OrbitalElements& elements,
+    Vector3D& position,
+    Vector3D& velocity,
+    double mu = 0.01720209895 * 0.01720209895);
+
 } // namespace ioccultcalc
 
 #endif // IOCCULTCALC_ORBITAL_ELEMENTS_H

@@ -24,16 +24,17 @@ static constexpr double GM_SUN_AU = GM_SUN / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * 
 static constexpr double C_LIGHT_AU_DAY = 299792.458 * DAY_TO_SEC / AU_TO_KM;  // AU/day
 
 // GM pianeti in AU³/day² (valori da JPL DE441)
+// https://ssd.jpl.nasa.gov/astro_par.html
 struct PlanetaryGM {
-    static constexpr double MERCURY = 22031.868551e3 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
-    static constexpr double VENUS   = 324858.592000e3 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
-    static constexpr double EARTH   = 398600.435436e3 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
-    static constexpr double MARS    = 42828.375816e3 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
-    static constexpr double JUPITER = 126712764.100000e3 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
-    static constexpr double SATURN  = 37940585.200000e3 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
-    static constexpr double URANUS  = 5794556.400000e3 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
-    static constexpr double NEPTUNE = 6836535.000000e3 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
-    static constexpr double MOON    = 4902.800076e3 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
+    static constexpr double MERCURY = 2.2031868551e4 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
+    static constexpr double VENUS   = 3.24858592000e5 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
+    static constexpr double EARTH   = 3.98600435436e5 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
+    static constexpr double MARS    = 4.2828375816e4 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
+    static constexpr double JUPITER = 1.26712764100e8 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
+    static constexpr double SATURN  = 3.7940585200e7 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
+    static constexpr double URANUS  = 5.794556400e6 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
+    static constexpr double NEPTUNE = 6.836535000e6 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
+    static constexpr double MOON    = 4.902800076e3 / (AU_TO_KM * AU_TO_KM * AU_TO_KM) * (DAY_TO_SEC * DAY_TO_SEC);
 };
 
 // GM asteroidi principali in AU³/day² (da JPL Small-Body Database)
@@ -69,12 +70,12 @@ public:
             jplReader.loadFile("");  // Usa backend VSOP87
         }
         
-        // Carica file asteroidi SB441-N16 (16 asteroidi massivi usati da JPL Horizons)
-        useAsteroidPerturbations = asteroidReader.ensureFileLoaded("sb441-n16.bsp");
+        // Carica file asteroidi (codes_300ast contiene i primi 300 asteroidi inclusi AST17)
+        useAsteroidPerturbations = asteroidReader.ensureFileLoaded("codes_300ast_20100725.bsp");
         if (useAsteroidPerturbations) {
-            std::cerr << "OrbitPropagator: Asteroid perturbations enabled (SB441-N16: 16 massive asteroids)" << std::endl;
+            std::cerr << "OrbitPropagator: Asteroid perturbations enabled (AST17: 17 massive asteroids matching OrbFit)" << std::endl;
         } else {
-            std::cerr << "OrbitPropagator: WARNING - Asteroid perturbations disabled (sb441-n16.bsp not found)" << std::endl;
+            std::cerr << "OrbitPropagator: WARNING - Asteroid perturbations disabled (codes_300ast_20100725.bsp not found)" << std::endl;
         }
     }
     
@@ -176,8 +177,8 @@ OrbitState OrbitPropagator::elementsToState(const EquinoctialElements& elements)
     double m12 = 2.0 * elements.p * elements.q / f;
     double m21 = 2.0 * elements.p * elements.q / f;
     double m22 = (1.0 + elements.p * elements.p - elements.q * elements.q) / f;
-    double m31 = 2.0 * elements.p / f;
-    double m32 = -2.0 * elements.q / f;
+    double m31 = -2.0 * elements.p / f;  // FIX: Changed sign for Z-axis
+    double m32 = 2.0 * elements.q / f;   // FIX: Changed sign for Z-axis
     
     double cos_wp = cos(omega_plus_Omega);
     double sin_wp = sin(omega_plus_Omega);
@@ -271,14 +272,27 @@ Vector3D OrbitPropagator::computeAcceleration(const JulianDate& jd,
                 const char* name;
             };
             
-            // 16 asteroidi massivi di SB441-N16 (stesso set usato da JPL Horizons)
-            // GM da JPL Small-Body Database (km³/s²), convertiti in AU³/day²
-            // Solo i 4 principali con copertura temporale completa
+            // 17 asteroidi massivi AST17 (stesso set usato da OrbFit)
+            // GM da Hilton 1997 (km³/s²), convertiti in AU³/day²
+            // Matching OrbFit's AST17 configuration
             Asteroid asteroids[] = {
-                {2000001, 62.6284e-12, "Ceres"},       // 1 Ceres
-                {2000002, 14.3e-12, "Pallas"},         // 2 Pallas
-                {2000004, 17.8e-12, "Vesta"},          // 4 Vesta
-                {2000010, 5.8e-12, "Hygiea"}           // 10 Hygiea
+                {2000001, 62.6284e-12, "Ceres"},         // 1 Ceres (4.76E-10 Msun)
+                {2000002, 14.3e-12, "Pallas"},           // 2 Pallas (1.08E-10 Msun)
+                {2000003, 1.82e-12, "Juno"},             // 3 Juno (1.49E-11 Msun)
+                {2000004, 17.8e-12, "Vesta"},            // 4 Vesta (1.34E-10 Msun)
+                {2000006, 0.85e-12, "Hebe"},             // 6 Hebe (7.0E-12 Msun)
+                {2000007, 0.79e-12, "Iris"},             // 7 Iris (6.48E-12 Msun)
+                {2000010, 5.8e-12, "Hygiea"},            // 10 Hygiea (4.39E-11 Msun)
+                {2000015, 0.38e-12, "Eunomia"},          // 15 Eunomia (2.9E-12 Msun)
+                {2000016, 0.36e-12, "Psyche"},           // 16 Psyche (2.7E-12 Msun)
+                {2000029, 0.13e-12, "Amphitrite"},       // 29 Amphitrite (1.0E-12 Msun)
+                {2000052, 0.34e-12, "Europa"},           // 52 Europa (2.6E-12 Msun)
+                {2000065, 0.15e-12, "Cybele"},           // 65 Cybele (1.1E-12 Msun)
+                {2000087, 0.15e-12, "Sylvia"},           // 87 Sylvia (1.1E-12 Msun)
+                {2000088, 0.16e-12, "Thisbe"},           // 88 Thisbe (1.2E-12 Msun)
+                {2000511, 0.39e-12, "Davida"},           // 511 Davida (3.0E-12 Msun)
+                {2000704, 0.34e-12, "Interamnia"},       // 704 Interamnia (2.6E-12 Msun)
+                {2134340, 871.0e-12, "Pluto"}            // 134340 Pluto (6.58E-9 Msun)
             };
             
             for (const auto& ast : asteroids) {
@@ -438,8 +452,8 @@ OrbitState OrbitPropagator::integrateRA15(const OrbitState& state0, const Julian
     ra15opts.llev = 10;                              // ss = 1e-10 (precisione massima)
     ra15opts.h_init = options_.stepSize;             // Step iniziale dall'utente
     ra15opts.eprk = options_.tolerance;              // Tolleranza convergenza
-    ra15opts.lit1 = 10;                              // Max iterazioni primo step
-    ra15opts.lit2 = 4;                               // Max iterazioni step successivi
+    ra15opts.lit1 = 20;                              // Max iterazioni primo step (OrbFit usa 20)
+    ra15opts.lit2 = 20;                              // Max iterazioni step successivi (OrbFit usa 20)
     ra15opts.fixed_step = false;                     // Step adattivo
     ra15opts.max_steps = options_.maxSteps;
     ra15opts.verbose = false;                        // Quiet per produzione

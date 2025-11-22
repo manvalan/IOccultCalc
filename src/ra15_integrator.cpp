@@ -144,7 +144,7 @@ double RA15Integrator::iterate(
 {
     double t2 = t * t;  // Per equazioni secondo ordine
     bool ncl = false;   // false = equazioni secondo ordine y"=f(y,t)
-    bool npq = true;    // true per nclass=-2 (secondo ordine standard)
+    bool npq = false;   // ← FIX: false per aggiornare anche velocità durante iterazioni
     
     // w1 per equazioni secondo ordine (OrbFit linea 734)
     double w1 = 0.5;  // half

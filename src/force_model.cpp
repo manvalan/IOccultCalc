@@ -103,14 +103,16 @@ ForceModelConfig ForceModelConfig::fullConfig() {
 // ForceModel
 // ============================================================================
 
-ForceModel::ForceModel() : config_(ForceModelConfig::standardConfig()), jplInitialized_(false) {
+ForceModel::ForceModel() : config_(ForceModelConfig::standardConfig()), jplInitialized_(false), spkInitialized_(false) {
     initializeBodyDatabase();
     // JPL viene inizializzato on-demand o tramite initializeJPL()
+    // SPK per asteroidi viene caricato se necessario
 }
 
-ForceModel::ForceModel(const ForceModelConfig& config) : config_(config), jplInitialized_(false) {
+ForceModel::ForceModel(const ForceModelConfig& config) : config_(config), jplInitialized_(false), spkInitialized_(false) {
     initializeBodyDatabase();
     // JPL viene inizializzato on-demand o tramite initializeJPL()
+    // SPK per asteroidi viene caricato se necessario
 }
 
 void ForceModel::initializeBodyDatabase() {
@@ -362,9 +364,31 @@ Vector3D ForceModel::getBodyPosition(PerturbingBody body, double jd) const {
     } else if (body == PerturbingBody::CERES || 
                body == PerturbingBody::PALLAS || 
                body == PerturbingBody::VESTA) {
-        // Grandi asteroidi: JPL DE441 include 343 asteroidi principali
-        // TODO: implementare lookup per ID asteroide in JPL
-        pos = Vector3D(0, 0, 0);
+        // Grandi asteroidi: usa SPK (SB441-N16.bsp)
+        if (!spkInitialized_) {
+            // Lazy initialization: carica SB441-N16.bsp
+            std::string spkPath = "sb441-n16.bsp";  // Cercare in data directory
+            const_cast<ForceModel*>(this)->spkInitialized_ = 
+                const_cast<ForceModel*>(this)->spkReader_.ensureFileLoaded(spkPath);
+        }
+        
+        if (spkInitialized_) {
+            // NAIF IDs: Ceres=2000001, Pallas=2000002, Vesta=2000004
+            int naifId = 0;
+            if (body == PerturbingBody::CERES) naifId = 2000001;
+            else if (body == PerturbingBody::PALLAS) naifId = 2000002;
+            else if (body == PerturbingBody::VESTA) naifId = 2000004;
+            
+            try {
+                // getPosition ritorna posizione eliocentrica (centerId=10)
+                pos = spkReader_.getPosition(naifId, jd, 10);
+            } catch (...) {
+                // Se fallisce, restituisci origine (zero perturbation)
+                pos = Vector3D(0, 0, 0);
+            }
+        } else {
+            pos = Vector3D(0, 0, 0);
+        }
     } else {
         // Pianeti e Luna: usa JPL DE
         JPLBody jplBody = toJPLBody(body);

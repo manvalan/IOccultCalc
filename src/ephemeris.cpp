@@ -138,14 +138,29 @@ void Ephemeris::propagateOrbit(const JulianDate& targetJD,
     double vy_ref = vx_orb * sin_wp + vy_orb * cos_wp;
     double vz_ref = 0;
     
-    // Applica trasformazione al sistema equatoriale
-    helioPos.x = m11 * x_ref + m12 * y_ref + m13 * z_ref;
-    helioPos.y = m21 * x_ref + m22 * y_ref + m23 * z_ref;
-    helioPos.z = m31 * x_ref + m32 * y_ref + m33 * z_ref;
+    // Applica trasformazione al frame degli elementi equinoziali
+    // NOTA: Elementi equinoziali da AstDyS sono in frame eclittico J2000 (ECLM)
+    double x_ecl = m11 * x_ref + m12 * y_ref + m13 * z_ref;
+    double y_ecl = m21 * x_ref + m22 * y_ref + m23 * z_ref;
+    double z_ecl = m31 * x_ref + m32 * y_ref + m33 * z_ref;
     
-    helioVel.x = m11 * vx_ref + m12 * vy_ref + m13 * vz_ref;
-    helioVel.y = m21 * vx_ref + m22 * vy_ref + m23 * vz_ref;
-    helioVel.z = m31 * vx_ref + m32 * vy_ref + m33 * vz_ref;
+    double vx_ecl = m11 * vx_ref + m12 * vy_ref + m13 * vz_ref;
+    double vy_ecl = m21 * vx_ref + m22 * vy_ref + m23 * vz_ref;
+    double vz_ecl = m31 * vx_ref + m32 * vy_ref + m33 * vz_ref;
+    
+    // Converti da eclittico a equatoriale (J2000)
+    // Rotazione attorno asse X di ε = 23.4392811° (obliquità eclittica J2000)
+    constexpr double OBLIQUITY_J2000 = 23.4392911 * M_PI / 180.0;  // rad
+    double cos_eps = std::cos(OBLIQUITY_J2000);
+    double sin_eps = std::sin(OBLIQUITY_J2000);
+    
+    helioPos.x = x_ecl;
+    helioPos.y = y_ecl * cos_eps - z_ecl * sin_eps;
+    helioPos.z = y_ecl * sin_eps + z_ecl * cos_eps;
+    
+    helioVel.x = vx_ecl;
+    helioVel.y = vy_ecl * cos_eps - vz_ecl * sin_eps;
+    helioVel.z = vy_ecl * sin_eps + vz_ecl * cos_eps;
 }
 
 double Ephemeris::solveKeplerEquation(double M, double e, double tolerance) {

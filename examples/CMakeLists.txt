@@ -28,6 +28,13 @@ target_link_libraries(debug_propagator ioccultcalc)
 add_executable(compare_propagation compare_propagation.cpp)
 target_link_libraries(compare_propagation ioccultcalc)
 
+# Obsoleto - API cambiata
+# add_executable(debug_herget_inclination debug_herget_inclination.cpp)
+# target_link_libraries(debug_herget_inclination ioccultcalc)
+
+add_executable(test_frame_conversion test_frame_conversion.cpp)
+target_link_libraries(test_frame_conversion ioccultcalc)
+
 add_executable(validate_with_jpl validate_with_jpl.cpp)
 target_link_libraries(validate_with_jpl ioccultcalc)
 
@@ -48,3 +55,84 @@ target_link_libraries(test_nongrav ioccultcalc)
 
 add_executable(fit_and_propagate fit_and_propagate.cpp)
 target_link_libraries(fit_and_propagate ioccultcalc)
+
+add_executable(test_jpl659_propagation test_jpl659_propagation.cpp)
+target_link_libraries(test_jpl659_propagation ioccultcalc)
+
+add_executable(test_jpl659_short test_jpl659_short.cpp)
+target_link_libraries(test_jpl659_short ioccultcalc)
+
+add_executable(test_initial_orbit test_initial_orbit.cpp)
+target_link_libraries(test_initial_orbit ioccultcalc)
+
+add_executable(test_eros_rwo test_eros_rwo.cpp)
+target_link_libraries(test_eros_rwo ioccultcalc)
+
+add_executable(test_eros_complete test_eros_complete.cpp)
+target_link_libraries(test_eros_complete ioccultcalc)
+
+add_executable(test_lambert test_lambert.cpp)
+target_link_libraries(test_lambert ioccultcalc)
+
+add_executable(test_coordinates_debug test_coordinates_debug.cpp)
+target_link_libraries(test_coordinates_debug ioccultcalc)
+
+add_executable(test_herget_debug test_herget_debug.cpp)
+target_link_libraries(test_herget_debug ioccultcalc)
+
+add_executable(test_orbfit test_orbfit.cpp)
+target_link_libraries(test_orbfit ioccultcalc)
+
+add_executable(test_iers test_iers.cpp)
+target_link_libraries(test_iers ioccultcalc)
+
+add_executable(test_asteroid_perturb test_asteroid_perturb.cpp)
+target_link_libraries(test_asteroid_perturb ioccultcalc)
+
+add_executable(test_relativity test_relativity.cpp)
+target_link_libraries(test_relativity ioccultcalc)
+
+add_executable(test_pompeia_precision test_pompeia_precision.cpp)
+target_link_libraries(test_pompeia_precision ioccultcalc)
+
+add_executable(test_astdys_fit_propagate test_astdys_fit_propagate.cpp)
+target_link_libraries(test_astdys_fit_propagate ioccultcalc)
+
+add_executable(test_propagator_validation test_propagator_validation.cpp)
+target_link_libraries(test_propagator_validation ioccultcalc)
+
+add_executable(test_rk4_three_body test_rk4_three_body.cpp)
+target_link_libraries(test_rk4_three_body ioccultcalc)
+
+add_executable(test_perturbation_debug test_perturbation_debug.cpp)
+target_link_libraries(test_perturbation_debug ioccultcalc)
+
+add_executable(test_stepsize_optimization test_stepsize_optimization.cpp)
+target_link_libraries(test_stepsize_optimization ioccultcalc)
+
+add_executable(test_orbfit_comparison test_orbfit_comparison.cpp)
+target_link_libraries(test_orbfit_comparison ioccultcalc)
+
+add_executable(test_initial_state_eros test_initial_state_eros.cpp)
+target_link_libraries(test_initial_state_eros ioccultcalc)
+
+add_executable(test_orbfit_backward test_orbfit_backward.cpp)
+target_link_libraries(test_orbfit_backward ioccultcalc)
+
+add_executable(test_astdys_vs_orbfit test_astdys_vs_orbfit.cpp)
+target_link_libraries(test_astdys_vs_orbfit ioccultcalc)
+
+add_executable(test_orbfit_fitted_elements test_orbfit_fitted_elements.cpp)
+target_link_libraries(test_orbfit_fitted_elements ioccultcalc)
+
+add_executable(test_frame_roundtrip test_frame_roundtrip.cpp)
+target_link_libraries(test_frame_roundtrip ioccultcalc)
+
+add_executable(test_asteroid_perturbations test_asteroid_perturbations.cpp)
+target_link_libraries(test_asteroid_perturbations ioccultcalc)
+
+add_executable(test_barycentric_heliocentric test_barycentric_heliocentric.cpp)
+target_link_libraries(test_barycentric_heliocentric ioccultcalc)
+
+add_executable(test_ast17_availability test_ast17_availability.cpp)
+target_link_libraries(test_ast17_availability ioccultcalc)
