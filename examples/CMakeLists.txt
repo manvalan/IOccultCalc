@@ -4,6 +4,10 @@ target_link_libraries(example_basic ioccultcalc)
 add_executable(example_search search_occultations.cpp)
 target_link_libraries(example_search ioccultcalc)
 
+# IOC_SPICE wrapper test
+add_executable(test_ioc_spice_wrapper test_ioc_spice_wrapper.cpp)
+target_link_libraries(test_ioc_spice_wrapper ioccultcalc)
+
 add_executable(example_orbit_improvement orbit_improvement.cpp)
 target_link_libraries(example_orbit_improvement ioccultcalc)
 

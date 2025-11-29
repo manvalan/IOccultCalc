@@ -48,6 +48,7 @@ set(SOURCES
     src/astdys_client.cpp
     # gaia_client.cpp and gaia_cache.cpp now provided by IOC_GaiaLib via adapter
     src/gaia_adapter.cpp
+    src/ioc_spice_wrapper.cpp
     src/orbital_elements.cpp
     src/ephemeris.cpp
     src/occultation_predictor.cpp
