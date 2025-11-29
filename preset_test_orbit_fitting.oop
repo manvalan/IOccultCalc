@@ -1,0 +1,107 @@
+! =============================================================================
+! Preset per test orbit fitting con asteroide (11234) 1999 JS82
+! =============================================================================
+! Test completo di:
+! 1. Caricamento elementi da file .eq1 (AstDyS - formato equinoziale)
+! 2. Propagazione con RKF78 + perturbazioni planetarie
+! 3. Predizione occultazioni gennaio 2026
+! =============================================================================
+
+general.
+    ! Asteroide
+    .asteroid_number = 11234
+    .asteroid_name = '1999 JS82'
+    
+    ! Epoca degli elementi dal file .eq1
+    ! MJD 61000.0 = 2025-11-20
+    .epoch_mjd = 61000.0
+    
+    ! Elementi orbitali (da 11234.eq1 - convertiti da equinoziali)
+    .semimajor_axis_au = 2.680854
+    .eccentricity = 0.04893825
+    .inclination_deg = 12.7744
+    .ascending_node_deg = 112.5386
+    .perihelion_arg_deg = 289.6601
+    .mean_anomaly_deg = 193.6408
+    
+    ! Propagatore: RKF78 per massima accuratezza
+    .propagator = 'RKF78'
+    .step_size_days = 0.1
+    .tolerance = 1.0e-12
+    
+    ! Output
+    .output_format = 'iota'
+    .verbose = .TRUE.
+
+propagator.
+    ! Perturbazioni planetarie ESSENZIALI
+    .use_planetary_perturbations = .TRUE.
+    
+    ! Pianeti da includere (tutti 8)
+    .include_mercury = .TRUE.
+    .include_venus = .TRUE.
+    .include_earth = .TRUE.
+    .include_mars = .TRUE.
+    .include_jupiter = .TRUE.
+    .include_saturn = .TRUE.
+    .include_uranus = .TRUE.
+    .include_neptune = .TRUE.
+    
+    ! Correzioni relativistiche
+    .use_relativistic_corrections = .TRUE.
+    
+    ! Effemeridi JPL DE441
+    .ephemeris_file = 'de441_part-1.bsp'
+
+timespan.
+    ! Test periodo gennaio 2026 (±60 giorni da epoca)
+    .start_date = '2025-12-01'
+    .end_date = '2026-02-28'
+    .time_step_hours = 1.0
+
+geographic_filter.
+    ! Italia
+    .enabled = .TRUE.
+    .min_latitude = 36.0
+    .max_latitude = 47.0
+    .min_longitude = 6.0
+    .max_longitude = 19.0
+
+magnitude_filter.
+    ! Filtro stelle visibili
+    .min_star_magnitude = 4.0
+    .max_star_magnitude = 16.0
+    .min_drop_magnitude = 0.3
+
+occultation_geometry.
+    ! Geometria occultazioni
+    .min_duration_seconds = 0.1
+    .max_shadow_velocity_km_s = 50.0
+    .min_elongation_deg = 45.0
+
+star_catalog.
+    ! Catalogo Gaia EDR3
+    .catalog = 'gaia_edr3'
+    .use_proper_motion = .TRUE.
+    .max_search_radius_deg = 2.0
+
+orbit_fitting.
+    ! Fitting DISABILITATO per questo test
+    ! (useremmo elementi già fittati da AstDyS)
+    .enable_fitting = .FALSE.
+    
+    ! Se abilitato in futuro:
+    .observation_source = 'mpc'
+    .min_observations = 50
+    .outlier_threshold_sigma = 3.0
+    .min_rms_arcsec = 0.3
+    .max_rms_arcsec = 2.0
+    .weight_by_accuracy = .TRUE.
+    .prefer_recent = .TRUE.
+    .recent_weight_factor = 1.5
+
+output.
+    .output_file = 'test_orbit_fitting_results.txt'
+    .format = 'detailed'
+    .include_uncertainty = .TRUE.
+    .coordinate_system = 'J2000'

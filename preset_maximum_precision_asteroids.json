@@ -1,0 +1,182 @@
+{
+  "preset_name": "Maximum Precision - Selected Asteroids",
+  "description": "Configurazione con massima precisione per analisi dettagliata di asteroidi selezionati. Input: lista asteroidi. Output: tutti i formati disponibili (JSON, XML, KML, JPG).",
+  "version": "2.1.0-rkf78",
+  
+  "propagator": {
+    "integrator": "RKF78",
+    "stepSize": 0.05,
+    "tolerance": 1e-13,
+    "usePlanetaryPerturbations": true,
+    "useAsteroidalPerturbations": true,
+    "asteroidalPerturbations": {
+      "includeMassive": true,
+      "massThreshold": 1e20,
+      "majorPerturbers": [1, 2, 4, 10, 15, 16, 52, 65, 87, 88, 511, 704]
+    },
+    "useRelativisticCorrections": true,
+    "ephemerisType": "JPL_DE441",
+    "maxIterations": 100000,
+    "outputInterval": 0.1
+  },
+  
+  "predictor": {
+    "startDate": "2026-01-01",
+    "endDate": "2026-01-31",
+    "observer": {
+      "latitude": 45.4642,
+      "longitude": 9.1900,
+      "altitude": 239.0,
+      "name": "High Precision Observatory"
+    },
+    "constraints": {
+      "minAltitude": 20.0,
+      "maxMagnitude": 18.0,
+      "minMagnitudeDrop": 0.1,
+      "maxShadowWidth": 1000.0,
+      "minDuration": 0.01,
+      "searchRadius": 5.0,
+      "maxDistanceFromPath": 2000.0
+    },
+    "starCatalog": "GAIA_DR3",
+    "starCatalogConfig": {
+      "gaia": {
+        "dataRelease": "EDR3",
+        "minMagnitude": 6.0,
+        "maxMagnitude": 21.0,
+        "useProperMotion": true,
+        "useParallax": true,
+        "applySystematicCorrections": true,
+        "cacheEnabled": true,
+        "cachePath": "~/.ioccultcalc/gaia_cache",
+        "cacheSize": 10000
+      }
+    },
+    "parallel": {
+      "enabled": true,
+      "numThreads": 0
+    },
+    "optimization": {
+      "useApproximatePositions": false,
+      "skipLowProbabilityEvents": false,
+      "probabilityThreshold": 0.001,
+      "refinementIterations": 5
+    },
+    "occultationAnalysis": {
+      "computeShadowPath": true,
+      "shadowPathResolution": 1.0,
+      "computeUncertaintyEllipse": true,
+      "computeFresnel": true,
+      "computeDiffraction": true,
+      "atmosphericRefraction": true
+    }
+  },
+  
+  "asteroidInput": {
+    "inputType": "file",
+    "inputFile": "./asteroids_selected.txt",
+    "format": "mpc_numbered",
+    "comment": "Un asteroide per riga: numero o designazione (es: 1, 433, 2010 AB123)"
+  },
+  
+  "database": {
+    "path": "~/.ioccultcalc/asteroids.db",
+    "source": "MPC",
+    "autoUpdate": true,
+    "updateInterval": 1,
+    "cacheResults": true,
+    "cachePath": "~/.ioccultcalc/cache",
+    "cacheExpiration": 43200
+  },
+  
+  "output": {
+    "formats": ["JSON", "XML", "KML", "JPG", "ASTNUM_LIST"],
+    "directory": "./results/high_precision",
+    "filenamePrefix": "occultation_",
+    "includeTimestamp": true,
+    "verbosity": 3,
+    "compression": true,
+    "options": {
+      "json": {
+        "prettyPrint": true,
+        "includeMetadata": true,
+        "includeStatistics": true,
+        "includeEphemeris": true,
+        "includeUncertainties": true,
+        "includeShadowPath": true
+      },
+      "astnum_list": {
+        "filename": "selected_asteroids_results.txt",
+        "includeEventCount": true,
+        "includeNames": true,
+        "sortBy": "priority"
+      },
+      "xml": {
+        "prettyPrint": true,
+        "includeSchema": true,
+        "version": "1.0",
+        "encoding": "UTF-8",
+        "includeMetadata": true
+      },
+      "kml": {
+        "includeGroundTrack": true,
+        "includeUncertaintyEllipse": true,
+        "includeShadowPath": true,
+        "pathWidth": 50.0,
+        "uncertaintyOpacity": 0.3,
+        "styleTemplate": "default",
+        "includeDescription": true,
+        "altitudeMode": "clampToGround"
+      },
+      "jpg": {
+        "width": 1920,
+        "height": 1080,
+        "dpi": 300,
+        "quality": 95,
+        "includeGrid": true,
+        "includeScale": true,
+        "includeTitle": true,
+        "includeMetadata": true,
+        "colorScheme": "professional",
+        "mapProjection": "equirectangular",
+        "showStarField": true,
+        "showAsteroidPath": true,
+        "showShadowPath": true,
+        "showUncertaintyBands": true
+      }
+    }
+  },
+  
+  "performance": {
+    "cacheEphemerides": true,
+    "cacheDuration": 86400,
+    "maxMemoryUsage": 8192,
+    "useMemoryMapping": true,
+    "batchSize": 10
+  },
+  
+  "logging": {
+    "level": "DEBUG",
+    "file": "./logs/high_precision.log",
+    "console": true,
+    "includeTimestamp": true,
+    "includeThreadId": true,
+    "rotateSize": 10485760,
+    "maxBackups": 5
+  },
+  
+  "validation": {
+    "checkOrbitQuality": true,
+    "requireUncertaintyEstimate": true,
+    "compareWithExternalEphemeris": false,
+    "validateStarPositions": true
+  },
+  
+  "reporting": {
+    "generateSummary": true,
+    "summaryFormat": "markdown",
+    "includePerformanceMetrics": true,
+    "includeAccuracyEstimates": true,
+    "compareWithPreviousRuns": false
+  }
+}

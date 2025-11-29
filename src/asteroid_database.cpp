@@ -150,24 +150,57 @@ bool AsteroidDatabase::saveToFile(const std::string& path) {
 AsteroidProperties AsteroidDatabase::parseMPCExtendedJson(const nlohmann::json& j) {
     AsteroidProperties props;
     
-    if (j.contains("number")) props.number = j["number"];
-    if (j.contains("name")) props.name = j["name"];
-    if (j.contains("designation")) props.designation = j["designation"];
-    if (j.contains("diameter")) {
-        props.diameter = j["diameter"];
-        props.has_diameter = true;
+    // MPC Extended Format Fields
+    // Number - Extract from "(123)" format
+    if (j.contains("Number")) {
+        std::string numStr = j["Number"];
+        // Remove parentheses "(1)" -> "1"
+        numStr.erase(std::remove(numStr.begin(), numStr.end(), '('), numStr.end());
+        numStr.erase(std::remove(numStr.begin(), numStr.end(), ')'), numStr.end());
+        try {
+            props.number = std::stoi(numStr);
+        } catch (...) {}
     }
-    if (j.contains("H")) props.H = j["H"];
-    if (j.contains("albedo")) {
-        props.albedo = j["albedo"];
-        props.has_albedo = true;
+    
+    // Name
+    if (j.contains("Name")) {
+        props.name = j["Name"];
     }
+    
+    // Designation
+    if (j.contains("Principal_desig")) {
+        props.designation = j["Principal_desig"];
+    }
+    
+    // H magnitude (absolute magnitude)
+    if (j.contains("H")) {
+        props.H = j["H"];
+    }
+    
+    // Orbital elements (for filtering)
     if (j.contains("a")) props.a = j["a"];
     if (j.contains("e")) props.e = j["e"];
     if (j.contains("i")) props.i = j["i"];
-    if (j.contains("rotation_period")) props.rotation_period = j["rotation_period"];
-    if (j.contains("orbit_class")) props.orbit_class = j["orbit_class"];
-    if (j.contains("spectral_type")) props.spectral_type = j["spectral_type"];
+    
+    // Orbit type (MBA, NEA, etc.)
+    if (j.contains("Orbit_type")) {
+        props.orbit_class = j["Orbit_type"];
+    }
+    
+    // Additional useful fields
+    if (j.contains("G")) {
+        // Slope parameter (for magnitude calculation)
+        // Not directly used but good to preserve
+    }
+    
+    // Estimate diameter from H magnitude if not provided
+    // Using standard formula: D = 1329 * 10^(-H/5) / sqrt(albedo)
+    // Assuming typical albedo 0.15 for C-type asteroids
+    if (!props.has_diameter && props.H > 0) {
+        double albedo = 0.15; // Default albedo
+        props.diameter = 1329.0 * std::pow(10.0, -props.H / 5.0) / std::sqrt(albedo);
+        props.has_diameter = true;
+    }
     
     return props;
 }
@@ -330,6 +363,7 @@ int AsteroidDatabase::importFromJson(const std::string& inputPath, bool merge) {
     try {
         std::ifstream file(inputPath);
         if (!file.is_open()) {
+            std::cerr << "Cannot open file: " << inputPath << std::endl;
             return 0;
         }
         
@@ -341,7 +375,26 @@ int AsteroidDatabase::importFromJson(const std::string& inputPath, bool merge) {
         }
         
         int count = 0;
-        if (j.contains("asteroids")) {
+        
+        // Check if MPC Extended Format (array of objects)
+        if (j.is_array()) {
+            std::cout << "Parsing MPC Extended Format (array)..." << std::endl;
+            for (const auto& item : j) {
+                AsteroidProperties props = parseMPCExtendedJson(item);
+                if (props.number > 0) {
+                    asteroids_[props.number] = props;
+                    count++;
+                }
+                
+                // Progress every 10k
+                if (count % 10000 == 0) {
+                    std::cout << "  Loaded " << count << " asteroids..." << std::endl;
+                }
+            }
+        }
+        // Legacy format: {"asteroids": {...}}
+        else if (j.contains("asteroids")) {
+            std::cout << "Parsing legacy format (object)..." << std::endl;
             for (auto& [key, value] : j["asteroids"].items()) {
                 int number = std::stoi(key);
                 AsteroidProperties props = parseMPCExtendedJson(value);
@@ -350,6 +403,12 @@ int AsteroidDatabase::importFromJson(const std::string& inputPath, bool merge) {
                 count++;
             }
         }
+        else {
+            std::cerr << "Unknown JSON format" << std::endl;
+            return 0;
+        }
+        
+        std::cout << "✓ Loaded " << count << " asteroids from MPC data" << std::endl;
         
         updateStats();
         return count;

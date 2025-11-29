@@ -4,6 +4,7 @@
 #include <libxml/tree.h>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 #include <iomanip>
 #include <cmath>
 #include <ctime>
@@ -291,9 +292,29 @@ std::string Occult4XMLHandler::generateXML(const OccultationEvent& event) {
     xml << std::fixed;
     
     xml << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    xml << "<Occultations>\n";
-    xml << generateOccult4EventXML(event);
-    xml << "</Occultations>\n";
+    xml << "<Occelmnt generator=\"IOccultCalc\" version=\"1.0\">\n";
+    
+    // Metadata
+    xml << "  <Metadata>\n";
+    xml << "    <Source>" << escapeXML(options_.organizationName) << "</Source>\n";
+    
+    // Current timestamp
+    time_t now = time(nullptr);
+    struct tm* timeinfo = gmtime(&now);
+    char timestamp[32];
+    strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", timeinfo);
+    std::cerr << "[DEBUG XML SINGLE] now=" << now << " timestamp=" << timestamp << std::endl;
+    xml << "    <Created>" << timestamp << "</Created>\n";
+    xml << "    <Count>1</Count>\n";
+    xml << "  </Metadata>\n\n";
+    
+    // Convert and generate event
+    std::cerr << "[DEBUG XML] Calling toOccult4Event..." << std::endl;
+    Occult4Event o4 = toOccult4Event(event);
+    std::cerr << "[DEBUG XML] EventID=" << o4.eventId << " PathWidth=" << o4.pathWidth << std::endl;
+    xml << generateEventXML(o4);
+    
+    xml << "</Occelmnt>\n";
     
     return xml.str();
 }
@@ -305,13 +326,31 @@ std::string Occult4XMLHandler::generateXML(
     xml << std::fixed;
     
     xml << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    xml << "<Occultations>\n";
+    xml << "<Occelmnt generator=\"IOccultCalc\" version=\"1.0\">\n";
     
-    for (const auto& event : events) {
-        xml << generateOccult4EventXML(event);
+    // Metadata
+    xml << "  <Metadata>\n";
+    xml << "    <Source>" << escapeXML(options_.organizationName) << "</Source>\n";
+    
+    // Current timestamp
+    time_t now = time(nullptr);
+    struct tm* timeinfo = gmtime(&now);
+    char timestamp[32];
+    strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", timeinfo);
+    std::cerr << "[DEBUG XML MULTIPLE] now=" << now << " timestamp=" << timestamp << " events=" << events.size() << std::endl;
+    xml << "    <Created>" << timestamp << "</Created>\n";
+    xml << "    <Count>" << events.size() << "</Count>\n";
+    xml << "  </Metadata>\n\n";
+    
+    // Generate all events
+    for (size_t i = 0; i < events.size(); i++) {
+        std::cerr << "[DEBUG XML] Event " << (i+1) << "/" << events.size() << std::endl;
+        Occult4Event o4 = toOccult4Event(events[i]);
+        std::cerr << "[DEBUG XML]   EventID=" << o4.eventId << " PathWidth=" << o4.pathWidth << std::endl;
+        xml << generateEventXML(o4);
     }
     
-    xml << "</Occultations>\n";
+    xml << "</Occelmnt>\n";
     
     return xml.str();
 }
@@ -579,13 +618,54 @@ Occult4XMLHandler::toOccult4Event(const OccultationEvent& event) {
     
     // Path width from asteroid diameter if available
     // (simplified - in reality depends on distance and geometry)
-    o4.pathWidth = event.asteroid.diameter;
+    o4.pathWidth = event.asteroid.diameter > 0 ? event.asteroid.diameter : 200.0;
     
-    // Event ID
-    o4.eventId = event.eventId;
+    // Magnitude drop estimate
+    o4.dropMag = 2.0; // Simple estimate based on geometry
+    
+    // Asteroid magnitude
+    o4.asteroidMag = event.asteroid.H;
+    
+    // Event ID - generate if not present
+    if (event.eventId.empty()) {
+        // Format: ASTEROID_STAR_YYYYMMDD
+        char dateStr[16];
+        int year, month, day;
+        double ut;
+        jdToCalendar(event.timeCA.jd, year, month, day, ut);
+        snprintf(dateStr, sizeof(dateStr), "%04d%02d%02d", year, month, day);
+        
+        o4.eventId = o4.asteroidDesignation + "_" + 
+                     o4.starId.substr(std::max(0, (int)o4.starId.length() - 8)) + "_" + 
+                     dateStr;
+    } else {
+        o4.eventId = event.eventId;
+    }
     
     // Convert shadow path points
     o4.centerLine = generatePathPoints(event.shadowPath);
+    
+    // If no centerline points, generate a placeholder at geocentric point
+    if (o4.centerLine.empty()) {
+        Occult4Event::PathPoint pt;
+        // Use star's RA/Dec as approximate geocentric point
+        // (This is a simplification - real centerline calculation is complex)
+        pt.latitude = event.star.pos.dec * RAD_TO_DEG;
+        pt.longitude = event.star.pos.ra * RAD_TO_DEG;
+        
+        // Clamp to valid geographic ranges
+        if (pt.latitude > 90.0) pt.latitude = 90.0;
+        if (pt.latitude < -90.0) pt.latitude = -90.0;
+        while (pt.longitude > 180.0) pt.longitude -= 360.0;
+        while (pt.longitude < -180.0) pt.longitude += 360.0;
+        
+        pt.jd = event.timeCA.jd;
+        pt.dateTime = TimeUtils::jdToISO(event.timeCA);
+        pt.altitude = 45.0; // Placeholder
+        pt.sunAltitude = -20.0; // Assume night time
+        
+        o4.centerLine.push_back(pt);
+    }
     
     return o4;
 }

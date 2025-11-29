@@ -1,0 +1,133 @@
+{
+  "preset_name": "High Precision - December 2025",
+  "description": "Massima precisione con orbit fitting, input da lista scan veloce, export multipli (JSON/XML/KML)",
+  "version": "2.1.0",
+  
+  "propagator": {
+    "integrator": "RKF78",
+    "stepSize": 0.01,
+    "tolerance": 1e-12,
+    "usePlanetaryPerturbations": true,
+    "useAsteroidalPerturbations": true,
+    "useRelativisticCorrections": true,
+    "ephemerisType": "JPL_DE441",
+    "maxIterations": 100000,
+    "outputInterval": 0.1
+  },
+  
+  "predictor": {
+    "startDate": "2025-12-01",
+    "endDate": "2025-12-31",
+    "observer": {
+      "latitude": 43.0,
+      "longitude": 12.0,
+      "altitude": 0.0,
+      "name": "Centro Italia"
+    },
+    "constraints": {
+      "minAltitude": 15.0,
+      "maxMagnitude": 14.0,
+      "minMagnitudeDrop": 0.3,
+      "maxShadowWidth": 800.0,
+      "minDuration": 0.05,
+      "searchRadius": 5.0,
+      "maxDistanceFromPath": 1000.0
+    },
+    "starCatalog": "GAIA_DR3",
+    "parallel": {
+      "enabled": true,
+      "numThreads": 0
+    },
+    "optimization": {
+      "useApproximatePositions": false,
+      "skipLowProbabilityEvents": false,
+      "probabilityThreshold": 0.0
+    }
+  },
+  
+  "asteroidFilter": {
+    "enabled": true,
+    "source": "file",
+    "listFile": "asteroids_fast_scan.txt",
+    "criteria": []
+  },
+  
+  "orbitFitting": {
+    "enabled": true,
+    "method": "least_squares",
+    "observationsPath": "mpcorb/rwo",
+    "elementsPath": "mpcorb/eq1",
+    "autoDownload": true,
+    "maxIterations": 100,
+    "convergenceThreshold": 1e-8,
+    "useWeights": true,
+    "outlierRejection": true,
+    "outlierThreshold": 3.0
+  },
+  
+  "database": {
+    "path": "~/.ioccultcalc/asteroids.db",
+    "source": "MPC",
+    "autoUpdate": true,
+    "updateInterval": 7,
+    "cacheResults": true,
+    "cachePath": "~/.ioccultcalc/cache"
+  },
+  
+  "output": {
+    "formats": ["JSON", "XML", "KML", "TEXT", "CSV"],
+    "directory": "./results",
+    "filenamePrefix": "dec2025_precise_",
+    "includeTimestamp": false,
+    "verbosity": 2,
+    "compression": false,
+    "options": {
+      "json": {
+        "prettyPrint": true,
+        "includeMetadata": true,
+        "includeStatistics": true,
+        "includeUncertainties": true,
+        "includeFitResiduals": true,
+        "filename": "occultations_dec2025_precise.json"
+      },
+      "xml": {
+        "filename": "occultations_dec2025_precise.xml"
+      },
+      "kml": {
+        "filename": "occultations_dec2025_precise.kml",
+        "includeGroundTrack": true,
+        "includeUncertaintyEllipse": true,
+        "iconScale": 1.0
+      },
+      "text": {
+        "filename": "occultations_dec2025_precise.txt"
+      },
+      "csv": {
+        "filename": "occultations_dec2025_precise.csv",
+        "delimiter": ",",
+        "includeHeader": true
+      },
+      "astnum_list": {
+        "filename": "asteroids_precise_fitted.txt",
+        "includeEventCount": true,
+        "includeNames": true,
+        "includeFitQuality": true
+      }
+    }
+  },
+  
+  "performance": {
+    "cacheEphemerides": true,
+    "cacheDuration": 86400,
+    "maxMemoryUsage": 8192,
+    "useMemoryMapping": true,
+    "batchSize": 50
+  },
+  
+  "logging": {
+    "level": "DEBUG",
+    "file": "./logs/dec2025_high_precision.log",
+    "console": true,
+    "includeTimestamp": true
+  }
+}

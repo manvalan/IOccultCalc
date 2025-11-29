@@ -1,0 +1,31 @@
+! TEST VELOCE - 5 asteroidi grandi, 5 giorni
+! Per verificare connessione Gaia e logging
+
+time.start_jd = 2461015.500000
+time.end_jd = 2461020.500000
+
+object.id = '1'
+object.name = ''
+
+asteroid_db.filter_by = 'H_magnitude'
+asteroid_db.min_H = 3.0
+asteroid_db.max_H = 6.0
+asteroid_db.use_local_database = true
+asteroid_db.local_database_path = '~/.ioccultcalc/data/all_numbered_asteroids.json'
+
+search.max_separation_arcsec = 10.0
+search.min_probability = 0.01
+search.magnitude_limit = 12.0
+
+gaia.version = 'DR3'
+gaia.use_cache = false
+
+propagation.method = 'RA15'
+propagation.step_size_days = 0.1
+propagation.planetary_ephemeris = 'DE441'
+propagation.include_perturbations = true
+propagation.include_relativity = false
+
+output.formats = ['json']
+output.directory = 'output'
+output.prefix = 'test_quick'

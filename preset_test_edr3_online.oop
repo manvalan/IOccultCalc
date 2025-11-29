@@ -1,0 +1,28 @@
+! Test rapido Gaia EDR3 con query online
+
+object.
+        .id = '1'
+        .name = '(1) Ceres'
+
+time.
+        .start_jd = 2460676.500000      ! 2025-01-01
+        .end_jd = 2460681.500000        ! 2025-01-06 (5 giorni per test veloce)
+        .step_hours = 24.0
+
+propag.
+        .type = 'RK4'
+        .step_size = 0.1
+
+gaia.
+        .version = 'EDR3'               ! ← QUERY ONLINE EDR3
+        .use_local_cache = .FALSE.      ! ← NO CACHE, query dirette
+        .max_magnitude = 12.0           ! Limita per test veloce
+
+observer.
+        .name = 'Bologna'
+        .latitude = 44.4949
+        .longitude = 11.3426
+
+report.
+        .format = 'IOTA'
+        .output_file = 'test_edr3_online.txt'

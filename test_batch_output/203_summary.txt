@@ -1,0 +1,14 @@
+Asteroid (203) - AstDyS Data Summary
+============================================================
+
+✓ Orbital elements (.eq1): Available
+  File: test_batch_output/203.eq1
+  Size: 1812 bytes
+
+✓ Observations (.rwo): Available
+  File: test_batch_output/203.rwo
+  Size: 2046081 bytes
+  Observations: ~11881
+
+Download completed: 2025-11-29 10:43:04
+Source: https://newton.spacedys.com/~astdys2

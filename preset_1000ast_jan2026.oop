@@ -1,0 +1,93 @@
+! IOccultCalc - Ricerca 1000 asteroidi Gennaio 2026
+! Configurazione ottimizzata per catalogo Mag18 locale
+
+object.
+        .id = '0'
+        .name = 'Survey 1000 Asteroids Jan 2026'
+        .numbered_start = 1
+        .numbered_end = 1000
+
+propag.
+        .start_jd = 2460676.500000  ! 2026-01-01 00:00 UTC
+        .end_jd = 2460707.500000    ! 2026-02-01 00:00 UTC (31 days)
+        .step_size = 0.050000       ! 0.05 days = 1.2 hours
+        .type = 'RK4'
+
+ephemeris.
+        .jpl_version = 'DE441'
+        .ast17_file = '~/.ioccultcalc/ephemerides/codes_300ast_20100725.bsp'
+
+output.
+        .file = 'occultations_1000ast_jan2026.json'
+        .format = 'JSON'
+        .verbosity = 2
+
+perturbations.
+        .planets = .TRUE.
+        .relativity = .TRUE.
+        .asteroid_count = 17
+
+search.
+        .start_jd = 2460676.500000  ! 2026-01-01 00:00 UTC
+        .end_jd = 2460707.500000    ! 2026-02-01 00:00 UTC
+        .mag_limit = 16.0           ! Magnitudine limite
+        .step_days = 1.0            ! Step di ricerca (24 ore)
+        .min_duration = 0.01        ! Durata minima secondi
+        .max_duration = 300.0       ! Durata massima secondi
+
+database.
+        .min_perihelion = 1.0       ! AU
+        .max_aphelion = 5.0         ! AU
+        .min_observations = 10      ! Numero minimo osservazioni
+        .max_uncertainty = 50.0     ! arcsec
+        .require_diameter = .FALSE. ! Non richiede diametro
+
+filtering.
+        .min_magnitude_drop = 0.1   ! Delta mag minimo
+        .min_altitude = 10.0        ! Altezza minima gradi
+        .sun_elevation_limit = -12.0 ! Crepuscolo astronomico
+
+observer.
+        .latitude = 41.9028         ! Roma - latitudine
+        .longitude = 12.4964        ! Roma - longitudine
+        .elevation = 20.0           ! metri slm
+        .max_distance_km = 1000.0   ! Distanza massima dalla traccia (km)
+        .min_mag_drop = 0.1         ! Variazione magnitudine minima
+        .moon_separation_min = 0.0  ! No filtro Luna
+
+scoring.
+        .weight_magnitude = 0.25
+        .weight_duration = 0.20
+        .weight_diameter = 0.30
+        .min_score = 0.0            ! Accetta tutti
+
+performance.
+        .parallel_threads = 8
+        .use_openmp = .TRUE.
+
+occultation.
+        .shadow_threshold_factor = 3.0          ! LinOccult: 3.0 × R_Earth
+        .star_uncertainty_base_mas = 7.0        ! 7-60 mas per magnitudine
+        .star_uncertainty_bright_mas = 7.0
+        .star_uncertainty_faint_mas = 60.0
+        .star_pm_degradation_mas_per_year = 2.5 ! Degrado PM da 2015
+        .use_probability_cdf = .TRUE.           ! Integrazione CDF gaussiana
+        .earth_oblateness_factor = 0.996647     ! Correzione oblateness
+        .use_chebyshev = .TRUE.                 ! ✅ Già attivo
+        .chebyshev_order = 11
+        .chebyshev_interval_days = 1.0
+        .apply_parallax_correction = .FALSE.    ! Opzionale
+        .angular_buffer_arcmin = 1.0            ! Buffer sicurezza
+        .use_adaptive_timestep = .TRUE.         ! ✅ FASE 1 - Attivato!
+        .coarse_timestep_hours = 6.0            ! Step grossolano 6h
+        .fine_timestep_hours = 0.5              ! Step fine 30 min
+
+gaia.
+        .use_local_cache = .TRUE.
+        .cache_directory = '/Users/michelebigi/catalogs'
+        .catalog_file = 'gaia_mag18.cat.gz'
+        .auto_download = .FALSE.
+        .max_magnitude = 16.0
+        .min_magnitude = 8.0
+        .healpix_level = 6
+

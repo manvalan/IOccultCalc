@@ -1,0 +1,88 @@
+# IOccultCalc Production Preset - Standard Monthly Search
+# Ottimizzato per performance con tutte le ottimizzazioni attive
+# Uso: ./italoccultcalc.sh preset_production_monthly.oop
+
+general.
+    .propagator = 'RK4'
+    .step_size_days = 0.05
+
+time.
+    .start_date = '2026-01-15'
+    .end_date = '2026-01-16'  # Solo 1 giorno per test veloce
+    .interval_days = 1.0
+
+asteroids.
+    # Selezione automatica asteroidi promettenti (test limitato)
+    .selection_mode = 'auto'
+    .max_magnitude = 12.0  # Solo i più luminosi per test
+    .min_diameter_km = 200.0  # Solo i più grandi per test
+    .max_diameter_km = 1000.0
+    .perihelion_au_min = 1.0
+    .perihelion_au_max = 5.0
+    .max_asteroids = 5  # Limita a 5 per test veloce
+
+search.
+    .max_magnitude = 16.0
+    .search_radius_deg = 0.1
+    .min_probability = 0.01
+
+# ═══════════════════════════════════════════════════════════════
+# OTTIMIZZAZIONI PERFORMANCE (3.4× speedup)
+# ═══════════════════════════════════════════════════════════════
+
+occultation.
+    # LinOccult-compatible settings
+    .shadow_threshold_factor = 3.0
+    .star_uncertainty_base_mas = 7.0
+    .star_pm_degradation_mas_per_year = 2.5
+    .use_probability_cdf = .TRUE.
+    .earth_oblateness_factor = 0.996647
+    
+    # ✓ Chebyshev interpolation (2× speedup propagazione)
+    .use_chebyshev = .TRUE.
+    .chebyshev_order = 11
+    .chebyshev_interval_days = 1.0
+    
+    # ✓ Adaptive timestep (10-20% gain)
+    .use_adaptive_timestep = .TRUE.
+    .coarse_timestep_hours = 6.0
+    .fine_timestep_hours = 0.5
+    
+    .angular_buffer_arcmin = 1.0
+
+# ═══════════════════════════════════════════════════════════════
+# CATALOGO GAIA (300M stelle, query parallele OpenMP)
+# ═══════════════════════════════════════════════════════════════
+
+gaia.
+    .use_local_cache = .TRUE.
+    .cache_directory = '/Users/michelebigi/catalogs'
+    .catalog_file = 'gaia_mag18.cat.gz'
+    .auto_download = .FALSE.
+    .version = 'DR3'
+
+# ═══════════════════════════════════════════════════════════════
+# OUTPUT
+# ═══════════════════════════════════════════════════════════════
+
+output.
+    .format = 'iota'
+    .directory = 'output'
+    .include_uncertainties = .TRUE.
+    .include_path = .TRUE.
+    .generate_kml = .TRUE.
+    .generate_json = .TRUE.
+
+# ═══════════════════════════════════════════════════════════════
+# FILTRI GEOGRAFICI (Italia)
+# ═══════════════════════════════════════════════════════════════
+
+filters.
+    .use_geographic_filter = .TRUE.
+    .latitude_min = 36.0
+    .latitude_max = 47.0
+    .longitude_min = 6.0
+    .longitude_max = 19.0
+    .max_distance_km = 2000.0
+    .min_mag_drop = 0.5
+    .min_duration_sec = 0.1

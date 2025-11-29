@@ -1,0 +1,20 @@
+{
+  "search": {
+    "start_date": "2026-01-01",
+    "end_date": "2026-01-07",
+    "time_step_hours": 24.0
+  },
+  "asteroids": {
+    "source": "astdys",
+    "selection_mode": "numbered_range",
+    "numbered_range_start": 1,
+    "numbered_range_end": 10,
+    "max_magnitude": 16.0
+  },
+  "gaia": {
+    "source": "mag18",
+    "catalog_path": "/Users/michelebigi/catalogs/gaia_mag18.cat.gz",
+    "min_magnitude": 8.0,
+    "max_magnitude": 16.0
+  }
+}

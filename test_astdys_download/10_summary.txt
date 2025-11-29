@@ -1,0 +1,14 @@
+Asteroid (10) - AstDyS Data Summary
+============================================================
+
+✓ Orbital elements (.eq1): Available
+  File: test_astdys_download/10.eq1
+  Size: 1811 bytes
+
+✓ Observations (.rwo): Available
+  File: test_astdys_download/10.rwo
+  Size: 1049519 bytes
+  Observations: ~5676
+
+Download completed: 2025-11-29 10:41:45
+Source: https://newton.spacedys.com/~astdys2

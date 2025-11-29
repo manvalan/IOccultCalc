@@ -1,0 +1,50 @@
+! ==============================================================================
+! PRESET: Esempio utilizzo Gaia EDR3
+! ==============================================================================
+! Questo preset dimostra come configurare IOccultCalc per usare il catalogo
+! Gaia Early Data Release 3 (EDR3) invece del Data Release 3 (DR3).
+!
+! Differenze principali tra EDR3 e DR3:
+! - EDR3: Dicembre 2020, epoca J2016.0, ~1.8 miliardi di sorgenti
+! - DR3:  Giugno 2022, epoca J2016.0, ~1.8 miliardi di sorgenti + astrofisica
+!
+! Per predizioni di occultazioni, EDR3 è sufficiente nella maggior parte dei casi.
+! ==============================================================================
+
+object.
+        .id = '1'
+        .name = '(1) Ceres'
+
+time.
+        .start_jd = 2460676.500000      ! 2025-01-01 00:00 TDT
+        .end_jd = 2460706.500000        ! 2025-01-31 00:00 TDT
+        .step_hours = 1.0
+
+propag.
+        .type = 'RA15'
+        .step_size = 0.050000
+        .tolerance = 1.0E-12
+
+perturbations.
+        .planets = .TRUE.
+        .relativity = .TRUE.
+        .asteroid_count = 17
+
+gaia.
+        ! Configurazione catalogo Gaia
+        .version = 'EDR3'               ! IMPORTANTE: Seleziona EDR3 invece di DR3
+        .use_local_cache = .TRUE.       ! Usa cache locale
+        .cache_directory = '~/.ioccultcalc/gaia6'  ! Usa cache esistente (contiene DR3)
+        .auto_download = .FALSE.        ! Non scaricare automaticamente
+        .max_magnitude = 15.0           ! Limite magnitudine
+
+observer.
+        .name = 'Bologna'
+        .latitude = 44.4949
+        .longitude = 11.3426
+        .altitude = 54.0
+
+report.
+        .format = 'IOTA'
+        .output_file = 'occultations_edr3.txt'
+        .max_events = 100

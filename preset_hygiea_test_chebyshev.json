@@ -1,0 +1,87 @@
+{
+  "sections": [
+    {
+      "type": "object",
+      "parameters": [
+        {
+          "name": "asteroid_list",
+          "type": "string",
+          "value": "10",
+          "comment": "Solo Hygiea - bypass filtri"
+        }
+      ]
+    },
+    {
+      "type": "propag",
+      "parameters": [
+        {
+          "name": "step_size",
+          "type": "double",
+          "value": "0.05"
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "value": "RK4"
+        }
+      ]
+    },
+    {
+      "type": "ephemeris",
+      "parameters": [
+        {
+          "name": "jpl_version",
+          "type": "string",
+          "value": "DE441"
+        }
+      ]
+    },
+    {
+      "type": "search",
+      "parameters": [
+        {
+          "name": "start_jd",
+          "type": "double",
+          "value": "2461047.5",
+          "comment": "2026-01-07"
+        },
+        {
+          "name": "end_jd",
+          "type": "double",
+          "value": "2461051.5",
+          "comment": "2026-01-11"
+        },
+        {
+          "name": "mag_limit",
+          "type": "double",
+          "value": "14.0"
+        }
+      ]
+    },
+    {
+      "type": "perturbations",
+      "parameters": [
+        {
+          "name": "planets",
+          "type": "bool",
+          "value": "true"
+        },
+        {
+          "name": "asteroid_count",
+          "type": "int",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "type": "output",
+      "parameters": [
+        {
+          "name": "verbosity",
+          "type": "int",
+          "value": "2"
+        }
+      ]
+    }
+  ]
+}

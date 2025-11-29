@@ -1,0 +1,39 @@
+! Test funzionante - 10 asteroidi più grandi
+! Dicembre 2025 - 15 giorni
+
+object.
+        .id = 'all'
+
+time.
+        .start_jd = 2461010.500000      ! 2025-12-01
+        .end_jd = 2461025.500000        ! 2025-12-15 (15 giorni)
+        .step_hours = 6.0
+
+propag.
+        .type = 'RA15'
+        .step_size = 0.1
+        .tolerance = 1.0E-12
+
+perturbations.
+        .planets = .TRUE.
+        .relativity = .TRUE.
+        .asteroid_count = 17
+
+gaia.
+        .version = 'DR3'
+        .use_local_cache = .FALSE.
+        .max_magnitude = 13.0
+
+asteroid_db.
+        .source = 'MPCORB'
+        .filter_by = 'H_magnitude'
+        .min_H = 3.0
+        .max_H = 6.0
+
+search.
+        .min_separation_arcsec = 0.001
+        .max_separation_arcsec = 8.0
+        .min_duration_sec = 0.01
+
+output.
+        .formats = 'xml'

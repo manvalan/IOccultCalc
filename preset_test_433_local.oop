@@ -1,0 +1,43 @@
+! Test caricamento file .eq1 locale
+! Preset basato su preset_433.oop con aggiunta sezione astdys
+
+general.
+    .asteroid_number = 433
+    .asteroid_name = 'Eros'
+    .epoch_mjd = 61000.0
+    .semimajor_axis_au = 1.4581210001
+    .eccentricity = 0.2228357916
+    .inclination_deg = 10.82846765
+    .ascending_node_deg = 304.27008186
+    .perihelion_arg_deg = 178.92971179
+    .mean_anomaly_deg = 310.55436231
+    .propagator = 'RK4'
+    .step_size_days = 0.1
+
+! ✅ Directory file locali AstDyS
+astdys.
+    .local_eq1_directory = 'test_astdys_download'
+    .local_rwo_directory = 'test_astdys_download'
+
+time.
+    .start_date = '2026-01-01'
+    .end_date = '2026-01-02'
+
+search.
+    .max_magnitude = 14.0
+    .search_radius_deg = 0.05
+
+occultation.
+    .use_chebyshev = .FALSE.
+
+gaia.
+    .version = 'DR3'
+
+output.
+    .format = 'text'
+
+perturbations.
+    .enable = .TRUE.
+    .jupiter = .TRUE.
+    .saturn = .TRUE.
+    .earth = .TRUE.

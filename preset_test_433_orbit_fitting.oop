@@ -1,0 +1,76 @@
+# Test Orbit Fitting con (433) Eros
+# Verifica integrazione .rwo → OrbitFitter → propagazione migliorata
+# File .rwo: 3.2MB con ~17,941 osservazioni ottiche
+
+object.
+    .max_magnitude = 15.0
+    .min_perihelion_au = 1.0
+    .max_aphelion_au = 3.0
+    .min_diameter_km = 10.0
+    .max_diameter_km = 40.0
+    .max_asteroids = 1
+
+propagation.
+    .integrator = 'RK4'
+    .step_size_days = 0.05
+
+time.
+    .start_date = '2026-01-01'
+    .end_date = '2026-01-05'
+    .interval_days = 0.5
+
+# ═══════════════════════════════════════════════════════════════
+# ASTDYS LOCAL FILES
+# ═══════════════════════════════════════════════════════════════
+
+astdys.
+    .local_eq1_directory = 'test_astdys_download'
+    .local_rwo_directory = 'test_astdys_download'
+
+# ═══════════════════════════════════════════════════════════════
+# ORBIT FITTING - ABILITATO PER TEST
+# ═══════════════════════════════════════════════════════════════
+
+orbit_fitting.
+    .enable_fitting = .TRUE.           # ← TEST: Abilita orbit fitting
+    .observation_source = 'astdys'     # Usa file .rwo locali
+    .max_iterations = 10
+    .convergence_tolerance = 1.0e-6
+    .outlier_threshold_sigma = 3.0
+
+search.
+    .max_magnitude = 15.0
+    .search_radius_deg = 0.15
+    .min_probability = 0.01
+
+occultation.
+    .shadow_threshold_factor = 3.0
+    .star_uncertainty_base_mas = 7.0
+    .star_pm_degradation_mas_per_year = 2.5
+    .use_probability_cdf = .TRUE.
+    .earth_oblateness_factor = 0.996647
+    .use_chebyshev = .TRUE.
+    .chebyshev_order = 11
+    .use_adaptive_timestep = .TRUE.
+    .coarse_timestep_hours = 2.0
+    .fine_timestep_hours = 0.25
+
+gaia.
+    .use_local_cache = .TRUE.
+    .cache_directory = '/Users/michelebigi/catalogs'
+    .catalog_file = 'gaia_mag18.cat.gz'
+    .auto_download = .FALSE.
+
+output.
+    .format = 'iota'
+    .directory = 'output'
+    .verbose = .TRUE.
+    .generate_kml = .TRUE.
+    .generate_json = .TRUE.
+
+filters.
+    .use_geographic_filter = .TRUE.
+    .latitude_min = 35.0
+    .latitude_max = 48.0
+    .longitude_min = 6.0
+    .longitude_max = 19.0

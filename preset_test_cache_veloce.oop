@@ -1,0 +1,28 @@
+! Test veloce con cache locale
+object.
+        .id = '10'
+        .name = '(10) Hygiea'
+
+time.
+        .start_jd = 2460676.500000
+        .end_jd = 2460680.500000        ! Solo 4 giorni
+        .step_hours = 6.0
+
+propag.
+        .type = 'RK4'
+        .step_size = 0.1
+
+gaia.
+        .version = 'DR3'
+        .use_local_cache = .TRUE.
+        .cache_directory = '/Users/michelebigi/.ioccultcalc/gaia6'  ! Path assoluto
+        .max_magnitude = 12.0
+
+observer.
+        .name = 'Bologna'
+        .latitude = 44.4949
+        .longitude = 11.3426
+
+report.
+        .format = 'IOTA'
+        .output_file = 'test_cache_veloce.txt'

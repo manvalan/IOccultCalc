@@ -1,0 +1,115 @@
+{
+  "preset_name": "Fast Survey - Asteroid List Generation",
+  "description": "Configurazione ottimizzata per survey veloce e generazione lista asteroidi candidati. Performance prioritaria su precisione.",
+  "version": "2.1.0-rkf78",
+  
+  "propagator": {
+    "integrator": "RKF78",
+    "stepSize": 0.5,
+    "tolerance": 1e-10,
+    "usePlanetaryPerturbations": true,
+    "useAsteroidalPerturbations": false,
+    "useRelativisticCorrections": false,
+    "ephemerisType": "JPL_DE441",
+    "maxIterations": 50000,
+    "outputInterval": 1.0
+  },
+  
+  "predictor": {
+    "startDate": "2026-01-01",
+    "endDate": "2026-01-31",
+    "observer": {
+      "latitude": 45.4642,
+      "longitude": 9.1900,
+      "altitude": 239.0,
+      "name": "Default Observer"
+    },
+    "constraints": {
+      "minAltitude": 15.0,
+      "maxMagnitude": 16.0,
+      "minMagnitudeDrop": 0.3,
+      "maxShadowWidth": 800.0,
+      "minDuration": 0.05,
+      "searchRadius": 3.5,
+      "maxDistanceFromPath": 1000.0
+    },
+    "starCatalog": "GAIA_DR3",
+    "parallel": {
+      "enabled": true,
+      "numThreads": 0
+    },
+    "optimization": {
+      "useApproximatePositions": true,
+      "skipLowProbabilityEvents": true,
+      "probabilityThreshold": 0.01
+    }
+  },
+  
+  "asteroidFilter": {
+    "enabled": true,
+    "criteria": [
+      {
+        "type": "diameter",
+        "min": 50.0,
+        "max": 1000.0,
+        "unit": "km"
+      },
+      {
+        "type": "magnitude",
+        "min": 8.0,
+        "max": 18.0
+      },
+      {
+        "type": "orbit_type",
+        "include": ["main_belt", "near_earth", "mars_crosser"]
+      }
+    ],
+    "limit": 1000,
+    "sortBy": "probability_descending"
+  },
+  
+  "database": {
+    "path": "~/.ioccultcalc/asteroids.db",
+    "source": "MPC",
+    "autoUpdate": true,
+    "updateInterval": 7,
+    "cacheResults": true,
+    "cachePath": "~/.ioccultcalc/cache"
+  },
+  
+  "output": {
+    "formats": ["JSON", "ASTNUM_LIST"],
+    "directory": "./results/fast_survey",
+    "filenamePrefix": "candidates_",
+    "includeTimestamp": true,
+    "verbosity": 1,
+    "compression": false,
+    "options": {
+      "json": {
+        "prettyPrint": false,
+        "includeMetadata": true,
+        "includeStatistics": true
+      },
+      "astnum_list": {
+        "filename": "asteroids_with_occultations.txt",
+        "includeEventCount": true,
+        "includeNames": true
+      }
+    }
+  },
+  
+  "performance": {
+    "cacheEphemerides": true,
+    "cacheDuration": 86400,
+    "maxMemoryUsage": 4096,
+    "useMemoryMapping": true,
+    "batchSize": 100
+  },
+  
+  "logging": {
+    "level": "INFO",
+    "file": "./logs/fast_survey.log",
+    "console": true,
+    "includeTimestamp": true
+  }
+}

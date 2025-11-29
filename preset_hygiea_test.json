@@ -1,0 +1,136 @@
+{
+  "metadata": {
+    "created_by": "ITALOccultCalc",
+    "version": "1.0",
+    "date": "2025-11-23",
+    "description": "Test massivo: primi 1000 asteroidi per gennaio 2026"
+  },
+  "sections": [
+    {
+      "type": "object",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "value": "1-1000",
+          "comment": "Range asteroidi da testare"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "First 1000 Asteroids",
+          "comment": "Test set name"
+        }
+      ]
+    },
+    {
+      "type": "search",
+      "parameters": [
+        {
+          "name": "start_jd",
+          "type": "double",
+          "value": "2460676.5",
+          "comment": "2026-01-01 00:00:00 UT"
+        },
+        {
+          "name": "end_jd",
+          "type": "double",
+          "value": "2460707.5",
+          "comment": "2026-02-01 00:00:00 UT (31 giorni)"
+        },
+        {
+          "name": "step_days",
+          "type": "double",
+          "value": "0.25",
+          "comment": "Campionamento ogni 6 ore"
+        },
+        {
+          "name": "max_separation",
+          "type": "double",
+          "value": "0.05",
+          "comment": "Separazione massima 0.05 gradi (180 arcsec)"
+        },
+        {
+          "name": "mag_limit",
+          "type": "double",
+          "value": "12.0",
+          "comment": "Solo stelle luminose (mag < 12)"
+        }
+      ]
+    },
+    {
+      "type": "propag",
+      "parameters": [
+        {
+          "name": "type",
+          "type": "string",
+          "value": "RK4",
+          "comment": "RK4 per velocità"
+        },
+        {
+          "name": "step_size",
+          "type": "double",
+          "value": "0.1",
+          "comment": "Step più grande per performance"
+        }
+      ]
+    },
+    {
+      "type": "ephemeris",
+      "parameters": [
+        {
+          "name": "jpl_version",
+          "type": "string",
+          "value": "DE441",
+          "comment": "JPL DE441 high precision"
+        }
+      ]
+    },
+    {
+      "type": "perturbations",
+      "parameters": [
+        {
+          "name": "planets",
+          "type": "bool",
+          "value": "true",
+          "comment": "8 pianeti"
+        },
+        {
+          "name": "asteroid_count",
+          "type": "int",
+          "value": "17",
+          "comment": "AST17 asteroids"
+        },
+        {
+          "name": "relativity",
+          "type": "bool",
+          "value": "true",
+          "comment": "Relativistic corrections"
+        }
+      ]
+    },
+    {
+      "type": "output",
+      "parameters": [
+        {
+          "name": "format",
+          "type": "string",
+          "value": "JSON",
+          "comment": "JSON output"
+        },
+        {
+          "name": "file",
+          "type": "string",
+          "value": "occultations_jan2026_1000ast.json",
+          "comment": "Output file"
+        },
+        {
+          "name": "verbosity",
+          "type": "int",
+          "value": "1",
+          "comment": "Normal verbosity"
+        }
+      ]
+    }
+  ]
+}

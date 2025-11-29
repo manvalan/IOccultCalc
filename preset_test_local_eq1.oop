@@ -1,0 +1,45 @@
+# Test File .eq1 Locali
+
+general.
+    .propagator = 'RK4'
+    .step_size_days = 0.05
+
+time.
+    .start_date = '2026-01-01'
+    .end_date = '2026-01-05'
+    .interval_days = 1.0
+
+# Directory file AstDyS locali
+astdys.
+    .local_eq1_directory = 'test_astdys_download'
+    .local_rwo_directory = 'test_astdys_download'
+
+asteroids.
+    .selection_mode = 'manual'
+    .asteroid_list = '433,10'
+
+search.
+    .max_magnitude = 16.0
+    .search_radius_deg = 0.1
+    .min_probability = 0.01
+
+occultation.
+    .use_chebyshev = .TRUE.
+    .chebyshev_order = 11
+    .chebyshev_interval_days = 1.0
+
+gaia.
+    .use_local_cache = .TRUE.
+    .cache_directory = '/Users/michelebigi/catalogs'
+    .version = 'DR3'
+
+output.
+    .format = 'iota'
+    .directory = 'output_test'
+
+filters.
+    .use_geographic_filter = .TRUE.
+    .latitude_min = 36.0
+    .latitude_max = 47.0
+    .longitude_min = 6.0
+    .longitude_max = 19.0

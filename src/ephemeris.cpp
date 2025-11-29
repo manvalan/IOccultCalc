@@ -1,29 +1,94 @@
 #include "ioccultcalc/ephemeris.h"
 #include "ioccultcalc/coordinates.h"
 #include "ioccultcalc/spice_spk_reader.h"
+#include "ioccultcalc/orbit_propagator.h"
 #include <cmath>
 #include <stdexcept>
+#include <mutex>
 
 namespace ioccultcalc {
+
+// Thread-safe Earth position cache
+static std::mutex s_cacheMutex;
+static Ephemeris::EarthPositionFunc s_earthPositionCache = nullptr;
+
+void Ephemeris::setEarthPositionCache(EarthPositionFunc cacheFunc) {
+    std::lock_guard<std::mutex> lock(s_cacheMutex);
+    s_earthPositionCache = cacheFunc;
+}
+
+void Ephemeris::clearEarthPositionCache() {
+    std::lock_guard<std::mutex> lock(s_cacheMutex);
+    s_earthPositionCache = nullptr;
+}
+
+bool Ephemeris::hasEarthPositionCache() {
+    std::lock_guard<std::mutex> lock(s_cacheMutex);
+    return s_earthPositionCache != nullptr;
+}
 
 // Costante gravitazionale gaussiana
 constexpr double GAUSS_K = 0.01720209895; // AU^(3/2) / day
 
-Ephemeris::Ephemeris() {}
+Ephemeris::Ephemeris() 
+    : propagatorInitialized_(false) {}
 
 Ephemeris::Ephemeris(const EquinoctialElements& elements) 
-    : elements_(elements) {}
+    : elements_(elements), propagatorInitialized_(false) {}
+
+Ephemeris::~Ephemeris() = default;
 
 void Ephemeris::setElements(const EquinoctialElements& elements) {
     elements_ = elements;
+    // Reset propagator per nuovi elementi
+    propagatorInitialized_ = false;
+    propagator_.reset();
+}
+
+void Ephemeris::setOptions(const EphemerisOptions& options) {
+    options_ = options;
+    // Reset propagator se cambiano opzioni
+    if (propagatorInitialized_) {
+        propagatorInitialized_ = false;
+        propagator_.reset();
+    }
+}
+
+void Ephemeris::enablePerturbations(bool enable) {
+    if (options_.usePerturbations != enable) {
+        options_.usePerturbations = enable;
+        propagatorInitialized_ = false;
+        propagator_.reset();
+    }
+}
+
+void Ephemeris::initializePropagator() {
+    if (propagatorInitialized_) return;
+    
+    PropagatorOptions propOpts;
+    propOpts.integrator = IntegratorType::RK4;
+    propOpts.stepSize = options_.stepSize;
+    propOpts.usePlanetaryPerturbations = true;  // Sempre attive quando usiamo propagator
+    propOpts.useRelativisticCorrections = options_.useRelativisticCorrections;
+    propOpts.tolerance = 1e-12;
+    
+    propagator_ = std::make_unique<OrbitPropagator>(propOpts);
+    propagatorInitialized_ = true;
+    
+    // Reset cache ultimo stato propagato
+    lastPropagatedEpoch_.jd = 0;
 }
 
 EphemerisData Ephemeris::compute(const JulianDate& jd) {
     EphemerisData data;
     data.jd = jd;
     
-    // Propaga l'orbita
-    propagateOrbit(jd, data.heliocentricPos, data.heliocentricVel);
+    // Propaga l'orbita (con o senza perturbazioni)
+    if (options_.usePerturbations) {
+        propagateOrbitWithPerturbations(jd, data.heliocentricPos, data.heliocentricVel);
+    } else {
+        propagateOrbit(jd, data.heliocentricPos, data.heliocentricVel);
+    }
     
     // Posizione della Terra
     Vector3D earthPos = getEarthPosition(jd);
@@ -108,46 +173,40 @@ void Ephemeris::propagateOrbit(const JulianDate& targetJD,
     double vx_orb = -v_factor * sin(E);
     double vy_orb = v_factor * sqrt(1.0 - e * e) * cos(E);
     
-    // Trasforma dal piano orbitale al sistema equatoriale
-    // Usando elementi equinoziali per la rotazione
+    // Converti elementi equinoziali in elementi classici
+    // p = tan(i/2) * sin(Omega)
+    // q = tan(i/2) * cos(Omega)
+    double tan_half_i = std::sqrt(elements_.p * elements_.p + elements_.q * elements_.q);
+    double i = 2.0 * std::atan(tan_half_i);  // Inclinazione
+    double Omega = std::atan2(elements_.p, elements_.q);  // Longitudine nodo ascendente
+    double omega = omega_plus_Omega - Omega;  // Argomento del periapside
     
-    double f = 1.0 + elements_.p * elements_.p + elements_.q * elements_.q;
+    // Trasforma dal piano orbitale al frame eclittico usando rotazioni 3D
+    // Sequenza: R_z(-Omega) * R_x(-i) * R_z(-omega)
+    double cos_o = std::cos(omega);
+    double sin_o = std::sin(omega);
+    double cos_O = std::cos(Omega);
+    double sin_O = std::sin(Omega);
+    double cos_i = std::cos(i);
+    double sin_i = std::sin(i);
     
-    // Matrice di trasformazione (elementi equinoziali -> equatoriale)
-    double m11 = (1.0 - elements_.p * elements_.p + elements_.q * elements_.q) / f;
-    double m12 = 2.0 * elements_.p * elements_.q / f;
-    double m13 = -2.0 * elements_.p / f;
+    // Matrice di rotazione combinata (piano orbitale -> eclittico)
+    double P11 = cos_O * cos_o - sin_O * sin_o * cos_i;
+    double P12 = -cos_O * sin_o - sin_O * cos_o * cos_i;
+    double P21 = sin_O * cos_o + cos_O * sin_o * cos_i;
+    double P22 = -sin_O * sin_o + cos_O * cos_o * cos_i;
+    double P31 = sin_i * sin_o;
+    double P32 = sin_i * cos_o;
     
-    double m21 = 2.0 * elements_.p * elements_.q / f;
-    double m22 = (1.0 + elements_.p * elements_.p - elements_.q * elements_.q) / f;
-    double m23 = 2.0 * elements_.q / f;
+    // Posizione eclittica
+    double x_ecl = P11 * x_orb + P12 * y_orb;
+    double y_ecl = P21 * x_orb + P22 * y_orb;
+    double z_ecl = P31 * x_orb + P32 * y_orb;
     
-    double m31 = 2.0 * elements_.p / f;
-    double m32 = -2.0 * elements_.q / f;
-    double m33 = (1.0 - elements_.p * elements_.p - elements_.q * elements_.q) / f;
-    
-    // Argomento del periapside + longitudine del nodo
-    double cos_wp = cos(omega_plus_Omega);
-    double sin_wp = sin(omega_plus_Omega);
-    
-    // Ruota dal piano orbitale al sistema di riferimento
-    double x_ref = x_orb * cos_wp - y_orb * sin_wp;
-    double y_ref = x_orb * sin_wp + y_orb * cos_wp;
-    double z_ref = 0;
-    
-    double vx_ref = vx_orb * cos_wp - vy_orb * sin_wp;
-    double vy_ref = vx_orb * sin_wp + vy_orb * cos_wp;
-    double vz_ref = 0;
-    
-    // Applica trasformazione al frame degli elementi equinoziali
-    // NOTA: Elementi equinoziali da AstDyS sono in frame eclittico J2000 (ECLM)
-    double x_ecl = m11 * x_ref + m12 * y_ref + m13 * z_ref;
-    double y_ecl = m21 * x_ref + m22 * y_ref + m23 * z_ref;
-    double z_ecl = m31 * x_ref + m32 * y_ref + m33 * z_ref;
-    
-    double vx_ecl = m11 * vx_ref + m12 * vy_ref + m13 * vz_ref;
-    double vy_ecl = m21 * vx_ref + m22 * vy_ref + m23 * vz_ref;
-    double vz_ecl = m31 * vx_ref + m32 * vy_ref + m33 * vz_ref;
+    // Velocità eclittica
+    double vx_ecl = P11 * vx_orb + P12 * vy_orb;
+    double vy_ecl = P21 * vx_orb + P22 * vy_orb;
+    double vz_ecl = P31 * vx_orb + P32 * vy_orb;
     
     // Converti da eclittico a equatoriale (J2000)
     // Rotazione attorno asse X di ε = 23.4392811° (obliquità eclittica J2000)
@@ -162,6 +221,55 @@ void Ephemeris::propagateOrbit(const JulianDate& targetJD,
     helioVel.x = vx_ecl;
     helioVel.y = vy_ecl * cos_eps - vz_ecl * sin_eps;
     helioVel.z = vy_ecl * sin_eps + vz_ecl * cos_eps;
+}
+
+void Ephemeris::propagateOrbitWithPerturbations(const JulianDate& targetJD,
+                                                  Vector3D& helioPos, Vector3D& helioVel) {
+    // Inizializza propagator se necessario
+    if (!propagatorInitialized_) {
+        initializePropagator();
+    }
+    
+    OrbitState result;
+    
+    // OTTIMIZZAZIONE: Se abbiamo già propagato a un'epoca vicina, 
+    // usa quello stato come punto di partenza invece di ripartire dall'epoca elementi
+    if (lastPropagatedEpoch_.jd > 0) {
+        double dt_from_last = std::abs(targetJD.jd - lastPropagatedEpoch_.jd);
+        double dt_from_epoch = std::abs(targetJD.jd - elements_.epoch.jd);
+        
+        // Se l'ultimo stato è più vicino dell'epoca elementi, usa quello
+        if (dt_from_last < dt_from_epoch && dt_from_last < 10.0) {  // max 10 giorni
+            OrbitState lastState(lastPropagatedEpoch_, lastPropagatedPos_, lastPropagatedVel_);
+            result = propagator_->propagate(lastState, targetJD);
+        } else {
+            result = propagator_->propagate(elements_, targetJD);
+        }
+    } else {
+        result = propagator_->propagate(elements_, targetJD);
+    }
+    
+    // Cache ultimo stato (in frame eclittico)
+    lastPropagatedEpoch_ = targetJD;
+    lastPropagatedPos_ = result.position;
+    lastPropagatedVel_ = result.velocity;
+    
+    // NOTA: OrbitPropagator restituisce posizioni in frame eclittico
+    // Dobbiamo convertire a equatoriale J2000 come fa propagateOrbit()
+    
+    // Converti da eclittico a equatoriale J2000
+    constexpr double OBLIQUITY_J2000 = 23.4392911 * M_PI / 180.0;
+    double cos_eps = std::cos(OBLIQUITY_J2000);
+    double sin_eps = std::sin(OBLIQUITY_J2000);
+    
+    // result.position è in eclittico
+    helioPos.x = result.position.x;
+    helioPos.y = result.position.y * cos_eps - result.position.z * sin_eps;
+    helioPos.z = result.position.y * sin_eps + result.position.z * cos_eps;
+    
+    helioVel.x = result.velocity.x;
+    helioVel.y = result.velocity.y * cos_eps - result.velocity.z * sin_eps;
+    helioVel.z = result.velocity.y * sin_eps + result.velocity.z * cos_eps;
 }
 
 double Ephemeris::solveKeplerEquation(double M, double e, double tolerance) {
@@ -205,6 +313,15 @@ Vector3D Ephemeris::getSunPosition(const JulianDate& jd) {
 }
 
 Vector3D Ephemeris::getEarthPosition(const JulianDate& jd) {
+    // THREAD-SAFE: Se è disponibile una cache pre-calcolata, usala
+    // Questo evita problemi di thread-safety con SPICE
+    {
+        std::lock_guard<std::mutex> lock(s_cacheMutex);
+        if (s_earthPositionCache != nullptr) {
+            return s_earthPositionCache(jd.jd);
+        }
+    }
+    
     // Prova a usare SPK (JPL DE441/DE440) per massima precisione
     static SPICESPKReader spkReader;
     static bool spkInitialized = false;
@@ -221,16 +338,33 @@ Vector3D Ephemeris::getEarthPosition(const JulianDate& jd) {
     if (spkReader.isLoaded()) {
         try {
             // NAIF ID: 399 = Terra, 10 = Sole, 0 = SSB (barycenter)
+            // NOTA: SPICE restituisce in ECLIPJ2000, dobbiamo convertire a EQUATORIALE J2000
+            // per coerenza con propagateOrbit() che restituisce helioPos in equatoriale
+            Vector3D pos_ecl;
+            
             // Prova prima con Sole come centro (heliocentric)
             try {
                 auto [pos, vel] = spkReader.getState(399, jd.jd, 10);
-                return pos;
+                pos_ecl = pos;
             } catch (...) {
                 // Se fallisce, prova SSB e sottrai posizione Sole
                 auto [earthPos, earthVel] = spkReader.getState(399, jd.jd, 0);
                 auto [sunPos, sunVel] = spkReader.getState(10, jd.jd, 0);
-                return earthPos - sunPos;
+                pos_ecl = earthPos - sunPos;
             }
+            
+            // Converti da eclittico a equatoriale J2000
+            // Rotazione attorno asse X di ε = 23.4392911° (obliquità eclittica J2000)
+            constexpr double OBLIQUITY_J2000 = 23.4392911 * M_PI / 180.0;
+            double cos_eps = std::cos(OBLIQUITY_J2000);
+            double sin_eps = std::sin(OBLIQUITY_J2000);
+            
+            Vector3D pos_eq;
+            pos_eq.x = pos_ecl.x;
+            pos_eq.y = pos_ecl.y * cos_eps - pos_ecl.z * sin_eps;
+            pos_eq.z = pos_ecl.y * sin_eps + pos_ecl.z * cos_eps;
+            
+            return pos_eq;
         } catch (...) {
             // Fallback a formula analitica
         }
@@ -297,8 +431,19 @@ Vector3D Ephemeris::getEarthVelocity(const JulianDate& jd) {
     
     if (spkReader.isLoaded()) {
         try {
-            auto [pos, vel] = spkReader.getState(399, jd.jd, 10);
-            return vel;
+            auto [pos, vel_ecl] = spkReader.getState(399, jd.jd, 10);
+            
+            // Converti velocità da eclittico a equatoriale J2000
+            constexpr double OBLIQUITY_J2000 = 23.4392911 * M_PI / 180.0;
+            double cos_eps = std::cos(OBLIQUITY_J2000);
+            double sin_eps = std::sin(OBLIQUITY_J2000);
+            
+            Vector3D vel_eq;
+            vel_eq.x = vel_ecl.x;
+            vel_eq.y = vel_ecl.y * cos_eps - vel_ecl.z * sin_eps;
+            vel_eq.z = vel_ecl.y * sin_eps + vel_ecl.z * cos_eps;
+            
+            return vel_eq;
         } catch (...) {
             // Fallback a differenze finite
         }

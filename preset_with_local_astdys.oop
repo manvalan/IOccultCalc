@@ -1,0 +1,80 @@
+# IOccultCalc Preset - Esempio con File AstDyS Locali
+# Test uso file .eq1 e .rwo scaricati localmente
+
+object.
+    .name = '(433) Eros'
+    .designation = '433'
+
+propag.
+    .type = 'RKF78'
+    .step_size_days = 0.1
+
+time.
+    .start_date = '2026-01-01'
+    .end_date = '2026-01-31'
+    .interval_days = 1.0
+
+# ═══════════════════════════════════════════════════════════════
+# CONFIGURAZIONE DIRECTORY ASTDYS LOCALI
+# ═══════════════════════════════════════════════════════════════
+
+astdys.
+    # Directory dove sono salvati i file .eq1 (elementi orbitali)
+    # Se specificato, IOccultCalc caricherà i file da qui invece di scaricarli
+    .local_eq1_directory = 'test_astdys_download'
+    
+    # Directory dove sono salvati i file .rwo (osservazioni)
+    # Usato per orbit fitting (se abilitato)
+    .local_rwo_directory = 'test_astdys_download'
+
+# ═══════════════════════════════════════════════════════════════
+# ASTEROIDI - Specifica quali asteroidi caricare
+# ═══════════════════════════════════════════════════════════════
+
+asteroids.
+    # Lista asteroidi da analizzare (devono avere file .eq1 nella directory)
+    .asteroid_list = '433,11234,203,704'
+    
+    # Oppure usa file esterno:
+    # .asteroid_list_file = 'example_asteroids_for_download.txt'
+
+search.
+    .max_magnitude = 16.0
+    .search_radius_deg = 0.1
+    .min_probability = 0.01
+
+occultation.
+    .use_chebyshev = .TRUE.
+    .chebyshev_order = 11
+    .chebyshev_interval_days = 1.0
+
+# ═══════════════════════════════════════════════════════════════
+# CATALOGO GAIA (cache locale)
+# ═══════════════════════════════════════════════════════════════
+
+gaia.
+    .use_local_cache = .TRUE.
+    .cache_directory = '/Users/michelebigi/catalogs'
+    .version = 'DR3'
+
+# ═══════════════════════════════════════════════════════════════
+# OUTPUT
+# ═══════════════════════════════════════════════════════════════
+
+output.
+    .format = 'iota'
+    .directory = 'output'
+    .include_uncertainties = .TRUE.
+    .generate_json = .TRUE.
+
+# ═══════════════════════════════════════════════════════════════
+# FILTRI GEOGRAFICI (Italia)
+# ═══════════════════════════════════════════════════════════════
+
+filters.
+    .use_geographic_filter = .TRUE.
+    .latitude_min = 36.0
+    .latitude_max = 47.0
+    .longitude_min = 6.0
+    .longitude_max = 19.0
+

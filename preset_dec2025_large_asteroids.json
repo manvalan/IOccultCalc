@@ -1,0 +1,323 @@
+{
+  "metadata": {
+    "name": "Dicembre 2025 - Large Asteroids (>5km)",
+    "description": "Ricerca veloce occultazioni per asteroidi con diametro > 5km, magnitudine limite 14.0",
+    "created": "2025-11-29",
+    "purpose": "Fast screening - LocalAsteroids December 2025"
+  },
+  "sections": [
+    {
+      "type": "object",
+      "parameters": [
+        {
+          "name": "id",
+          "value": "0",
+          "type": "string",
+          "comment": "Object ID"
+        },
+        {
+          "name": "name",
+          "value": "LargeAsteroids_5km",
+          "type": "string",
+          "comment": "Object name"
+        },
+        {
+          "name": "source",
+          "value": "MPC",
+          "type": "string",
+          "comment": "Data source - Minor Planet Center"
+        },
+        {
+          "name": "auto_download",
+          "value": "true",
+          "type": "bool",
+          "comment": "Download MPC data automatically"
+        },
+        {
+          "name": "selection_mode",
+          "value": "diameter",
+          "type": "string",
+          "comment": "Select by diameter"
+        },
+        {
+          "name": "min_diameter_km",
+          "value": "5.0",
+          "type": "double",
+          "comment": "Minimum diameter in km"
+        }
+      ]
+    },
+    {
+      "type": "propag",
+      "parameters": [
+        {
+          "name": "type",
+          "value": "RK4",
+          "type": "string",
+          "comment": "Propagator type - Runge-Kutta 4th order (veloce)"
+        },
+        {
+          "name": "step_size",
+          "value": "0.1",
+          "type": "double",
+          "comment": "Integration step size in days"
+        }
+      ]
+    },
+    {
+      "type": "ephemeris",
+      "parameters": [
+        {
+          "name": "jpl_version",
+          "value": "DE441",
+          "type": "string",
+          "comment": "JPL planetary ephemeris"
+        }
+      ]
+    },
+    {
+      "type": "perturbations",
+      "parameters": [
+        {
+          "name": "planets",
+          "value": "true",
+          "type": "bool",
+          "comment": "Include planetary perturbations"
+        },
+        {
+          "name": "asteroid_count",
+          "value": "0",
+          "type": "int",
+          "comment": "No asteroid perturbations (veloce)"
+        },
+        {
+          "name": "relativity",
+          "value": "false",
+          "type": "bool",
+          "comment": "No relativistic corrections (veloce)"
+        }
+      ]
+    },
+    {
+      "type": "time",
+      "parameters": [
+        {
+          "name": "start_date",
+          "value": "2025-12-01",
+          "type": "string",
+          "comment": "Start date"
+        },
+        {
+          "name": "end_date",
+          "value": "2025-12-31",
+          "type": "string",
+          "comment": "End date - full December 2025"
+        }
+      ]
+    },
+    {
+      "type": "search",
+      "parameters": [
+        {
+          "name": "max_magnitude",
+          "value": "14.0",
+          "type": "double",
+          "comment": "Maximum star magnitude"
+        },
+        {
+          "name": "search_radius_deg",
+          "value": "0.15",
+          "type": "double",
+          "comment": "Search radius in degrees"
+        },
+        {
+          "name": "min_probability",
+          "value": "0.005",
+          "type": "double",
+          "comment": "Minimum event probability (0.5%)"
+        }
+      ]
+    },
+    {
+      "type": "occultation",
+      "parameters": [
+        {
+          "name": "shadow_threshold_factor",
+          "value": "4.0",
+          "type": "double",
+          "comment": "Shadow threshold factor (permissive)"
+        },
+        {
+          "name": "star_uncertainty_base_mas",
+          "value": "10.0",
+          "type": "double",
+          "comment": "Base star uncertainty in mas"
+        },
+        {
+          "name": "star_pm_degradation_mas_per_year",
+          "value": "3.0",
+          "type": "double",
+          "comment": "PM degradation per year"
+        }
+      ]
+    },
+    {
+      "type": "gaia",
+      "parameters": [
+        {
+          "name": "catalog",
+          "value": "GAIA_EDR3",
+          "type": "string",
+          "comment": "GAIA catalog version"
+        },
+        {
+          "name": "version",
+          "value": "DR3",
+          "type": "string",
+          "comment": "Data release version"
+        },
+        {
+          "name": "max_magnitude",
+          "value": "14.0",
+          "type": "double",
+          "comment": "Maximum star magnitude"
+        },
+        {
+          "name": "use_local_cache",
+          "value": "true",
+          "type": "bool",
+          "comment": "Use local cache"
+        },
+        {
+          "name": "cache_directory",
+          "value": "/Users/michelebigi/.ioccultcalc/gaia_cache",
+          "type": "string",
+          "comment": "Cache directory path"
+        }
+      ]
+    },
+    {
+      "type": "geographic",
+      "parameters": [
+        {
+          "name": "min_latitude",
+          "value": "36.0",
+          "type": "double",
+          "comment": "Minimum latitude (South Sicily)"
+        },
+        {
+          "name": "max_latitude",
+          "value": "47.0",
+          "type": "double",
+          "comment": "Maximum latitude (North Alps)"
+        },
+        {
+          "name": "min_longitude",
+          "value": "6.0",
+          "type": "double",
+          "comment": "Minimum longitude (West)"
+        },
+        {
+          "name": "max_longitude",
+          "value": "19.0",
+          "type": "double",
+          "comment": "Maximum longitude (East)"
+        },
+        {
+          "name": "min_sun_altitude_deg",
+          "value": "-18.0",
+          "type": "double",
+          "comment": "Astronomical night"
+        },
+        {
+          "name": "min_target_altitude_deg",
+          "value": "20.0",
+          "type": "double",
+          "comment": "Minimum target altitude"
+        }
+      ]
+    },
+    {
+      "type": "observer",
+      "parameters": [
+        {
+          "name": "name",
+          "value": "Italy-Center",
+          "type": "string",
+          "comment": "Observer name"
+        },
+        {
+          "name": "latitude",
+          "value": "42.8333",
+          "type": "double",
+          "comment": "Latitude (Rome area)"
+        },
+        {
+          "name": "longitude",
+          "value": "12.8333",
+          "type": "double",
+          "comment": "Longitude"
+        },
+        {
+          "name": "elevation_m",
+          "value": "100.0",
+          "type": "double",
+          "comment": "Elevation in meters"
+        }
+      ]
+    },
+    {
+      "type": "output",
+      "parameters": [
+        {
+          "name": "format",
+          "value": "TEXT",
+          "type": "string",
+          "comment": "Output format for LocalAsteroids"
+        },
+        {
+          "name": "output_file",
+          "value": "localasteroids_dec2025_5km.txt",
+          "type": "string",
+          "comment": "Main output file"
+        },
+        {
+          "name": "export_asteroid_list",
+          "value": "true",
+          "type": "bool",
+          "comment": "Export list of asteroids with events"
+        },
+        {
+          "name": "asteroid_list_file",
+          "value": "asteroids_5km_with_events.txt",
+          "type": "string",
+          "comment": "List of asteroids found"
+        },
+        {
+          "name": "verbosity",
+          "value": "1",
+          "type": "int",
+          "comment": "Verbosity level"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "OTTIMIZZATO PER VELOCITÀ:",
+    "- Chebyshev degree 11 (veloce)",
+    "- Step 20 giorni",
+    "- Solo perturbazioni planetarie (no asteroidi)",
+    "- No orbit fitting",
+    "- No relatività",
+    "- Magnitudine limite 14.0",
+    "- Shadow threshold 4.0 (permissivo)",
+    "",
+    "SELEZIONE ASTEROIDI:",
+    "- Tutti gli asteroidi con diametro > 5 km",
+    "- Fonte: MPCORB.DAT (auto-download)",
+    "",
+    "OUTPUT:",
+    "1. localasteroids_dec2025_5km.txt - Lista eventi per LocalAsteroids",
+    "2. asteroids_5km_with_events.txt - Lista asteroidi che hanno eventi"
+  ]
+}

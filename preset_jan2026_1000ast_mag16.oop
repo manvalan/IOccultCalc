@@ -1,0 +1,140 @@
+{
+  "comment": "Ricerca occultazioni Gennaio 2026 - Primi 1000 asteroidi fino a magnitudine 16",
+  "description": "Configurazione ottimizzata per ricerca su periodo breve (31 giorni) con grande numero di asteroidi",
+  
+  "search": {
+    "start_date": "2026-01-01T00:00:00",
+    "end_date": "2026-01-31T23:59:59",
+    "time_step_hours": 24.0,
+    "max_separation_arcsec": 19114.0,
+    "comment_threshold": "3.0 × R_Earth = 19,114 km @ 1 AU (LinOccult method)",
+    
+    "apply_parallax_correction": false,
+    "comment_parallax": "Disabilitato per velocità - attiva se necessario per stelle vicine",
+    
+    "angular_buffer_arcmin": 0.5,
+    "comment_buffer": "Margine sicurezza 0.5' (ridotto per performance)",
+    
+    "use_adaptive_timestep": false,
+    "coarse_step_days": 1.0,
+    "fine_step_minutes": 15.0,
+    "comment_adaptive": "Disabilitato - step fisso 24h sufficiente per scan iniziale"
+  },
+  
+  "chebyshev": {
+    "enabled": true,
+    "order": 11,
+    "interval_days": 1.0,
+    "fine_timestep_minutes": 15.0,
+    "precision_check": false,
+    "comment": "Chebyshev attivo per performance - critico con 1000 asteroidi"
+  },
+  
+  "asteroids": {
+    "source": "astdys",
+    "selection_mode": "numbered_range",
+    "numbered_range_start": 1,
+    "numbered_range_end": 1000,
+    "comment_range": "Primi 1000 asteroidi numerati (1) Ceres - (1000) Piazzia",
+    
+    "max_magnitude": 16.0,
+    "comment_magnitude": "Filtro magnitudine V ≤ 16.0 - occultazioni osservabili",
+    
+    "min_diameter_km": 0.0,
+    "comment_diameter": "Nessun filtro su diametro - usa solo magnitudine",
+    
+    "priority_large_asteroids": true,
+    "comment_priority": "Priorità asteroidi grandi per risultati migliori"
+  },
+  
+  "gaia": {
+    "source": "mag18",
+    "catalog_path": "/Users/michelebigi/catalogs/gaia_mag18.cat.gz",
+    "comment_catalog": "Usa catalogo Mag18 locale (303M stelle, G≤18)",
+    
+    "max_stars_per_cone": 5000,
+    "cone_radius_arcmin": 60.0,
+    "comment_cone": "Raggio 1° - bilanciamento copertura/performance",
+    
+    "min_magnitude": 8.0,
+    "max_magnitude": 16.0,
+    "comment_mag": "Stelle G=8-16 - range osservabile per occultazioni",
+    
+    "use_proper_motion": true,
+    "epoch": "J2026.0",
+    "comment_pm": "Proper motion critico per precisione posizioni 2026"
+  },
+  
+  "output": {
+    "formats": ["json", "csv", "xml"],
+    "comment_formats": "Tutti i formati per analisi e distribuzione",
+    
+    "json_file": "occultations_jan2026_1000ast_mag16.json",
+    "csv_file": "occultations_jan2026_1000ast_mag16.csv",
+    "xml_file": "occultations_jan2026_1000ast_mag16.xml",
+    
+    "include_negative_events": false,
+    "comment_negative": "Solo eventi positivi per ridurre dimensione output",
+    
+    "min_probability": 0.01,
+    "comment_min_prob": "Soglia 1% - elimina eventi molto improbabili",
+    
+    "sort_by": "probability",
+    "sort_order": "descending",
+    "comment_sort": "I migliori eventi in cima",
+    
+    "max_events": 10000,
+    "comment_max": "Limite output 10k eventi - evita file enormi",
+    
+    "verbose": true,
+    "progress_updates": true,
+    "comment_verbose": "Progress importante per scan lungo (1000 asteroidi)"
+  },
+  
+  "filters": {
+    "min_shadow_width_km": 0.0,
+    "comment_shadow": "Nessun filtro - accetta tutte le dimensioni",
+    
+    "min_duration_seconds": 0.0,
+    "comment_duration": "Nessun filtro - accetta tutte le durate",
+    
+    "max_sun_altitude_deg": -12.0,
+    "comment_sun": "Solo notte astronomica (sole < -12°)",
+    
+    "min_star_altitude_deg": 20.0,
+    "comment_altitude": "Minimo 20° - evita problemi orizzonte",
+    
+    "geographic_filters": {
+      "enabled": false,
+      "comment_geo": "Disabilitato - ricerca globale"
+    }
+  },
+  
+  "performance": {
+    "parallel_threads": 0,
+    "comment_threads": "0 = auto-detect (usa tutti i core disponibili)",
+    
+    "cache_asteroid_ephemeris": true,
+    "comment_cache_eph": "Cache effemeridi riduce calcoli ripetuti",
+    
+    "batch_size": 50,
+    "comment_batch": "50 asteroidi per batch - bilanciamento memoria/performance"
+  },
+  
+  "validation": {
+    "check_earth_shadow": true,
+    "comment_earth_shadow": "Elimina eventi in ombra Terra",
+    
+    "check_moon_distance": false,
+    "min_moon_distance_deg": 10.0,
+    "comment_moon": "Disabilitato - filtra in post-processing se necessario"
+  },
+  
+  "metadata": {
+    "created_by": "IOccultCalc",
+    "created_date": "2025-11-27",
+    "config_version": "2.0",
+    "linoccult_compatible": true,
+    "comment": "Configurazione ottimizzata per ricerca mensile con 1000 asteroidi. Usa Chebyshev per performance. Filtri conservativi per risultati puliti."
+  }
+}

@@ -1,0 +1,43 @@
+# Test MPC Data Import
+# Test che il database MPC venga caricato correttamente
+
+object.
+    .max_magnitude = 14.0
+    .min_perihelion_au = 1.5
+    .max_aphelion_au = 4.5
+    .min_diameter_km = 50.0
+    .max_diameter_km = 1000.0
+    .max_asteroids = 3
+
+propagation.
+    .integrator = 'RK4'
+    .step_size_days = 0.1
+
+time.
+    .start_date = '2026-01-15'
+    .end_date = '2026-01-16'  # Solo 1 giorno per test veloce
+    .interval_days = 1.0
+
+search.
+    .max_magnitude = 14.0
+    .search_radius_deg = 0.1
+    .min_probability = 0.50
+
+occultation.
+    .use_chebyshev = .FALSE.
+    .use_adaptive_timestep = .TRUE.
+    .coarse_timestep_hours = 6.0
+    .fine_timestep_hours = 1.0
+
+gaia.
+    .use_local_cache = .TRUE.
+    .cache_directory = '/Users/michelebigi/catalogs'
+    .catalog_file = 'gaia_mag18.cat.gz'
+
+output.
+    .format = 'iota'
+    .directory = 'output'
+    .verbose = .TRUE.  # Mostra dettagli caricamento
+
+filters.
+    .use_geographic_filter = .FALSE.

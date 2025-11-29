@@ -1,0 +1,54 @@
+{
+  "comment": "Preset con supporto Chebyshev per scan lunghi ad alta risoluzione",
+  "propagation": {
+    "type": "radau",
+    "step_size": 0.5,
+    "tolerance": 1e-12,
+    "perturbations": true
+  },
+  "search": {
+    "start_jd": 2460676.5,
+    "end_jd": 2460683.5,
+    "mag_limit": 14.0,
+    "search_radius_deg": 0.1,
+    "min_probability": 0.01,
+    "apply_parallax_correction": false,
+    "angular_buffer_arcmin": 1.0,
+    "use_adaptive_timestep": false,
+    "coarse_step_days": 1.0,
+    "fine_step_minutes": 15.0
+  },
+  "object": {
+    "designation": "1 Ceres",
+    "min_diameter": 50.0,
+    "max_diameter": 1000.0,
+    "max_asteroids": 10,
+    "orbital_uncertainty_km": 100.0
+  },
+  "database": {
+    "catalog_path": "~/.ioccultcalc/data/all_numbered_asteroids.json",
+    "min_perihelion": 1.5,
+    "max_aphelion": 4.5
+  },
+  "gaia": {
+    "cache_dir": "~/.ioccultcalc/gaia_cache",
+    "use_local_cache": true,
+    "tap_timeout_sec": 120,
+    "max_retries": 5
+  },
+  "chebyshev": {
+    "comment": "Approssimazione Chebyshev per interpolazione veloce (LinOccult method)",
+    "enabled": true,
+    "order": 11,
+    "interval_days": 1.0,
+    "fine_timestep_minutes": 15.0,
+    "precision_check": false,
+    "max_error_km": 10.0
+  },
+  "output": {
+    "format": "json",
+    "output_file": "occultations_chebyshev_test.json",
+    "include_path": true,
+    "path_resolution_minutes": 5.0
+  }
+}

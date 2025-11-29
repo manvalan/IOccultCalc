@@ -5,6 +5,7 @@
 #include <curl/curl.h>
 #include <sstream>
 #include <iostream>
+#include <fstream>
 #include <stdexcept>
 #include <regex>
 
@@ -20,10 +21,15 @@ static size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::stri
 class AstDysClient::Impl {
 public:
     std::string baseURL;
+    std::string localEQ1Dir;
+    std::string localRWODir;
     int timeout;
     CURL* curl;
     
-    Impl() : baseURL("https://newton.spacedys.com/~astdys2/"), timeout(30) {
+    Impl() : baseURL("https://newton.spacedys.com/~astdys2/"), 
+             localEQ1Dir(""), 
+             localRWODir(""),
+             timeout(30) {
         curl_global_init(CURL_GLOBAL_DEFAULT);
         curl = curl_easy_init();
     }
@@ -80,15 +86,122 @@ void AstDysClient::setTimeout(int seconds) {
     pImpl->timeout = seconds;
 }
 
-EquinoctialElements AstDysClient::getElements(const std::string& designation) {
-    // Costruisci URL per scaricare file .eq
-    // Struttura: https://newton.spacedys.com/~astdys2/epoch/numbered/<num/1000>/<num>.eq0
-    // Esempio: 433 -> epoch/numbered/0/433.eq0
-    //          15080 -> epoch/numbered/15/15080.eq0
+void AstDysClient::setLocalEQ1Directory(const std::string& directory) {
+    pImpl->localEQ1Dir = directory;
+}
+
+void AstDysClient::setLocalRWODirectory(const std::string& directory) {
+    pImpl->localRWODir = directory;
+}
+
+EquinoctialElements AstDysClient::getElementsFromFile(const std::string& filepath) {
+    // Leggi file locale
+    std::ifstream file(filepath);
+    if (!file.is_open()) {
+        throw std::runtime_error("Cannot open file: " + filepath);
+    }
     
+    std::string content((std::istreambuf_iterator<char>(file)),
+                        std::istreambuf_iterator<char>());
+    file.close();
+    
+    // Estrai designation dal nome file (es: "433.eq1" -> "433")
+    size_t lastSlash = filepath.find_last_of("/\\");
+    size_t lastDot = filepath.find_last_of('.');
+    std::string designation = filepath.substr(
+        lastSlash == std::string::npos ? 0 : lastSlash + 1,
+        lastDot == std::string::npos ? std::string::npos : lastDot - (lastSlash == std::string::npos ? 0 : lastSlash + 1)
+    );
+    
+    return parseEquinoctialFile(content, designation);
+}
+
+std::vector<std::string> AstDysClient::getObservationsFromFile(const std::string& filepath) {
+    // Leggi file .rwo locale
+    std::ifstream file(filepath);
+    if (!file.is_open()) {
+        throw std::runtime_error("Cannot open .rwo file: " + filepath);
+    }
+    
+    std::vector<std::string> observations;
+    std::string line;
+    bool inDataSection = false;
+    
+    while (std::getline(file, line)) {
+        // Salta header fino a "END_OF_HEADER"
+        if (line.find("END_OF_HEADER") != std::string::npos) {
+            inDataSection = true;
+            continue;
+        }
+        
+        if (!inDataSection) continue;
+        
+        // Salta righe vuote e commenti
+        if (line.empty() || line[0] == '!' || line[0] == '#') continue;
+        
+        // Aggiungi riga osservazione
+        observations.push_back(line);
+    }
+    
+    file.close();
+    return observations;
+}
+
+std::vector<std::string> AstDysClient::getObservations(const std::string& designation) {
+    // Verifica numero asteroide
     int asteroidNumber = 0;
+    if (std::all_of(designation.begin(), designation.end(), ::isdigit)) {
+        asteroidNumber = std::stoi(designation);
+    } else {
+        throw std::runtime_error("AstDyS supports only numbered asteroids");
+    }
     
-    // Se è un numero, calcola la directory
+    // Calcola subdirectory
+    int dirNumber = asteroidNumber / 1000;
+    
+    // SE directory locale configurata, prova file locale
+    if (!pImpl->localRWODir.empty()) {
+        std::string localPath = pImpl->localRWODir + "/" + designation + ".rwo";
+        
+        std::ifstream file(localPath);
+        if (file.good()) {
+            std::cout << "📁 Carico osservazioni da file locale: " << localPath << std::endl;
+            file.close();
+            return getObservationsFromFile(localPath);
+        } else {
+            std::cout << "⚠️  File .rwo locale non trovato: " << localPath << std::endl;
+            std::cout << "   Provo download da AstDyS..." << std::endl;
+        }
+    }
+    
+    // ALTRIMENTI scarica da AstDyS
+    std::string url = pImpl->baseURL + "mpcobs/numbered/" + std::to_string(dirNumber) + "/" + designation + ".rwo";
+    
+    std::cout << "🌐 Download osservazioni da AstDyS: " << url << std::endl;
+    std::string content = pImpl->httpGet(url);
+    
+    // Parse contenuto
+    std::vector<std::string> observations;
+    std::istringstream stream(content);
+    std::string line;
+    bool inDataSection = false;
+    
+    while (std::getline(stream, line)) {
+        if (line.find("END_OF_HEADER") != std::string::npos) {
+            inDataSection = true;
+            continue;
+        }
+        if (!inDataSection) continue;
+        if (line.empty() || line[0] == '!' || line[0] == '#') continue;
+        observations.push_back(line);
+    }
+    
+    return observations;
+}
+
+EquinoctialElements AstDysClient::getElements(const std::string& designation) {
+    // Verifica numero asteroide
+    int asteroidNumber = 0;
     if (std::all_of(designation.begin(), designation.end(), ::isdigit)) {
         asteroidNumber = std::stoi(designation);
     } else {
@@ -98,9 +211,28 @@ EquinoctialElements AstDysClient::getElements(const std::string& designation) {
     // Calcola il numero della directory (numero / 1000)
     int dirNumber = asteroidNumber / 1000;
     
-    // Usa .eq1 che ha epoche RECENTI invece di .eq0 (vecchio)
+    // SE directory locale configurata, prova a caricare da file
+    if (!pImpl->localEQ1Dir.empty()) {
+        std::string localPath = pImpl->localEQ1Dir + "/" + designation + ".eq1";
+        
+        std::ifstream file(localPath);
+        if (file.good()) {
+            std::cout << "📁 Carico elementi da file locale: " << localPath << std::endl;
+            file.close();
+            return getElementsFromFile(localPath);
+        } else {
+            std::cout << "⚠️  File locale non trovato: " << localPath << std::endl;
+            std::cout << "   Provo download da AstDyS..." << std::endl;
+        }
+    }
+    
+    // ALTRIMENTI scarica da AstDyS (HTTP)
+    // Struttura: https://newton.spacedys.com/~astdys2/epoch/numbered/<num/1000>/<num>.eq1
+    // Esempio: 433 -> epoch/numbered/0/433.eq1
+    //          11234 -> epoch/numbered/11/11234.eq1
     std::string url = pImpl->baseURL + "epoch/numbered/" + std::to_string(dirNumber) + "/" + designation + ".eq1";
     
+    std::cout << "🌐 Download da AstDyS: " << url << std::endl;
     std::string content = pImpl->httpGet(url);
     return parseEquinoctialFile(content, designation);
 }
@@ -150,57 +282,81 @@ EquinoctialElements AstDysClient::parseEquinoctialFile(const std::string& conten
     elem.designation = designation;
     
     // Parsing del formato .eq di AstDyS
-    // Formato tipico (varia, questa è una approssimazione):
-    // Nome
-    // Epoca MJD
-    // a h k p q lambda
-    // H G
+    // NOTA: I valori possono essere spezzati su più righe!
+    // Formato: "EQU a h k p q_part1\nq_part2 lambda ... MJD epoch TDT"
+    // Cerchiamo la linea EQU e la successiva, le combiniamo, poi estraiamo i numeri
     
     std::istringstream iss(content);
     std::string line;
-    int lineNum = 0;
+    std::string equBlock;
+    bool inEquBlock = false;
     
     while (std::getline(iss, line)) {
-        if (line.empty() || line[0] == '#' || line[0] == '!') continue;
-        
-        lineNum++;
+        if (line.empty() || line[0] == '!') continue;
         
         // Rimuovi spazi iniziali
         size_t start = line.find_first_not_of(" \t");
         if (start == std::string::npos) continue;
         line = line.substr(start);
         
-        // Controlla il tipo di linea
+        // Header, salta
         if (line.find("format") == 0 || line.find("rectype") == 0 || 
             line.find("refsys") == 0 || line.find("END_OF_HEADER") == 0) {
-            continue; // Header, salta
+            continue;
         }
         
-        // Nome dell'asteroide (solo numero o designazione)
+        // Nome dell'asteroide
         if (elem.name.empty() && line.find_first_not_of("0123456789") == std::string::npos) {
             elem.name = line;
             continue;
         }
         
-        // Linea EQU con elementi
+        // Inizia blocco EQU
         if (line.find("EQU") == 0) {
-            std::istringstream iss_line(line.substr(3)); // Salta "EQU"
-            iss_line >> elem.a >> elem.h >> elem.k >> elem.p >> elem.q >> elem.lambda;
+            equBlock = line;
+            inEquBlock = true;
             continue;
         }
         
-        // Linea MJD con epoca
-        if (line.find("MJD") == 0) {
-            std::istringstream iss_line(line.substr(3)); // Salta "MJD"
-            double mjd;
-            iss_line >> mjd;
-            elem.epoch.jd = mjd + 2400000.5; // Converti MJD in JD
+        // Continua blocco EQU (riga successiva con resto dei dati e MJD)
+        if (inEquBlock && line.find("MAG") != 0 && line.find("LSP") != 0 && 
+            line.find("COV") != 0 && line.find("NOR") != 0 && line.find("RMS") != 0 &&
+            line.find("EIG") != 0 && line.find("WEA") != 0) {
+            equBlock += " " + line;
+            
+            // Se contiene MJD, il blocco EQU è completo
+            if (line.find("MJD") != std::string::npos) {
+                inEquBlock = false;
+                
+                // Parsing del blocco EQU completo
+                // Formato: "EQU a h k p q lambda ... MJD epoch TDT"
+                size_t mjdPos = equBlock.find("MJD");
+                std::string equData = equBlock.substr(3, mjdPos - 3); // Dopo "EQU", prima di "MJD"
+                std::string mjdData = equBlock.substr(mjdPos + 3);
+                
+                // Leggi i 6 elementi equinoziali
+                std::istringstream iss_equ(equData);
+                iss_equ >> elem.a >> elem.h >> elem.k >> elem.p >> elem.q >> elem.lambda;
+                
+                // Lambda è in GRADI nel formato AstDyS, converti in radianti
+                elem.lambda = elem.lambda * M_PI / 180.0;
+                
+                // Normalizza mean longitude a [0, 2π]
+                while (elem.lambda < 0) elem.lambda += 2.0 * M_PI;
+                while (elem.lambda >= 2.0 * M_PI) elem.lambda -= 2.0 * M_PI;
+                
+                // Leggi epoca MJD
+                std::istringstream iss_mjd(mjdData);
+                double mjd;
+                iss_mjd >> mjd;
+                elem.epoch.jd = mjd + 2400000.5;
+            }
             continue;
         }
         
         // Linea MAG con H e G
         if (line.find("MAG") == 0) {
-            std::istringstream iss_line(line.substr(3)); // Salta "MAG"
+            std::istringstream iss_line(line.substr(3));
             iss_line >> elem.H >> elem.G;
             continue;
         }

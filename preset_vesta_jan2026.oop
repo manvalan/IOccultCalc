@@ -1,0 +1,47 @@
+# IOccultCalc Preset - (4) Vesta gennaio 2026
+# Confronto con predizioni Preston/LinOccult
+
+general.
+    .propagator = 'RK4'
+    .step_size_days = 0.05
+
+time.
+    .start_date = '2026-01-01'
+    .end_date = '2026-01-31'
+    .interval_days = 1.0
+
+asteroids.
+    .selection_mode = 'list'
+    .asteroid_list = '4'
+    .max_magnitude = 16.0
+
+search.
+    .max_magnitude = 16.0
+    .search_radius_deg = 0.1
+    .min_probability = 0.01
+
+occultation.
+    .shadow_threshold_factor = 3.0
+    .star_uncertainty_base_mas = 7.0
+    .star_pm_degradation_mas_per_year = 2.5
+    .use_probability_cdf = .TRUE.
+    .earth_oblateness_factor = 0.996647
+    .use_chebyshev = .TRUE.
+    .chebyshev_order = 11
+    .chebyshev_interval_days = 1.0
+    .use_adaptive_timestep = .TRUE.
+    .coarse_timestep_hours = 6.0
+    .fine_timestep_hours = 0.5
+    .angular_buffer_arcmin = 1.0
+
+gaia.
+    .use_local_cache = .TRUE.
+    .cache_directory = '/Users/michelebigi/catalogs'
+    .catalog_file = 'gaia_mag18.cat.gz'
+    .auto_download = .FALSE.
+
+output.
+    .format = 'iota'
+    .directory = 'output'
+    .include_uncertainties = .TRUE.
+    .include_path = .TRUE.

@@ -1,0 +1,38 @@
+// Helper per estrarre configurazione Chebyshev da ConfigManager
+ChebyshevConfig extractChebyshevConfig(const ConfigManager& config) {
+    ChebyshevConfig chebConfig;
+    
+    auto chebSection = config.getSection(ConfigSection::CHEBYSHEV);
+    if (!chebSection) {
+        // Default: Chebyshev disabilitato
+        chebConfig.enabled = false;
+        return chebConfig;
+    }
+    
+    // Leggi parametri
+    if (chebSection->hasParameter("enabled")) {
+        chebConfig.enabled = chebSection->getParameter("enabled")->asBool();
+    }
+    
+    if (chebSection->hasParameter("order")) {
+        chebConfig.order = chebSection->getParameter("order")->asInt();
+    }
+    
+    if (chebSection->hasParameter("interval_days")) {
+        chebConfig.intervalDays = chebSection->getParameter("interval_days")->asDouble();
+    }
+    
+    if (chebSection->hasParameter("fine_timestep_minutes")) {
+        chebConfig.fineTimestepMinutes = chebSection->getParameter("fine_timestep_minutes")->asDouble();
+    }
+    
+    if (chebSection->hasParameter("precision_check")) {
+        chebConfig.precisionCheck = chebSection->getParameter("precision_check")->asBool();
+    }
+    
+    if (chebSection->hasParameter("max_error_km")) {
+        chebConfig.maxErrorKm = chebSection->getParameter("max_error_km")->asDouble();
+    }
+    
+    return chebConfig;
+}

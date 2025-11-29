@@ -4,6 +4,7 @@
 #include "orbital_elements.h"
 #include "ephemeris.h"
 #include "gaia_client.h"
+#include "chebyshev_approximation.h"
 #include "types.h"
 #include <string>
 #include <vector>
@@ -60,6 +61,9 @@ public:
     // Carica l'asteroide da AstDyS
     void loadAsteroidFromAstDyS(const std::string& designation);
     
+    // Configura directory locali per file AstDyS
+    void setLocalAstDySDirectories(const std::string& eq1Dir, const std::string& rwoDir);
+    
     // Cerca occultazioni in un intervallo temporale
     std::vector<OccultationEvent> findOccultations(
         const JulianDate& startJD,
@@ -86,6 +90,30 @@ public:
     
     // Imposta l'errore orbitale (sigma in km) per calcolo incertezze
     void setOrbitalUncertainty(double sigmaKm);
+    
+    // Configura approssimazione Chebyshev per performance
+    void setChebyshevConfig(const ChebyshevConfig& config);
+    
+    // Ottiene configurazione Chebyshev corrente
+    const ChebyshevConfig& getChebyshevConfig() const;
+    
+    // ===== OPZIONI AVANZATE (OPZIONALI) =====
+    
+    // Abilita correzione parallasse per stelle vicine
+    // Default: false (per retrocompatibilità)
+    // Impatto: +0.5" accuratezza per stelle con parallax > 10 mas
+    void setParallaxCorrection(bool enabled);
+    
+    // Imposta buffer angolare per ricerca stelle (arcmin)
+    // Default: 0.0 (nessun buffer)
+    // Raccomandato: 1.0 arcmin per evitare edge cases
+    void setAngularBuffer(double arcmin);
+    
+    // Abilita timestep adattivo (scan grossolano + refine automatico)
+    // Default: false (timestep fisso)
+    // Impatto: 10× speedup per scan lunghi, cattura tutti eventi
+    void setAdaptiveTimestep(bool enabled, double coarseStepDays = 1.0, 
+                            double fineStepMinutes = 15.0);
     
 private:
     class Impl;

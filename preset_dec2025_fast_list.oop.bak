@@ -1,0 +1,109 @@
+# ============================================================================
+# PRESET: Dicembre 2025 - Ricerca Veloce Lista Asteroidi
+# ============================================================================
+# Modalità FAST per generare velocemente lista asteroidi con occultazioni
+# Output: Lista asteroidi da analizzare con preset dettagliato
+# Ottimizzazioni: Chebyshev, mag limite bassa, no orbit fitting
+# ============================================================================
+
+# ════════════════════════════════════════════════════════════════════════
+# OBJECT - Definizione oggetto (obbligatorio)
+# ════════════════════════════════════════════════════════════════════════
+
+object.
+    .id = '1-1000'
+    .name = 'asteroids_1_1000'
+
+# ════════════════════════════════════════════════════════════════════════
+# PROPAGATION - Metodo di propagazione (obbligatorio)
+# ════════════════════════════════════════════════════════════════════════
+
+propagation.
+    .method = 'CHEBYSHEV'
+    .step_size_days = 0.5
+    .planetary_ephemeris = 'DE441'
+    .include_perturbations = .TRUE.
+    .include_relativity = .FALSE.
+
+# ════════════════════════════════════════════════════════════════════════
+# CHEBYSHEV - Parametri specifici
+# ════════════════════════════════════════════════════════════════════════
+
+chebyshev.degree = 11
+chebyshev.step_days = 20.0
+
+# ════════════════════════════════════════════════════════════════════════
+# PERIODO TEMPORALE - DICEMBRE 2025
+# ════════════════════════════════════════════════════════════════════════
+
+time.start_jd = 2460674.500000
+time.end_jd = 2460705.500000
+
+# ════════════════════════════════════════════════════════════════════════
+# SELEZIONE ASTEROIDI - 1-1000
+# ════════════════════════════════════════════════════════════════════════
+
+asteroid_db.filter_by = 'list'
+asteroid_db.use_local_database = false
+asteroid_db.asteroid_list_file = 'asteroids_1_1000.txt'
+
+# ════════════════════════════════════════════════════════════════════════
+# RICERCA OCCULTAZIONI - PARAMETRI VELOCI
+# ════════════════════════════════════════════════════════════════════════
+
+search.max_separation_arcsec = 10.0
+search.min_probability = 0.005
+search.magnitude_limit = 13.0
+
+# ════════════════════════════════════════════════════════════════════════
+# CATALOGO STELLE - GAIA EDR3
+# ════════════════════════════════════════════════════════════════════════
+
+gaia.
+    .catalog = 'GAIA_EDR3'
+    .max_magnitude = 13.0
+    .use_proper_motion = .TRUE.
+    .cache_dir = '/Users/michelebigi/.ioccultcalc/gaia_cache'
+    .version = 'DR3'
+    .cone_search_radius_deg = 0.2
+
+# ════════════════════════════════════════════════════════════════════════
+# OUTPUT - LISTA ASTEROIDI
+# ════════════════════════════════════════════════════════════════════════
+
+output.
+    .output_file = 'occultations_dec2025_fast.txt'
+    .format = 'text'
+    .include_header = .TRUE.
+    .include_statistics = .TRUE.
+    .sort_by = 'date'
+    .export_asteroid_list = .TRUE.
+    .asteroid_list_file = 'asteroids_dec2025_candidates.txt'
+
+# ════════════════════════════════════════════════════════════════════════
+# OSSERVATORE - Centro Italia
+# ════════════════════════════════════════════════════════════════════════
+
+observer.name = 'Italy-Center'
+observer.latitude = 42.8333
+observer.longitude = 12.8333
+observer.elevation_m = 100.0
+
+# ============================================================================
+# NOTE
+# ============================================================================
+# Questo preset è ottimizzato per VELOCITÀ:
+# - Chebyshev degree 11 (invece di 15)
+# - Step 20 giorni (invece di 8-16)
+# - NO orbit fitting
+# - NO relatività
+# - Mag limite 13.0 (invece di 16-18)
+# - Shadow threshold 4.0 (permissivo)
+#
+# Output:
+# 1. occultations_dec2025_fast.txt - Lista eventi
+# 2. asteroids_dec2025_candidates.txt - Lista asteroidi da riprocessare
+#
+# Prossimo step:
+# Usare asteroids_dec2025_candidates.txt con preset dettagliato (high precision)
+# ============================================================================

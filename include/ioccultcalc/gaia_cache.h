@@ -177,6 +177,11 @@ public:
     void setGaiaClient(std::shared_ptr<GaiaClient> client);
     
     /**
+     * @brief Imposta versione catalogo Gaia (EDR3 o DR3)
+     */
+    void setGaiaVersion(GaiaVersion version);
+    
+    /**
      * @brief Abilita/disabilita auto-download
      */
     void setAutoDownload(bool enable);

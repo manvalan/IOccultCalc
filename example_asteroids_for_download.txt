@@ -1,0 +1,12 @@
+# Lista esempio asteroidi per test download
+# Formato: un numero per riga, oppure output IOccultCalc
+
+# Asteroidi famosi con buone osservazioni
+1     # Ceres
+2     # Pallas  
+4     # Vesta
+10    # Hygiea
+203   # Pompeja
+433   # Eros
+704   # Interamnia
+11234 # 1999 JS82

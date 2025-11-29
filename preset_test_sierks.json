@@ -1,0 +1,35 @@
+{
+  "description": "Test evento reale: (17030) Sierks - 28 nov 2025 - da OccultWatcher",
+  "sections": [
+    {
+      "type": "object",
+      "parameters": [
+        {"name": "asteroid_number", "type": "int", "value": "17030"},
+        {"name": "catalog_file", "type": "string", "value": "mpc_extended.json"}
+      ]
+    },
+    {
+      "type": "search",
+      "parameters": [
+        {"name": "start_jd", "type": "double", "value": "2460604.0"},
+        {"name": "end_jd", "type": "double", "value": "2460606.0"},
+        {"name": "mag_limit", "type": "double", "value": "14.0"},
+        {"name": "search_radius_deg", "type": "double", "value": "0.5"}
+      ]
+    },
+    {
+      "type": "propag",
+      "parameters": [
+        {"name": "step_hours", "type": "double", "value": "0.5"},
+        {"name": "use_perturbations", "type": "bool", "value": "true"}
+      ]
+    },
+    {
+      "type": "output",
+      "parameters": [
+        {"name": "format", "type": "string", "value": "text"},
+        {"name": "verbose", "type": "bool", "value": "true"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+! Test FIX threshold - Solo 3 asteroidi grandi
+! Gennaio 2026 - 7 giorni
+
+object.
+        .id = 'all'
+
+time.
+        .start_jd = 2460676.500000      ! 2026-01-01
+        .end_jd = 2460683.500000        ! 2026-01-07 (7 giorni)
+        .step_hours = 12.0
+
+propag.
+        .type = 'RA15'
+        .step_size = 0.1
+        .tolerance = 1.0E-12
+
+perturbations.
+        .planets = .TRUE.
+        .relativity = .TRUE.
+        .asteroid_count = 17
+
+gaia.
+        .version = 'DR3'
+        .use_local_cache = .FALSE.
+        .max_magnitude = 14.0
+
+asteroid_db.
+        .source = 'MPCORB'
+        .filter_by = 'H_magnitude'
+        .min_H = 3.0
+        .max_H = 5.0
+
+output.
+        .format = 'text'
+        .file = 'test_output_threshold_fix.txt'
+        .verbose = .TRUE.

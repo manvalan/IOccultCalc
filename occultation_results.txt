@@ -1,194 +1,29 @@
-================================================================================
-ITALOCCULTCALC - ASTEROID OCCULTATION PREDICTIONS
-================================================================================
-Generated: 2025-11-23
-Software: v1.0.0
-Total events: 3
-================================================================================
 
-EVENT #1 - Priority: ★★★ (11/11)
---------------------------------------------------------------------------------
+╔═══════════════════════════════════════════════════════════════╗
+║                     ITALOccultCalc v1.0                        ║
+║         Ricerca Automatica Occultazioni Asteroidali           ║
+║              Ottimizzato per Osservatori Italiani              ║
+╚═══════════════════════════════════════════════════════════════╝
 
-ASTEROID:
-  (324) Bamberga = 1892 A
-  Diameter: 228.0 km
-  H magnitude: 6.82
-  Albedo: 0.063
+╔════════════════════════════════════════════════════════════════╗
+║  Modalità Verbose - Barra di Avanzamento Unificata            ║
+╠════════════════════════════════════════════════════════════════╣
+║  0-40%:  Propagazione orbite                                   ║
+║  40-50%: Query catalogo stelle                                 ║
+║  50-100%: Rilevamento occultazioni                             ║
+╚════════════════════════════════════════════════════════════════╝
 
-STAR:
-  Catalog: TYC 5865-00764-1
-  RA: +56°49'24.24"
-  Dec: +08°27'24.12"
-  Magnitude: 7.50
 
-OCCULTATION:
-  Time (UTC): 2025-12-08 22:44:13
-  JD: 2460653.447370
-  Magnitude drop: 3.07 mag
-  Duration: 11.5 seconds
-  Shadow width: 228.0 km
-  Shadow velocity: 19.80 km/s
-  Closest approach: 0.120 arcsec
+================================================================
+CARICAMENTO CONFIGURAZIONE
+================================================================
 
-UNCERTAINTIES:
-  Path: ±12.0 km
-  Time: ±2.50 seconds
+File configurazione: preset_jan2026_1000ast_mag16.oop
+✓ Configurazione OrbFit caricata
+Errori di validazione:
+  ✗ Missing required section: object
+  ✗ Missing required section: propagation
+✗ Errore caricamento configurazione: Configurazione non valida
 
-CENTRAL PATH:
-  Start: +45°30'00.00", +09°11'60.00" (Milano)
-  End:   +40°47'60.00", +14°18'00.00" (Napoli)
-
-OBSERVABILITY:
-  Roma Campidoglio:
-    Altitude: 71.3°
-    Azimuth: 135.7°
-    Sun altitude: -45.2°
-    Observable: YES
-  Milano Brera:
-    Altitude: 68.9°
-    Azimuth: 138.2°
-    Sun altitude: -43.8°
-    Observable: YES
-
-MAP:
-  |--------------------------------------------------------------------------|
-  |                                                                          |
-  |      *                                                                   |
-  |                                                                          |
-  |                                                                          |
-  |                               *                                          |
-  |                                                                          |
-  |                             *                                            |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                             *                            |
-  |                                                                          |
-  |                                                                          |
-  |                                                                  *       |
-  |                                                                          |
-  |                                                                          |
-  |--------------------------------------------------------------------------|
-  Lat: 40.3° to 46.0°
-  Lon: 8.7° to 14.8°
-
-================================================================================
-
-EVENT #2 - Priority: ★★★ (9/11)
---------------------------------------------------------------------------------
-
-ASTEROID:
-  (10) Hygiea = 1849 Hygiea
-  Diameter: 407.1 km
-  H magnitude: 5.43
-  Albedo: 0.072
-
-STAR:
-  Catalog: GAIA DR3 1234567890123456
-  RA: +123°27'24.12"
-  Dec: +23°27'24.12"
-  Magnitude: 10.20
-
-OCCULTATION:
-  Time (UTC): 2026-01-09 18:35:48
-  JD: 2460685.274866
-  Magnitude drop: 7.45 mag
-  Duration: 22.2 seconds
-  Shadow width: 407.1 km
-  Shadow velocity: 18.30 km/s
-  Closest approach: 19.630 arcsec
-
-UNCERTAINTIES:
-  Path: ±18.0 km
-  Time: ±3.20 seconds
-
-CENTRAL PATH:
-  Start: +42°30'00.00", +10°30'00.00" (Corsica)
-  End:   +40°12'00.00", +15°05'60.00" (Campania)
-
-MAP:
-  |--------------------------------------------------------------------------|
-  |                                                                          |
-  |      *                                                                   |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                    *                                     |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                  *       |
-  |                                                                          |
-  |                                                                          |
-  |--------------------------------------------------------------------------|
-  Lat: 40.0° to 42.7°
-  Lon: 10.0° to 15.6°
-
-================================================================================
-
-EVENT #3 - Priority: ★★ (7/11)
---------------------------------------------------------------------------------
-
-ASTEROID:
-  (4) Vesta = 1807 FA
-  Diameter: 525.4 km
-  H magnitude: 3.20
-  Albedo: 0.423
-
-STAR:
-  Catalog: HIP 45678
-  RA: +234°34'04.08"
-  Dec: -12°20'44.16"
-  Magnitude: 8.90
-
-OCCULTATION:
-  Time (UTC): 2026-01-24 15:00:00
-  JD: 2460700.125000
-  Magnitude drop: 5.12 mag
-  Duration: 24.4 seconds
-  Shadow width: 525.4 km
-  Shadow velocity: 21.50 km/s
-  Closest approach: 5.230 arcsec
-
-UNCERTAINTIES:
-  Path: ±22.0 km
-  Time: ±2.80 seconds
-
-CENTRAL PATH:
-  Start: +38°06'00.00", +13°24'00.00" (Sicilia)
-  End:   +37°30'00.00", +15°05'60.00" (Sicilia)
-
-MAP:
-  |--------------------------------------------------------------------------|
-  |                                                                          |
-  |      *                                                                   |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                          |
-  |                                                                  *       |
-  |                                                                          |
-  |                                                                          |
-  |--------------------------------------------------------------------------|
-  Lat: 37.4° to 38.2°
-  Lon: 13.2° to 15.3°
-
-================================================================================
+✗ ERRORE CRITICO: Configurazione non valida
 

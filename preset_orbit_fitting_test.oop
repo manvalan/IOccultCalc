@@ -1,0 +1,50 @@
+! ============================================================
+! PRESET: Orbit Fitting Test - (433) Eros
+! ============================================================
+! Test completo dell'integrazione orbit fitting con osservazioni AstDyS
+! Verifico che le osservazioni .rwo vengano parsate e usate per fitting
+
+! Modalità Operativa
+operation_mode.mode = PREDICT
+
+! Configurazione Integrazione
+integration.method = CHEBYSHEV
+integration.chebyshev_degree = 13
+integration.chebyshev_step_days = 16.0
+
+! Perturbing Bodies
+perturbing_bodies.planets = .TRUE.
+perturbing_bodies.moon = .TRUE.
+perturbing_bodies.asteroids = AST17
+
+! Object Source
+object.source = ASTDYS
+object.designation = 433
+
+! Propagation
+propag.method = CHEBYSHEV
+propag.chebyshev_degree = 13
+propag.chebyshev_step_days = 16.0
+
+! Orbit Fitting
+orbit_fitting.enable_fitting = .TRUE.
+orbit_fitting.observation_source = ASTDYS
+orbit_fitting.max_iterations = 10
+orbit_fitting.convergence_tolerance = 1.0e-6
+orbit_fitting.outlier_sigma = 3.0
+
+! Target
+TARGET (433) Eros
+
+! Time Range (gennaio 2026 - test predictions)
+TIME_RANGE 2026-01-01 2026-01-31
+
+! Observer
+OBSERVER Greenwich
+
+! Star Catalogs
+STAR_CATALOG GAIA_EDR3
+MIN_STAR_MAGNITUDE 14.0
+
+! Output
+OUTPUT_FILE occultations_fitting_test.txt

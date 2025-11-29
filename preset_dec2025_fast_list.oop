@@ -1,173 +1,35 @@
-# ============================================================================
-# PRESET: Dicembre 2025 - Ricerca Veloce Lista Asteroidi
-# ============================================================================
-# Modalità FAST per generare velocemente lista asteroidi con occultazioni
-# Output: Lista asteroidi da analizzare con preset dettagliato
-# Ottimizzazioni: Chebyshev, mag limite bassa, no orbit fitting
-# ============================================================================
+! TEST VELOCE - Dicembre 2025 - Lista Asteroidi 1-1000
+! 31 giorni, Chebyshev degree 11, Gaia DR3 mag 13.0
 
-# ════════════════════════════════════════════════════════════════════════
-# CONFIGURAZIONE GENERALE
-# ════════════════════════════════════════════════════════════════════════
+time.start_jd = 2460674.500000
+time.end_jd = 2460705.500000
 
-general.
-    .propagator = 'Chebyshev'
-    .step_size_days = 1.0
-    .output_format = 'text'
-    .verbose = .FALSE.
+object.id = '1'
+object.name = 'First1000'
 
-# ════════════════════════════════════════════════════════════════════════
-# PROPAGATORE CHEBYSHEV (VELOCE)
-# ════════════════════════════════════════════════════════════════════════
+asteroid_db.filter_by = 'H_magnitude'
+asteroid_db.min_H = 3.0
+asteroid_db.max_H = 20.0
+asteroid_db.use_local_database = false
 
-propagator.
-    # Chebyshev polinomiale (molto veloce)
-    .use_chebyshev = .TRUE.
-    .chebyshev_degree = 11              # Grado medio (compromesso velocità/precisione)
-    .chebyshev_step_days = 20.0         # Step grande per velocità
-    
-    # Perturbazioni essenziali
-    .use_planetary_perturbations = .TRUE.
-    .include_mercury = .FALSE.          # Skip pianeti piccoli per velocità
-    .include_venus = .TRUE.
-    .include_earth = .TRUE.
-    .include_mars = .TRUE.
-    .include_jupiter = .TRUE.
-    .include_saturn = .TRUE.
-    .include_uranus = .FALSE.
-    .include_neptune = .FALSE.
-    
-    # NO relatività per velocità
-    .use_relativistic_corrections = .FALSE.
+search.max_separation_arcsec = 10.0
+search.min_probability = 0.005
+search.magnitude_limit = 13.0
 
-# ════════════════════════════════════════════════════════════════════════
-# SORGENTE ELEMENTI ORBITALI
-# ════════════════════════════════════════════════════════════════════════
+gaia.version = 'DR3'
+gaia.use_cache = true
 
-orbit_source.
-    .type = 'mpc'                       # Minor Planet Center (invece di astdys)
-    .auto_download = .TRUE.
-    
-    # File locale MPC (opzionale, se disponibile)
-    # .local_file = 'MPCORB.DAT'
-    
-    # NO orbit fitting (troppo lento per ricerca veloce)
-    .fit_orbit = .FALSE.
+propagation.method = 'RA15'
+propagation.step_size_days = 0.1
+propagation.planetary_ephemeris = 'DE441'
+propagation.include_perturbations = true
+propagation.include_relativity = false
 
-# ════════════════════════════════════════════════════════════════════════
-# PERIODO TEMPORALE - DICEMBRE 2025
-# ════════════════════════════════════════════════════════════════════════
+output.formats = ['json']
+output.directory = 'output'
+output.prefix = 'dec2025_fast'
 
-time.
-    .start_date = '2025-12-01'
-    .end_date = '2025-12-31'
-    .interval_days = 1.0
-
-# ════════════════════════════════════════════════════════════════════════
-# SELEZIONE ASTEROIDI - PRIMI 1000 NUMERATI
-# ════════════════════════════════════════════════════════════════════════
-
-asteroids.
-    .selection_mode = 'number_range'
-    .number_range_start = 1
-    .number_range_end = 1000
-    
-    # Filtri dimensione/luminosità
-    .min_absolute_magnitude = -99.0     # No limite (tutti)
-    .max_absolute_magnitude = 15.0      # Solo asteroidi abbastanza grandi
-
-# ════════════════════════════════════════════════════════════════════════
-# RICERCA OCCULTAZIONI - PARAMETRI VELOCI
-# ════════════════════════════════════════════════════════════════════════
-
-search.
-    .max_magnitude = 13.0               # Solo stelle luminose (ricerca veloce)
-    .search_radius_deg = 0.1            # Raggio ampio per trovare più eventi
-    .min_probability = 0.005            # Soglia bassa (0.5%)
-
-occultation.
-    # Shadow più permissivo per ricerca veloce
-    .shadow_threshold_factor = 4.0      # Più permissivo
-    
-    # Incertezze standard (no fitting)
-    .star_uncertainty_base_mas = 10.0
-    .star_pm_degradation_mas_per_year = 3.0
-    .use_probability_cdf = .TRUE.
-    
-    # NO Chebyshev extra (già usato nel propagatore)
-    .use_chebyshev = .FALSE.
-    .use_adaptive_timestep = .FALSE.
-
-# ════════════════════════════════════════════════════════════════════════
-# CATALOGO STELLE - GAIA DR3
-# ════════════════════════════════════════════════════════════════════════
-
-gaia.
-    .use_local_cache = .TRUE.
-    .cache_directory = '/Users/michelebigi/.ioccultcalc/gaia_cache'
-    .auto_download = .TRUE.
-    .version = 'DR3'
-    .cone_search_radius_deg = 0.2       # Ampio per performance
-
-# ════════════════════════════════════════════════════════════════════════
-# OUTPUT - LISTA ASTEROIDI
-# ════════════════════════════════════════════════════════════════════════
-
-output.
-    .output_file = 'occultations_dec2025_fast.txt'
-    .format = 'text'
-    
-    # Opzioni lista
-    .include_header = .TRUE.
-    .include_statistics = .TRUE.
-    .sort_by = 'date'
-    
-    # Esporta lista asteroidi trovati
-    .export_asteroid_list = .TRUE.
-    .asteroid_list_file = 'asteroids_dec2025_candidates.txt'
-
-# ════════════════════════════════════════════════════════════════════════
-# FILTRI GEOGRAFICI - VISIBILITÀ ITALIA
-# ════════════════════════════════════════════════════════════════════════
-
-geographic.
-    # Bounding box Italia approssimativo
-    .min_latitude = 36.0                # Sud Sicilia
-    .max_latitude = 47.0                # Nord Alpi
-    .min_longitude = 6.0                # Ovest
-    .max_longitude = 19.0               # Est (include Puglia)
-    
-    # Criteri visibilità
-    .min_sun_altitude_deg = -18.0       # Notte astronomica
-    .max_sun_altitude_deg = -6.0        # Fino a crepuscolo civile
-    .min_target_altitude_deg = 20.0     # Target sopra 20°
-
-# ════════════════════════════════════════════════════════════════════════
-# OSSERVATORI DI RIFERIMENTO (per statistiche)
-# ════════════════════════════════════════════════════════════════════════
-
-observer.
-    .name = 'Italy-Center'
-    .latitude = 42.8333                 # Centro Italia (Roma area)
-    .longitude = 12.8333
-    .elevation_m = 100.0
-    .timezone = 'Europe/Rome'
-
-# ============================================================================
-# NOTE
-# ============================================================================
-# Questo preset è ottimizzato per VELOCITÀ:
-# - Chebyshev degree 11 (invece di 15)
-# - Step 20 giorni (invece di 8-16)
-# - NO orbit fitting
-# - NO relatività
-# - Mag limite 13.0 (invece di 16-18)
-# - Shadow threshold 4.0 (permissivo)
-#
-# Output:
-# 1. occultations_dec2025_fast.txt - Lista eventi
-# 2. asteroids_dec2025_candidates.txt - Lista asteroidi da riprocessare
-#
-# Prossimo step:
-# Usare asteroids_dec2025_candidates.txt con preset dettagliato (high precision)
-# ============================================================================
+observer.name = 'Italy-Center'
+observer.latitude = 42.8333
+observer.longitude = 12.8333
+observer.elevation_m = 100.0

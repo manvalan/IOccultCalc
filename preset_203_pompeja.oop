@@ -1,0 +1,46 @@
+! IOccultCalc Configuration File - (203) Pompeja
+! Adattato da OrbFit configuration per test propagatore
+! Created: 25 November 2025
+
+object.
+        .id = '203'
+        .name = '(203) Pompeja'
+        .min_diameter = 100.0
+        .max_diameter = 120.0
+
+propag.
+        .start_jd = 2461192.000000  ! MJD 61192.00 TDT (epoch dal file OrbFit)
+        .end_jd = 2461557.000000    ! +365 giorni (1 anno)
+        .step_size = 0.050000       ! 0.05 days = 1.2 hours
+        .type = 'RA15'              ! RA15 come usa OrbFit per alta precisione
+
+ephemeris.
+        .jpl_version = 'DE441'
+        .ast17_file = '~/.ioccultcalc/ephemerides/codes_300ast_20100725.bsp'
+
+perturbations.
+        .planets = .TRUE.
+        .relativity = .TRUE.
+        .asteroid_count = 17        ! iast=17 dal file OrbFit
+
+output.
+        .file = 'occultations_203_pompeja.json'
+        .format = 'JSON'
+        .verbosity = 2
+
+search.
+        .start_jd = 2461192.000000
+        .end_jd = 2461557.000000
+        .mag_limit = 15.0
+        .step_days = 0.5
+        .min_duration = 0.5
+        .max_duration = 300.0
+
+gaia.
+        .cache_dir = '~/.ioccultcalc/gaia6'
+        .mag_limit = 7.0
+        .use_proper_motion = .TRUE.
+
+asteroid_db.
+        .catalog_file = '~/.ioccultcalc/data/all_numbered_asteroids.json'
+        .use_mpcorb = .FALSE.

@@ -5,6 +5,8 @@
 #include <cmath>
 #include <algorithm>
 #include <stdexcept>
+#include <iostream>
+#include <iomanip>
 
 namespace ioccultcalc {
 
@@ -18,7 +20,24 @@ public:
     double asteroidDiameter;    // km
     double orbitalUncertainty;  // km (1-sigma)
     
-    Impl() : asteroidDiameter(0), orbitalUncertainty(100.0) {}
+    // Chebyshev approximation support
+    ChebyshevConfig chebyshevConfig;
+    std::unique_ptr<ChebyshevCache> chebyshevCache;
+    
+    // Advanced options (opzionali, default false per retrocompatibilità)
+    bool applyParallaxCorrection;   // Correzione parallasse stelle vicine
+    double angularBufferArcmin;     // Buffer ricerca (arcmin)
+    bool useAdaptiveTimestep;       // Timestep adattivo
+    double coarseStepDays;          // Step grossolano per adaptive
+    double fineStepMinutes;         // Step fine per adaptive
+    
+    Impl() : asteroidDiameter(0), orbitalUncertainty(100.0),
+             applyParallaxCorrection(false), angularBufferArcmin(0.0),
+             useAdaptiveTimestep(false), coarseStepDays(1.0), 
+             fineStepMinutes(15.0) {
+        // Default: Chebyshev disabilitato
+        chebyshevConfig.enabled = false;
+    }
 };
 
 OccultationPredictor::OccultationPredictor() : pImpl(new Impl()) {}
@@ -39,12 +58,50 @@ void OccultationPredictor::loadAsteroidFromAstDyS(const std::string& designation
     setAsteroid(elem);
 }
 
+void OccultationPredictor::setLocalAstDySDirectories(const std::string& eq1Dir, const std::string& rwoDir) {
+    pImpl->astdysClient.setLocalEQ1Directory(eq1Dir);
+    pImpl->astdysClient.setLocalRWODirectory(rwoDir);
+}
+
 void OccultationPredictor::setAsteroidDiameter(double diameter) {
     pImpl->asteroidDiameter = diameter;
 }
 
 void OccultationPredictor::setOrbitalUncertainty(double sigmaKm) {
     pImpl->orbitalUncertainty = sigmaKm;
+}
+
+void OccultationPredictor::setChebyshevConfig(const ChebyshevConfig& config) {
+    pImpl->chebyshevConfig = config;
+}
+
+const ChebyshevConfig& OccultationPredictor::getChebyshevConfig() const {
+    return pImpl->chebyshevConfig;
+}
+
+void OccultationPredictor::setParallaxCorrection(bool enabled) {
+    pImpl->applyParallaxCorrection = enabled;
+    if (enabled) {
+        std::cout << "Parallax correction ENABLED (accurate for stars < 100 pc)" << std::endl;
+    }
+}
+
+void OccultationPredictor::setAngularBuffer(double arcmin) {
+    pImpl->angularBufferArcmin = arcmin;
+    if (arcmin > 0) {
+        std::cout << "Angular buffer set to " << arcmin << " arcmin" << std::endl;
+    }
+}
+
+void OccultationPredictor::setAdaptiveTimestep(bool enabled, double coarseStepDays, 
+                                               double fineStepMinutes) {
+    pImpl->useAdaptiveTimestep = enabled;
+    pImpl->coarseStepDays = coarseStepDays;
+    pImpl->fineStepMinutes = fineStepMinutes;
+    if (enabled) {
+        std::cout << "Adaptive timestep ENABLED (coarse: " << coarseStepDays 
+                  << " days, fine: " << fineStepMinutes << " min)" << std::endl;
+    }
 }
 
 std::vector<OccultationEvent> OccultationPredictor::findOccultations(
@@ -56,53 +113,181 @@ std::vector<OccultationEvent> OccultationPredictor::findOccultations(
     
     std::vector<OccultationEvent> events;
     
-    // Step temporale per la ricerca (1 giorno)
-    double stepDays = 1.0;
+    // Determina strategia computazionale
+    bool useChebyshev = pImpl->chebyshevConfig.enabled;
+    bool useAdaptive = pImpl->useAdaptiveTimestep;
     
-    // Calcola effemeridi per l'intervallo
-    auto ephemerides = pImpl->ephemeris.computeRange(startJD, endJD, stepDays);
+    std::vector<EphemerisData> ephemerides;
     
-    // Per ogni epoca, cerca stelle vicine
+    // ============================================================
+    // FASE 1: Calcola effemeridi asteroide per tutto il periodo
+    // ============================================================
+    
+    if (useChebyshev) {
+        std::cout << "Using Chebyshev approximation for fast ephemeris computation" << std::endl;
+        
+        // Inizializza cache Chebyshev
+        pImpl->chebyshevCache = std::make_unique<ChebyshevCache>(pImpl->chebyshevConfig);
+        pImpl->chebyshevCache->initialize(pImpl->ephemeris, startJD, endJD);
+        
+        // Genera timesteps fini
+        auto timesteps = pImpl->chebyshevCache->generateFineTimesteps();
+        std::cout << "Generated " << timesteps.size() << " fine timesteps" << std::endl;
+        
+        // Valuta effemeridi usando Chebyshev
+        for (const auto& jd : timesteps) {
+            ephemerides.push_back(pImpl->chebyshevCache->evaluate(jd));
+        }
+        
+    } else {
+        // Metodo standard: integrazione RADAU timestep fisso
+        double stepDays = useAdaptive ? pImpl->coarseStepDays : 1.0;
+        ephemerides = pImpl->ephemeris.computeRange(startJD, endJD, stepDays);
+    }
+    
+    std::cout << "Computed " << ephemerides.size() << " ephemeris points" << std::endl;
+    
+    // DEBUG: Stampa posizioni asteroide
+    std::cout << "\nDEBUG: Asteroid path positions:\n";
+    for (size_t i = 0; i < ephemerides.size(); i++) {
+        const auto& eph = ephemerides[i];
+        std::cout << "  [" << i << "] JD=" << std::fixed << std::setprecision(2) << eph.jd.jd 
+                  << " RA=" << std::setprecision(4) << (eph.geocentricPos.ra * RAD_TO_DEG)
+                  << "° Dec=" << (eph.geocentricPos.dec * RAD_TO_DEG) << "°\n";
+    }
+    std::cout << std::endl;
+    
+    // ============================================================
+    // FASE 2: OTTIMIZZAZIONE CORRIDOR - Query stelle una sola volta
+    // ============================================================
+    
+    std::vector<GaiaStar> candidateStars;
+    
+    // Costruisci percorso asteroide nel cielo
+    std::vector<EquatorialCoordinates> asteroidPath;
+    asteroidPath.reserve(ephemerides.size());
+    
     for (const auto& eph : ephemerides) {
-        // Converti posizione in gradi
-        double raDeg = eph.geocentricPos.ra * RAD_TO_DEG;
-        double decDeg = eph.geocentricPos.dec * RAD_TO_DEG;
+        EquatorialCoordinates pos;
+        pos.ra = eph.geocentricPos.ra * RAD_TO_DEG;
+        pos.dec = eph.geocentricPos.dec * RAD_TO_DEG;
+        asteroidPath.push_back(pos);
+    }
+    
+    // Semplifica il percorso se ha troppi punti (mantieni 1 punto ogni N)
+    std::vector<EquatorialCoordinates> simplifiedPath;
+    size_t pathStep = std::max(size_t(1), asteroidPath.size() / 50);  // Max ~50 punti
+    for (size_t i = 0; i < asteroidPath.size(); i += pathStep) {
+        simplifiedPath.push_back(asteroidPath[i]);
+    }
+    // Assicura che l'ultimo punto sia incluso
+    if (simplifiedPath.back().ra != asteroidPath.back().ra ||
+        simplifiedPath.back().dec != asteroidPath.back().dec) {
+        simplifiedPath.push_back(asteroidPath.back());
+    }
+    
+    if (simplifiedPath.size() >= 2) {
+        // Usa query corridor per trovare TUTTE le stelle candidate in un colpo solo
+        double corridorWidth = searchRadius * 2.0;  // Buffer per incertezze
         
-        // Query stelle nella regione
-        auto stars = pImpl->gaiaClient.queryCone(raDeg, decDeg, searchRadius, maxMagnitude);
+        std::cout << "Corridor query: " << simplifiedPath.size() << " path points, width=" 
+                  << corridorWidth << "°, mag<" << maxMagnitude << std::endl;
         
-        // Per ogni stella, verifica se c'è un'occultazione
-        for (const auto& star : stars) {
+        candidateStars = pImpl->gaiaClient.queryAlongPath(simplifiedPath, corridorWidth, maxMagnitude);
+        
+        std::cout << "Found " << candidateStars.size() << " candidate stars along path" << std::endl;
+    } else {
+        // Fallback a singola query cone (periodo molto breve)
+        double raDeg = ephemerides[0].geocentricPos.ra * RAD_TO_DEG;
+        double decDeg = ephemerides[0].geocentricPos.dec * RAD_TO_DEG;
+        candidateStars = pImpl->gaiaClient.queryCone(raDeg, decDeg, searchRadius * 3.0, maxMagnitude);
+        std::cout << "Single cone query: " << candidateStars.size() << " candidate stars" << std::endl;
+    }
+    
+    if (candidateStars.empty()) {
+        std::cout << "No candidate stars found - returning empty" << std::endl;
+        return events;
+    }
+    
+    // ============================================================
+    // FASE 3: Per ogni stella candidata, trova closest approach
+    // ============================================================
+    
+    std::cout << "Analyzing " << candidateStars.size() << " candidate stars..." << std::endl;
+    
+    // DEBUG: Trova la stella target e stampa la separazione
+    const std::string TARGET_STAR = "3411546266140512128";
+    bool targetFound = false;
+    
+    for (const auto& star : candidateStars) {
+        if (star.sourceId == TARGET_STAR) {
+            std::cout << "\n*** DEBUG: TARGET STAR FOUND IN CORRIDOR! ***\n";
+            std::cout << "    RA=" << star.pos.ra << "° Dec=" << star.pos.dec << "° G=" << star.phot_g_mean_mag << "\n";
+            targetFound = true;
+        }
+        
+        // Trova l'epoca di minima separazione scansionando le effemeridi
+        double minSeparation = 1e9;
+        size_t minIndex = 0;
+        
+        for (size_t i = 0; i < ephemerides.size(); i++) {
+            const auto& eph = ephemerides[i];
+            
             // Propaga stella all'epoca
             auto starPos = star.propagateToEpoch(eph.jd);
             
             // Calcola separazione angolare
             double separation = Coordinates::angularSeparation(eph.geocentricPos, starPos);
-            double separationArcsec = separation * RAD_TO_DEG * 3600.0;
             
-            // Stima dimensione angolare dell'asteroide
-            double asteroidAngularSize = 0;
-            if (pImpl->asteroidDiameter > 0 && eph.distance > 0) {
-                // Dimensione angolare in arcsec
-                asteroidAngularSize = (pImpl->asteroidDiameter / (eph.distance * AU)) * RAD_TO_DEG * 3600.0;
+            if (separation < minSeparation) {
+                minSeparation = separation;
+                minIndex = i;
             }
+        }
+        
+        double separationArcsec = minSeparation * RAD_TO_DEG * 3600.0;
+        
+        // DEBUG: Mostra stella target
+        if (star.sourceId == TARGET_STAR) {
+            std::cout << "    Min separation at epoch " << minIndex << ": " << separationArcsec << " arcsec\n";
+            std::cout << "    Asteroid pos: RA=" << (ephemerides[minIndex].geocentricPos.ra * RAD_TO_DEG) 
+                      << "° Dec=" << (ephemerides[minIndex].geocentricPos.dec * RAD_TO_DEG) << "°\n";
+        }
+        
+        // Calcola threshold usando metodo LinOccult (geometria 3D)
+        const auto& ephMin = ephemerides[minIndex];
+        double asteroidDistanceKm = ephMin.distance * AU;
+        
+        const double R_EARTH_KM = 6371.0;
+        const double MAX_SHADOW_RADIUS_KM = 3.0 * R_EARTH_KM;
+        
+        double uncertaintyKm = pImpl->orbitalUncertainty;
+        double maxDistKm = uncertaintyKm + R_EARTH_KM;
+        if (maxDistKm > MAX_SHADOW_RADIUS_KM) {
+            maxDistKm = MAX_SHADOW_RADIUS_KM;
+        }
+        
+        double thresholdArcsec = (maxDistKm / asteroidDistanceKm) * RAD_TO_DEG * 3600.0;
+        if (thresholdArcsec < 10.0) thresholdArcsec = 10.0;
+        
+        // Aggiungi buffer angolare opzionale
+        double effectiveThreshold = thresholdArcsec;
+        if (pImpl->angularBufferArcmin > 0) {
+            effectiveThreshold += pImpl->angularBufferArcmin * 60.0;
+        }
+        
+        if (separationArcsec < effectiveThreshold) {
+            // Refine closest approach con ricerca precisa
+            JulianDate searchStart(ephemerides[std::max(0, (int)minIndex - 1)].jd.jd);
+            JulianDate searchEnd(ephemerides[std::min(ephemerides.size()-1, minIndex + 1)].jd.jd);
             
-            // Controllo preliminare: stella deve essere vicina
-            double threshold = asteroidAngularSize + 3.0 * pImpl->orbitalUncertainty / (eph.distance * AU) * RAD_TO_DEG * 3600.0;
-            if (threshold == 0) threshold = 10.0; // Default 10 arcsec
+            JulianDate caTime = findClosestApproach(star, searchStart, searchEnd);
             
-            if (separationArcsec < threshold) {
-                // Trova momento di closest approach
-                JulianDate caTime = findClosestApproach(star, 
-                    JulianDate(eph.jd.jd - 0.5), 
-                    JulianDate(eph.jd.jd + 0.5));
-                
-                // Predici occultazione dettagliata
-                OccultationEvent event = predictOccultation(star, caTime);
-                
-                if (event.probability >= minProbability) {
-                    events.push_back(event);
-                }
+            // Predici occultazione dettagliata
+            OccultationEvent event = predictOccultation(star, caTime);
+            
+            if (event.probability >= minProbability) {
+                events.push_back(event);
             }
         }
     }
@@ -112,6 +297,8 @@ std::vector<OccultationEvent> OccultationPredictor::findOccultations(
              [](const OccultationEvent& a, const OccultationEvent& b) {
                  return a.timeCA.jd < b.timeCA.jd;
              });
+    
+    std::cout << "Found " << events.size() << " occultation events" << std::endl;
     
     return events;
 }
@@ -132,8 +319,30 @@ OccultationEvent OccultationPredictor::predictOccultation(
     // Calcola effemeridi al momento CA
     EphemerisData ephCA = pImpl->ephemeris.compute(event.timeCA);
     
-    // Propaga posizione stella
+    // Propaga posizione stella con correzione oblateness Terra
     auto starPosCA = star.propagateToEpoch(event.timeCA);
+    
+    // Applica correzione parallasse se abilitata (stelle vicine)
+    if (pImpl->applyParallaxCorrection && star.parallax > 0.001) {
+        // Parallasse > 1 mas → stella entro ~1000 pc
+        // Correzione significativa per parallax > 10 mas (< 100 pc)
+        
+        // Posizione Terra barycenter (AU)
+        Vector3D earthPos = Ephemeris::getEarthPosition(event.timeCA);
+        
+        // Distanza stella in AU
+        double distance_pc = 1000.0 / star.parallax;  // mas → pc
+        double distance_au = distance_pc * 206265.0;  // pc → AU
+        
+        // Correzione parallasse (effetto annuo)
+        // ΔRA = -x_Earth / distance * sec(Dec)
+        // ΔDec = -y_Earth / distance
+        double dra = -earthPos.x / distance_au / cos(starPosCA.dec * DEG_TO_RAD);
+        double ddec = -earthPos.y / distance_au;
+        
+        starPosCA.ra += dra * RAD_TO_DEG;
+        starPosCA.dec += ddec * RAD_TO_DEG;
+    }
     
     // Calcola geometria
     double separation, posAngle;
@@ -148,11 +357,33 @@ OccultationEvent OccultationPredictor::predictOccultation(
         asteroidAngularSize = (pImpl->asteroidDiameter / (ephCA.distance * AU)) * RAD_TO_DEG * 3600.0;
     }
     
-    // Calcola probabilità
-    double uncertaintyArcsec = (pImpl->orbitalUncertainty / (ephCA.distance * AU)) * RAD_TO_DEG * 3600.0;
+    // Calcola incertezza totale (asteroide + stella) - LinOccult method
+    // Incertezza asteroide
+    double asteroidUncertaintyArcsec = (pImpl->orbitalUncertainty / (ephCA.distance * AU)) * RAD_TO_DEG * 3600.0;
+    
+    // Incertezza stella dipendente da magnitudine (LinOccult CalculateTotalUncertainty)
+    const double STAR_UNCERT_FAINT = 60.0 / 1000.0;   // 60 mas per Mv >= 9
+    const double STAR_UNCERT_BRIGHT = 7.0 / 1000.0;   // 7 mas per Mv < 9
+    const double PROPER_MOTION_UNCERT = 2.5 / 1000.0; // 2.5 mas/anno
+    const double MJD_J2015 = 2457023.5;               // J2015.0 epoch
+    
+    double starMag = star.phot_g_mean_mag;
+    double starUncertMas = (starMag < 9.0) ? STAR_UNCERT_BRIGHT : STAR_UNCERT_FAINT;
+    
+    // Aggiunge degradazione moto proprio dal 2015
+    double yearsSince2015 = (event.timeCA.jd - MJD_J2015) / 365.25;
+    starUncertMas += fabs(yearsSince2015) * PROPER_MOTION_UNCERT;
+    
+    double starUncertaintyArcsec = starUncertMas / 1000.0;  // mas → arcsec
+    
+    // Incertezza totale (somma quadratica)
+    double totalUncertaintyArcsec = sqrt(asteroidUncertaintyArcsec * asteroidUncertaintyArcsec + 
+                                         starUncertaintyArcsec * starUncertaintyArcsec);
+    
+    // Calcola probabilità con metodo LinOccult migliorato
     event.probability = calculateProbability(event.closeApproachDistance, 
                                             asteroidAngularSize,
-                                            uncertaintyArcsec);
+                                            totalUncertaintyArcsec);
     
     // Durata massima
     if (pImpl->asteroidDiameter > 0) {
@@ -303,8 +534,24 @@ void OccultationPredictor::calculateGeometry(const EphemerisData& asteroidPos,
                                              double& posAngle) {
     auto starPos = star.propagateToEpoch(time);
     
-    separation = Coordinates::angularSeparation(asteroidPos.geocentricPos, starPos);
-    posAngle = Coordinates::positionAngle(asteroidPos.geocentricPos, starPos);
+    // Applica correzione oblateness Terra (LinOccult fac = 0.996647)
+    // Ratio polar/equatorial Earth radius
+    const double EARTH_FLATTENING = 0.003353;  // WGS84
+    const double POLAR_EQUAT_RATIO = 1.0 - EARTH_FLATTENING;  // 0.996647
+    
+    // Converti coordinate stella in cartesiane e applica correzione
+    Vector3D starDir = Coordinates::equatorialToCartesian(starPos);
+    
+    // Schiacciamento polare: scala componente z (DEC) con ratio
+    // Questo compensa geometria ellissoidale Terra nel calcolo ombra
+    starDir = Vector3D(starDir.x, starDir.y, starDir.z / POLAR_EQUAT_RATIO);
+    starDir = starDir.normalize();
+    
+    // Riconverti in coordinate equatoriali corrette
+    EquatorialCoordinates correctedStarPos = Coordinates::cartesianToEquatorial(starDir);
+    
+    separation = Coordinates::angularSeparation(asteroidPos.geocentricPos, correctedStarPos);
+    posAngle = Coordinates::positionAngle(asteroidPos.geocentricPos, correctedStarPos);
 }
 
 double OccultationPredictor::calculateProbability(double separationArcsec,
@@ -315,19 +562,25 @@ double OccultationPredictor::calculateProbability(double separationArcsec,
         return (separationArcsec <= asteroidAngularSize / 2.0) ? 1.0 : 0.0;
     }
     
-    // Distribuzione gaussiana
-    // Probabilità che la vera posizione cada entro il raggio dell'asteroide
+    // Metodo LinOccult: integra CDF gaussiana tra distance ± radius
+    // CalculateProbability() linee 1691-1708
     
-    double r_asteroid = asteroidAngularSize / 2.0;
+    double radius = asteroidAngularSize / 2.0;
     double sigma = uncertaintyArcsec;
     
-    // Approssimazione: probabilità che la separazione reale sia < r_asteroid
-    // Usando CDF della normale
+    // Normalizza distanze
+    double x1 = (separationArcsec + radius) / sigma;  // Bordo esterno
+    double x2 = (separationArcsec - radius) / sigma;  // Bordo interno
     
-    double z = (r_asteroid - separationArcsec) / sigma;
+    // CDF gaussiana standard: Φ(x) = 0.5 * (1 + erf(x/√2))
+    auto gaussCDF = [](double x) -> double {
+        return 0.5 * (1.0 + erf(x / sqrt(2.0)));
+    };
     
-    // erf approximation
-    double prob = 0.5 * (1.0 + erf(z / sqrt(2.0)));
+    // Probabilità = |Φ(x1) - Φ(x2)| = probabilità nell'intervallo [x2, x1]
+    double g1 = gaussCDF(x1);
+    double g2 = gaussCDF(x2);
+    double prob = fabs(g1 - g2);
     
     // Limita a [0, 1]
     if (prob < 0) prob = 0;

@@ -1,0 +1,14 @@
+Asteroid (433) - AstDyS Data Summary
+============================================================
+
+✓ Orbital elements (.eq1): Available
+  File: test_astdys_download/433.eq1
+  Size: 1812 bytes
+
+✓ Observations (.rwo): Available
+  File: test_astdys_download/433.rwo
+  Size: 3394509 bytes
+  Observations: ~17941
+
+Download completed: 2025-11-29 10:42:08
+Source: https://newton.spacedys.com/~astdys2

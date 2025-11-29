@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "name": "Dicembre 2025 - Fast Search",
+    "description": "Lista asteroidi 1-1000 per dicembre 2025",
+    "created": "2025-11-29"
+  },
+  "sections": [
+    {
+      "type": "object",
+      "parameters": {
+        "id": "1-1000",
+        "name": "First1000"
+      }
+    },
+    {
+      "type": "propagation",
+      "parameters": {
+        "method": "RA15",
+        "step_size_days": 0.1,
+        "planetary_ephemeris": "DE441",
+        "include_perturbations": true,
+        "include_relativity": false
+      }
+    },
+    {
+      "type": "time",
+      "parameters": {
+        "start_jd": 2460674.5,
+        "end_jd": 2460705.5
+      }
+    },
+    {
+      "type": "search",
+      "parameters": {
+        "max_separation_arcsec": 10.0,
+        "min_probability": 0.005,
+        "magnitude_limit": 13.0
+      }
+    },
+    {
+      "type": "gaia",
+      "parameters": {
+        "version": "DR3",
+        "use_cache": true
+      }
+    },
+    {
+      "type": "output",
+      "parameters": {
+        "formats": ["json"],
+        "directory": "output",
+        "prefix": "dec2025_fast"
+      }
+    },
+    {
+      "type": "observer",
+      "parameters": {
+        "name": "Italy-Center",
+        "latitude": 42.8333,
+        "longitude": 12.8333,
+        "elevation_m": 100.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+
+╔═══════════════════════════════════════════════════════════════╗
+║                     ITALOccultCalc v1.0                        ║
+║         Ricerca Automatica Occultazioni Asteroidali           ║
+║              Ottimizzato per Osservatori Italiani              ║
+╚═══════════════════════════════════════════════════════════════╝
+
+╔════════════════════════════════════════════════════════════════╗
+║  Modalità Verbose - Barra di Avanzamento Unificata            ║
+╠════════════════════════════════════════════════════════════════╣
+║  0-40%:  Propagazione orbite                                   ║
+║  40-50%: Query catalogo stelle                                 ║
+║  50-100%: Rilevamento occultazioni                             ║
+╚════════════════════════════════════════════════════════════════╝
+
+
+================================================================
+CARICAMENTO CONFIGURAZIONE
+================================================================
+
+File configurazione: preset_1000ast_jan2026.oop
+✓ Configurazione OrbFit caricata
+✓ Configurazione validata
+
+Propagatore: RA15
+Step size: 0.1 giorni
+✗ Errore caricamento configurazione: Cannot convert '' to double: stod: no conversion
+
+✗ ERRORE CRITICO: Cannot convert '' to double: stod: no conversion
+

@@ -1,0 +1,35 @@
+! TEST EVENTO REALE: (17030) Sierks - 28 nov 2025
+! Da OccultWatcher - UCAC4 552-011427
+! Evento atteso: 2025-11-28 14:11:32 UTC (JD 2461008.0913)
+
+object.
+        .id = 'all'
+        .asteroid_list = '17030'
+
+search.
+        .start_jd = 2461007.0
+        .end_jd = 2461009.0
+        .min_separation_arcsec = 0.001
+        .max_separation_arcsec = 50.0
+        .min_duration_sec = 0.01
+
+propag.
+        .type = 'RA15'
+        .step_size = 0.02
+        .tolerance = 1.0E-12
+
+perturbations.
+        .planets = .TRUE.
+        .relativity = .FALSE.
+        .asteroid_count = 0
+
+gaia.
+        .version = 'DR3'
+        .use_local_cache = .TRUE.
+        .max_magnitude = 14.0
+
+asteroid_db.
+        .source = 'MPCORB'
+
+output.
+        .formats = 'text'

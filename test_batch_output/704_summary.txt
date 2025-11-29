@@ -1,0 +1,14 @@
+Asteroid (704) - AstDyS Data Summary
+============================================================
+
+✓ Orbital elements (.eq1): Available
+  File: test_batch_output/704.eq1
+  Size: 1812 bytes
+
+✓ Observations (.rwo): Available
+  File: test_batch_output/704.rwo
+  Size: 1504931 bytes
+  Observations: ~8165
+
+Download completed: 2025-11-29 10:43:08
+Source: https://newton.spacedys.com/~astdys2

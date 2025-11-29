@@ -1,0 +1,142 @@
+{
+  "metadata": {
+    "created_by": "ITALOccultCalc",
+    "version": "1.0",
+    "date": "2025-11-27",
+    "description": "Test Hygiea validation - gennaio 2026"
+  },
+  "sections": [
+    {
+      "type": "object",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "value": "10",
+          "comment": "Solo (10) Hygiea"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Hygiea",
+          "comment": "Asteroide da testare"
+        },
+        {
+          "name": "min_diameter",
+          "type": "double",
+          "value": "200.0",
+          "comment": "Filtro per includere Hygiea (stimato ~256 km con albedo 0.15, reale 407 km)"
+        },
+        {
+          "name": "max_diameter",
+          "type": "double",
+          "value": "500.0",
+          "comment": "Filtro per includere solo grandi asteroidi"
+        }
+      ]
+    },
+    {
+      "type": "search",
+      "parameters": [
+        {
+          "name": "start_jd",
+          "type": "double",
+          "value": "2461048.5",
+          "comment": "2026-01-08 00:00:00 UT (CORRETTO)"
+        },
+        {
+          "name": "end_jd",
+          "type": "double",
+          "value": "2461050.5",
+          "comment": "2026-01-10 00:00:00 UT (CORRETTO)"
+        },
+        {
+          "name": "step_days",
+          "type": "double",
+          "value": "0.1",
+          "comment": "Campionamento ogni 2.4 ore per precisione"
+        },
+        {
+          "name": "max_separation",
+          "type": "double",
+          "value": "0.05",
+          "comment": "Separazione massima 0.05 gradi (180 arcsec)"
+        },
+        {
+          "name": "mag_limit",
+          "type": "double",
+          "value": "11.0",
+          "comment": "Stella IOTA: mag 10.2"
+        }
+      ]
+    },
+    {
+      "type": "propag",
+      "parameters": [
+        {
+          "name": "type",
+          "type": "string",
+          "value": "RK4",
+          "comment": "RK4 per accuracy"
+        },
+        {
+          "name": "step_size",
+          "type": "double",
+          "value": "0.05",
+          "comment": "Step piccolo per precisione massima"
+        }
+      ]
+    },
+    {
+      "type": "ephemeris",
+      "parameters": [
+        {
+          "name": "jpl_version",
+          "type": "string",
+          "value": "DE441",
+          "comment": "JPL DE441 high precision"
+        }
+      ]
+    },
+    {
+      "type": "perturbations",
+      "parameters": [
+        {
+          "name": "planets",
+          "type": "bool",
+          "value": "true",
+          "comment": "8 pianeti"
+        },
+        {
+          "name": "asteroid_count",
+          "type": "int",
+          "value": "17",
+          "comment": "17 asteroidi massivi (AST17 OrbFit)"
+        }
+      ]
+    },
+    {
+      "type": "output",
+      "parameters": [
+        {
+          "name": "format",
+          "type": "string",
+          "value": "json",
+          "comment": "Output JSON per parsing"
+        },
+        {
+          "name": "iota_format",
+          "type": "bool",
+          "value": "true",
+          "comment": "Formato IOTA-compatible"
+        },
+        {
+          "name": "verbose",
+          "type": "bool",
+          "value": "true",
+          "comment": "Output dettagliato"
+        }
+      ]
+    }
+  ]
+}

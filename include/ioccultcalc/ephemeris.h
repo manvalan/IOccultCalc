@@ -4,8 +4,14 @@
 #include "orbital_elements.h"
 #include "types.h"
 #include <vector>
+#include <functional>
+#include <memory>
 
 namespace ioccultcalc {
+
+// Forward declarations
+class OrbitPropagator;
+struct PropagatorOptions;
 
 // Dati effemeridali per un istante
 struct EphemerisData {
@@ -21,13 +27,55 @@ struct EphemerisData {
     EphemerisData() : distance(0), elongation(0), phase(0), magnitude(0) {}
 };
 
+/**
+ * @brief Opzioni per il calcolo delle effemeridi
+ */
+struct EphemerisOptions {
+    bool usePerturbations;           // Usa perturbazioni planetarie (più preciso, più lento)
+    bool useRelativisticCorrections; // Correzioni relativistiche
+    double stepSize;                  // Passo integrazione (giorni) - solo con perturbazioni
+    
+    EphemerisOptions() 
+        : usePerturbations(false),
+          useRelativisticCorrections(false),
+          stepSize(0.1) {}
+          
+    // Preset configurazioni
+    static EphemerisOptions fast() {
+        return EphemerisOptions();  // Default: solo Keplero
+    }
+    
+    static EphemerisOptions standard() {
+        EphemerisOptions opts;
+        opts.usePerturbations = true;
+        return opts;
+    }
+    
+    static EphemerisOptions highPrecision() {
+        EphemerisOptions opts;
+        opts.usePerturbations = true;
+        opts.useRelativisticCorrections = true;
+        opts.stepSize = 0.05;
+        return opts;
+    }
+};
+
 class Ephemeris {
 public:
     Ephemeris();
     explicit Ephemeris(const EquinoctialElements& elements);
+    ~Ephemeris();
     
     // Imposta gli elementi orbitali
     void setElements(const EquinoctialElements& elements);
+    
+    // Imposta opzioni (perturbazioni, etc.)
+    void setOptions(const EphemerisOptions& options);
+    const EphemerisOptions& getOptions() const { return options_; }
+    
+    // Abilita/disabilita perturbazioni (shortcut)
+    void enablePerturbations(bool enable = true);
+    bool hasPerturbations() const { return options_.usePerturbations; }
     
     // Calcola la posizione dell'asteroide per una data epoca
     EphemerisData compute(const JulianDate& jd);
@@ -48,12 +96,33 @@ public:
     static Vector3D getEarthPositionWithCorrections(const JulianDate& jd, 
                                                      const Vector3D& observerPos);
     
+    // Thread-safe Earth position cache (for parallel processing)
+    using EarthPositionFunc = std::function<Vector3D(double jd)>;
+    static void setEarthPositionCache(EarthPositionFunc cacheFunc);
+    static void clearEarthPositionCache();
+    static bool hasEarthPositionCache();
+    
 private:
     EquinoctialElements elements_;
+    EphemerisOptions options_;
     
-    // Propaga l'orbita da epoca elementi a epoca target
+    // Propagatore con perturbazioni (lazy init)
+    std::unique_ptr<OrbitPropagator> propagator_;
+    bool propagatorInitialized_;
+    JulianDate lastPropagatedEpoch_;
+    Vector3D lastPropagatedPos_;
+    Vector3D lastPropagatedVel_;
+    
+    // Inizializza propagatore se necessario
+    void initializePropagator();
+    
+    // Propaga l'orbita da epoca elementi a epoca target (Keplero puro)
     void propagateOrbit(const JulianDate& targetJD, 
                        Vector3D& helioPos, Vector3D& helioVel);
+    
+    // Propaga con perturbazioni (usa OrbitPropagator)
+    void propagateOrbitWithPerturbations(const JulianDate& targetJD,
+                                         Vector3D& helioPos, Vector3D& helioVel);
     
     // Risolve l'equazione di Keplero per anomalia eccentrica
     double solveKeplerEquation(double meanAnomaly, double eccentricity, 

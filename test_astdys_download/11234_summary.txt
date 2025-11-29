@@ -1,0 +1,14 @@
+Asteroid (11234) - AstDyS Data Summary
+============================================================
+
+✓ Orbital elements (.eq1): Available
+  File: test_astdys_download/11234.eq1
+  Size: 1814 bytes
+
+✓ Observations (.rwo): Available
+  File: test_astdys_download/11234.rwo
+  Size: 1265207 bytes
+  Observations: ~6837
+
+Download completed: 2025-11-29 10:42:10
+Source: https://newton.spacedys.com/~astdys2

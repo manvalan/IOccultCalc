@@ -20,6 +20,15 @@ public:
     // designation può essere numero (es. "433") o designazione (es. "2024 AA")
     EquinoctialElements getElements(const std::string& designation);
     
+    // Carica elementi equinoziali da file .eq1 locale
+    EquinoctialElements getElementsFromFile(const std::string& filepath);
+    
+    // Carica osservazioni da file .rwo locale
+    std::vector<std::string> getObservationsFromFile(const std::string& filepath);
+    
+    // Ottiene osservazioni (da file locale o download)
+    std::vector<std::string> getObservations(const std::string& designation);
+    
     // Scarica elementi orbitali KEPLERIAN per un asteroide (epoca recente)
     // Usa il catalogo allnum.cat che ha epoche vicine al presente
     OrbitalElements getRecentElements(const std::string& designation);
@@ -44,6 +53,12 @@ public:
     
     // Imposta l'URL base di AstDyS (default: https://newton.spacedys.com/astdys2/)
     void setBaseURL(const std::string& url);
+    
+    // Imposta directory locale per file .eq1 (se vuoto, usa download HTTP)
+    void setLocalEQ1Directory(const std::string& directory);
+    
+    // Imposta directory locale per file .rwo (se vuoto, usa download HTTP)
+    void setLocalRWODirectory(const std::string& directory);
     
     // Imposta timeout per le richieste HTTP (secondi)
     void setTimeout(int seconds);

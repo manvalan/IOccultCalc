@@ -1,0 +1,136 @@
+! =============================================================================
+! Preset generato da file .eq1 (AstDyS)
+! =============================================================================
+! Oggetto: 11234
+! Epoca elementi: MJD 61000.0 (2025-11-20)
+! Fonte: AstDyS equinoctial elements (OEF2.0)
+! Generato: 2025-11-29 10:43:11
+! =============================================================================
+
+general.
+    ! Identificazione asteroide
+    .asteroid_number = 11234
+    .asteroid_name = 'Asteroid 11234'
+    
+    ! Epoca elementi (MJD TDB)
+    .epoch_mjd = 61000.000000
+    
+    ! Elementi orbitali Kepleriani (convertiti da equinoziali)
+    .semimajor_axis_au = 2.6808535917
+    .eccentricity = 0.0489382542
+    .inclination_deg = 12.77437551
+    .ascending_node_deg = 112.53863400
+    .perihelion_arg_deg = 289.66010725
+    .mean_anomaly_deg = 193.64084485
+    
+    ! Propagatore: RKF78 per accuratezza professionale
+    .propagator = 'RKF78'
+    .step_size_days = 0.1
+    .tolerance = 1.0e-12
+    
+    ! Output
+    .output_format = 'iota'
+    .verbose = .TRUE.
+
+propagator.
+    ! Perturbazioni planetarie ESSENZIALI per accuratezza
+    .use_planetary_perturbations = .TRUE.
+    
+    ! Pianeti inclusi (tutti 8)
+    .include_mercury = .TRUE.
+    .include_venus = .TRUE.
+    .include_earth = .TRUE.
+    .include_mars = .TRUE.
+    .include_jupiter = .TRUE.
+    .include_saturn = .TRUE.
+    .include_uranus = .TRUE.
+    .include_neptune = .TRUE.
+    
+    ! Correzioni relativistiche
+    .use_relativistic_corrections = .TRUE.
+    
+    ! Effemeridi JPL
+    .ephemeris_file = 'de441_part-1.bsp'
+
+timespan.
+    ! Periodo predizioni
+    .start_date = '2025-09-21'
+    .end_date = '2026-01-19'
+    .time_step_hours = 1.0
+
+geographic_filter.
+    ! Italia + Europa
+    .enabled = .TRUE.
+    .min_latitude = 36.0
+    .max_latitude = 71.0
+    .min_longitude = -10.0
+    .max_longitude = 40.0
+
+magnitude_filter.
+    ! Filtro stelle
+    .min_star_magnitude = 4.0
+    .max_star_magnitude = 16.0
+    .min_drop_magnitude = 0.3
+
+occultation_geometry.
+    ! Geometria occultazioni
+    .min_duration_seconds = 0.1
+    .max_shadow_velocity_km_s = 50.0
+    .min_elongation_deg = 45.0
+    .max_moon_angle_deg = 30.0
+
+star_catalog.
+    ! Catalogo stelle Gaia EDR3
+    .catalog = 'gaia_edr3'
+    .use_proper_motion = .TRUE.
+    .max_search_radius_deg = 2.0
+    .parallax_correction = .TRUE.
+
+orbit_fitting.
+    ! Fitting DISABILITATO
+    ! Elementi da .eq1 sono già fittati da AstDyS con migliaia di osservazioni
+    .enable_fitting = .FALSE.
+    
+    ! Se abilitato in futuro:
+    .observation_source = 'mpc'
+    .min_observations = 50
+    .outlier_threshold_sigma = 3.0
+    .min_rms_arcsec = 0.3
+    .max_rms_arcsec = 2.0
+
+output.
+    .output_file = 'occultations_11234.txt'
+    .format = 'detailed'
+    .include_uncertainty = .TRUE.
+    .coordinate_system = 'J2000'
+
+! =============================================================================
+! NOTE TECNICHE
+! =============================================================================
+! 
+! Elementi Equinoziali Originali (da .eq1):
+!   a      = 2.6808535917 AU
+!   h      = 0.0328720365  (= e·sin(ϖ))
+!   k      = 0.0362544058  (= e·cos(ϖ))
+!   p      = 0.1033915965  (= tan(i/2)·sin(Ω))
+!   q      = -0.0429079017  (= tan(i/2)·cos(Ω))
+!   lambda = 235.83958610°  (longitudine media)
+!
+! Conversione Equinoziale → Kepleriano:
+!   e = sqrt(h² + k²) = 0.04893825
+!   i = 2·atan(sqrt(p² + q²)) = 12.774376°
+!   Ω = atan2(p, q) = 112.538634°
+!   ϖ = atan2(h, k) = 42.198741°
+!   ω = ϖ - Ω = 289.660107°
+!   M = λ - ϖ = 193.640845°
+!
+! Accuratezza Attesa (RKF78 + perturbazioni):
+!   ±30 giorni: 0.1-0.3 arcsec
+!   ±60 giorni: 1-3 arcsec
+!   ±90 giorni: 3-10 arcsec
+!   ±180 giorni: 10-50 arcsec
+!
+! Per validare:
+!   python3 compare_jpl_horizons.py 11234 2025-09-21
+!
+! =============================================================================

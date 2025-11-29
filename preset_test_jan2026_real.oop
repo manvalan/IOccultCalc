@@ -1,0 +1,60 @@
+! ==============================================================================
+! TEST REALE: Occultazioni Gennaio 2026
+! ==============================================================================
+! Ricerca occultazioni asteroidali con stelle Gaia DR3
+! Periodo: Gennaio 2026 (tutto il mese)
+! Obiettivo: Trovare eventi reali osservabili dall'Italia
+! ==============================================================================
+
+object.
+        .id = '1'
+        .name = '(1) Ceres'
+
+time.
+        .start_jd = 2460676.500000      ! 2026-01-01 00:00 TDT
+        .end_jd = 2460706.500000        ! 2026-01-31 00:00 TDT (30 giorni)
+        .step_hours = 2.0               ! Campionamento ogni 2 ore
+
+propag.
+        .type = 'RA15'                  ! Everhart (alta precisione)
+        .step_size = 0.05               ! 0.05 giorni
+        .tolerance = 1.0E-12
+
+perturbations.
+        .planets = .TRUE.               ! 8 pianeti
+        .relativity = .TRUE.            ! Effetti relativistici
+        .asteroid_count = 17            ! AST17 perturbatori
+
+gaia.
+        .version = 'DR3'                ! Usa Gaia DR3
+        .use_local_cache = .TRUE.       ! Cache locale (veloce!)
+        .cache_directory = '~/.ioccultcalc/gaia6'
+        .auto_download = .FALSE.
+        .max_magnitude = 14.0           ! Stelle fino a mag 14
+
+asteroid_db.
+        .source = 'MPCORB'
+        .filter_by = 'H_magnitude'
+        .min_H = 5.0                    ! Solo asteroidi grandi
+        .max_H = 10.0                   ! H < 10 (diametro > 50 km tipicamente)
+
+search.
+        .min_separation_arcsec = 0.5    ! Separazione minima 0.5"
+        .max_separation_arcsec = 2.0    ! Separazione massima 2"
+        .min_duration_sec = 0.5         ! Durata minima 0.5s
+        .start_jd = 2460676.500000
+        .end_jd = 2460706.500000
+
+observer.
+        .name = 'Bologna, Italy'
+        .latitude = 44.4949
+        .longitude = 11.3426
+        .altitude = 54.0
+        .timezone = 1.0
+
+report.
+        .format = 'IOTA'
+        .output_file = 'occultations_jan2026_real_test.txt'
+        .max_events = 50                ! Limita a 50 eventi migliori
+        .include_maps = .FALSE.
+        .include_uncertainties = .TRUE.

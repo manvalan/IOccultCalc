@@ -1,0 +1,14 @@
+Asteroid (4) - AstDyS Data Summary
+============================================================
+
+✓ Orbital elements (.eq1): Available
+  File: test_batch_output/4.eq1
+  Size: 1810 bytes
+
+✓ Observations (.rwo): Available
+  File: test_batch_output/4.rwo
+  Size: 1675865 bytes
+  Observations: ~8554
+
+Download completed: 2025-11-29 10:43:00
+Source: https://newton.spacedys.com/~astdys2

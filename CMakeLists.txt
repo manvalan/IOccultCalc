@@ -29,6 +29,9 @@ find_package(OpenMP REQUIRED)
 # Add IOC_GaiaLib subdirectory
 add_subdirectory(external/IOC_GaiaLib)
 
+# Add IOC_SPICE subdirectory
+add_subdirectory(external/IOC_SPICE)
+
 # Include directories
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -37,6 +40,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/external/cspice/include
     ${CMAKE_CURRENT_SOURCE_DIR}/external
     ${CMAKE_CURRENT_SOURCE_DIR}/external/IOC_GaiaLib/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/IOC_SPICE/include
 )
 
 # Source files
@@ -220,6 +224,7 @@ target_link_libraries(ioccultcalc
     ${CMAKE_CURRENT_SOURCE_DIR}/external/cspice/lib/cspice.a
     ${ORBFIT_ALL_LIBS}
     ioc_gaialib
+    ioc_spice
     OpenMP::OpenMP_CXX
 )
 

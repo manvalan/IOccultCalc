@@ -1,0 +1,20 @@
+
+╔═══════════════════════════════════════════════════════════════╗
+║                     ITALOccultCalc v1.0                        ║
+║         Ricerca Automatica Occultazioni Asteroidali           ║
+║              Ottimizzato per Osservatori Italiani              ║
+╚═══════════════════════════════════════════════════════════════╝
+
+================================================================
+CARICAMENTO CONFIGURAZIONE
+================================================================
+
+File configurazione: preset_hygiea_jan2026.json
+✓ Configurazione JSON caricata
+Errori di validazione:
+  ✗ Missing required section: object
+  ✗ Missing required section: propagation
+✗ Errore caricamento configurazione: Configurazione non valida
+
+✗ ERRORE CRITICO: Configurazione non valida
+

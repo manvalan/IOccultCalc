@@ -153,11 +153,12 @@ public:
     std::string indexFile;
     bool autoDownload;
     bool verbose;
+    GaiaVersion gaiaVersion;
     
     std::map<int, GaiaTile> tileIndex;  // healpix_id -> tile metadata
     std::shared_ptr<GaiaClient> gaiaClient;
     
-    Impl() : autoDownload(true), verbose(false) {
+    Impl() : autoDownload(true), verbose(false), gaiaVersion(GaiaVersion::DR3) {
         // Setup directories
         auto& dm = DataManager::instance();
         dm.initialize();
@@ -172,6 +173,7 @@ public:
         
         // Create default GAIA client
         gaiaClient = std::make_shared<GaiaClient>();
+        gaiaClient->setGaiaVersion(gaiaVersion);
     }
 };
 
@@ -638,6 +640,13 @@ void GaiaCache::clearCache() {
 
 void GaiaCache::setGaiaClient(std::shared_ptr<GaiaClient> client) {
     pImpl->gaiaClient = client;
+}
+
+void GaiaCache::setGaiaVersion(GaiaVersion version) {
+    pImpl->gaiaVersion = version;
+    if (pImpl->gaiaClient) {
+        pImpl->gaiaClient->setGaiaVersion(version);
+    }
 }
 
 void GaiaCache::setAutoDownload(bool enable) {

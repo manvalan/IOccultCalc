@@ -1,0 +1,63 @@
+{
+  "time": {
+    "start_date": "2026-01-08",
+    "end_date": "2026-01-10",
+    "interval_days": 0.5
+  },
+  "object": {
+    "max_magnitude": 11.0,
+    "min_perihelion_au": 2.0,
+    "max_aphelion_au": 4.5,
+    "min_diameter_km": 300.0,
+    "max_diameter_km": 500.0
+  },
+  "propagation": {
+    "integrator": "RK4",
+    "step_size_days": 0.05
+  },
+  "asteroids": {
+    "selection_mode": "auto",
+    "max_magnitude": 11.0,
+    "min_diameter_km": 300.0,
+    "max_diameter_km": 500.0,
+    "perihelion_au_min": 2.0,
+    "perihelion_au_max": 4.5
+  },
+  "search": {
+    "max_magnitude": 11.0,
+    "search_radius_deg": 0.15,
+    "min_probability": 0.01
+  },
+  "occultation": {
+    "shadow_threshold_factor": 3.0,
+    "star_uncertainty_base_mas": 7.0,
+    "star_pm_degradation_mas_per_year": 2.5,
+    "use_probability_cdf": true,
+    "earth_oblateness_factor": 0.996647,
+    "use_chebyshev": true,
+    "chebyshev_order": 11,
+    "use_adaptive_timestep": true,
+    "coarse_timestep_hours": 2.0,
+    "fine_timestep_hours": 0.25
+  },
+  "gaia": {
+    "use_local_cache": true,
+    "cache_directory": "/Users/michelebigi/catalogs",
+    "catalog_file": "gaia_mag18.cat.gz"
+  },
+  "output": {
+    "format": "iota",
+    "directory": "output",
+    "generate_kml": true,
+    "generate_json": true
+  },
+  "filters": {
+    "use_geographic_filter": true,
+    "latitude_min": 35.0,
+    "latitude_max": 48.0,
+    "longitude_min": 6.0,
+    "longitude_max": 19.0,
+    "min_mag_drop": 6.0,
+    "min_duration_sec": 15.0
+  }
+}

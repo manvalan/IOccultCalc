@@ -8,7 +8,13 @@
 
 namespace ioccultcalc {
 
-// Dati di una stella da Gaia DR3
+// Enum per le versioni del catalogo Gaia
+enum class GaiaVersion {
+    EDR3,  // Early Data Release 3 (2020)
+    DR3    // Data Release 3 (2022) - default
+};
+
+// Dati di una stella da Gaia DR3/EDR3
 struct GaiaStar {
     std::string sourceId;      // Gaia source_id
     EquatorialCoordinates pos; // RA, Dec (J2016.0)
@@ -56,6 +62,12 @@ public:
     
     // Imposta il numero massimo di righe restituite
     void setMaxRows(int rows);
+    
+    // Imposta la versione del catalogo Gaia (EDR3 o DR3)
+    void setGaiaVersion(GaiaVersion version);
+    
+    // Ottieni la versione attualmente configurata
+    GaiaVersion getGaiaVersion() const;
     
 private:
     class Impl;

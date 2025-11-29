@@ -137,12 +137,24 @@ public:
     std::string tapURL;
     int timeout;
     int maxRows;
+    GaiaVersion version;
     CURL* curl;
     
     Impl() : tapURL("https://gea.esac.esa.int/tap-server/tap/"), 
-             timeout(60), maxRows(10000) {
+             timeout(60), maxRows(10000), version(GaiaVersion::DR3) {
         curl_global_init(CURL_GLOBAL_DEFAULT);
         curl = curl_easy_init();
+    }
+    
+    // Restituisce il nome della tabella Gaia in base alla versione
+    std::string getGaiaTable() const {
+        switch (version) {
+            case GaiaVersion::EDR3:
+                return "gaiaedr3.gaia_source";
+            case GaiaVersion::DR3:
+            default:
+                return "gaiadr3.gaia_source";
+        }
     }
     
     ~Impl() {
@@ -194,6 +206,14 @@ void GaiaClient::setMaxRows(int rows) {
     pImpl->maxRows = rows;
 }
 
+void GaiaClient::setGaiaVersion(GaiaVersion version) {
+    pImpl->version = version;
+}
+
+GaiaVersion GaiaClient::getGaiaVersion() const {
+    return pImpl->version;
+}
+
 std::vector<GaiaStar> GaiaClient::queryRegion(double raCenterDeg, double decCenterDeg,
                                               double radiusDeg, double maxMagnitude) {
     return queryCone(raCenterDeg, decCenterDeg, radiusDeg, maxMagnitude);
@@ -206,7 +226,7 @@ std::vector<GaiaStar> GaiaClient::queryCone(double raCenterDeg, double decCenter
     adql << "SELECT TOP " << pImpl->maxRows << " "
          << "source_id, ra, dec, parallax, pmra, pmdec, "
          << "phot_g_mean_mag, phot_bp_mean_mag, phot_rp_mean_mag "
-         << "FROM gaiadr3.gaia_source "
+         << "FROM " << pImpl->getGaiaTable() << " "
          << "WHERE CONTAINS("
          << "POINT('ICRS', ra, dec), "
          << "CIRCLE('ICRS', " 
@@ -224,7 +244,7 @@ GaiaStar GaiaClient::queryStar(const std::string& sourceId) {
     std::ostringstream adql;
     adql << "SELECT source_id, ra, dec, parallax, pmra, pmdec, "
          << "phot_g_mean_mag, phot_bp_mean_mag, phot_rp_mean_mag "
-         << "FROM gaiadr3.gaia_source "
+         << "FROM " << pImpl->getGaiaTable() << " "
          << "WHERE source_id = " << sourceId;
     
     std::string votable = executeADQL(adql.str());

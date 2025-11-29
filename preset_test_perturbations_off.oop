@@ -1,0 +1,45 @@
+! Test configuration with perturbations disabled
+! To verify configuration reading works correctly
+
+object.
+        .id = '0'
+        .name = 'Test No Perturbations'
+        .min_diameter = 100.0
+        .max_diameter = 1000.0
+
+propag.
+        .start_jd = 2460676.500000  ! 2026-01-01
+        .end_jd = 2460707.500000    ! 2026-02-01 (31 days)
+        .step_size = 1.0            ! 1 day (fast test)
+        .type = 'RK4'
+
+ephemeris.
+        .jpl_version = 'DE441'
+        .ast17_file = '~/.ioccultcalc/ephemerides/codes_300ast_20100725.bsp'
+
+perturbations.
+        .planets = .FALSE.
+        .relativity = .FALSE.
+        .asteroid_count = 0
+
+output.
+        .format = 'text'
+        .file = 'test_output_no_pert.txt'
+        .verbosity = 2
+
+search.
+        .search_window_days = 31.0
+        .min_magnitude = 0.0
+        .max_magnitude = 15.0
+        .min_probability = 1.0
+        .max_shadow_radius_km = 500.0
+        .search_radius_deg = 0.1
+
+gaia.
+        .cache_dir = '~/.ioccultcalc/gaia6'
+        .mag_limit = 7.0
+        .use_proper_motion = .TRUE.
+
+asteroid_db.
+        .catalog_file = '~/.ioccultcalc/data/all_numbered_asteroids.json'
+        .use_mpcorb = .FALSE.
