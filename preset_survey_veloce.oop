@@ -1,0 +1,67 @@
+# IOccultCalc Preset - Survey Veloce
+# Configurazione ottimizzata per survey ampi con molti asteroidi
+
+general.
+    .propagator = 'hybrid'
+    .step_size_days = 0.1
+    .search_radius_deg = 1.0
+    .precision_mode = 'fast'
+    .verbose = .FALSE.
+    .parallel = .TRUE.
+    .max_threads = 8
+
+orbit_source.
+    .type = 'astdys'
+    .cache_expire_hours = 24
+    .update_auto = .TRUE.
+
+orbit_fitting.
+    .mode = 'never'  # No fitting per velocità massima
+
+asteroids.
+    .selection_mode = 'range'
+    .range = [1, 2000]  # Primi 2000 asteroidi numerati
+    .diameter_min = 5.0  # Solo asteroidi > 5km
+
+time.
+    .start_date = '2026-01-01'
+    .end_date = '2026-03-31'  # 3 mesi
+    .time_zone = 'UTC'
+
+observer.
+    .location_type = 'geocentric'  # Centro Terra per velocità
+
+search.
+    .max_magnitude = 12.0
+    .search_radius_deg = 0.1
+    .min_probability = 0.01
+    .min_duration_sec = 0.5
+    .solar_elongation_min = 15.0
+    .altitude_min = 15.0
+
+star_catalogs.
+    .primary = 'gaia_dr2'  # DR2 più veloce di DR3
+    .download_auto = .TRUE.
+    .proper_motion = .FALSE.  # Disabilita per velocità
+
+hybrid.
+    .phase1_algorithm = 'chebyshev'
+    .phase2_algorithm = 'rkf78'
+    .promotion_threshold_arcsec = 120.0  # Soglia alta
+    .search_window_hours = 2.0
+
+output.
+    .format = 'csv'
+    .directory = './results/survey/'
+    .filename = 'survey_veloce_2026'
+    .include_statistics = .TRUE.
+    .precision_coordinates = 1  # Precisione ridotta
+    .sort_by = 'probability'
+    .compression = 'gzip'
+
+performance.
+    .parallel_asteroids = .TRUE.
+    .parallel_stars = .TRUE.
+    .thread_pool_size = 16
+    .batch_size = 1000  # Batch grandi
+    .cache_strategy = 'memory'

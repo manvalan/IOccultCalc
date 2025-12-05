@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "created_by": "StarScreening Test",
+    "version": "2.0", 
+    "date": "2025-01-15",
+    "description": "Test StarScreening con asteroide 433 Eros"
+  },
+  "sections": [
+    {
+      "type": "object",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "value": "433",
+          "comment": "Asteroide 433 Eros"
+        },
+        {
+          "name": "name",
+          "type": "string", 
+          "value": "Eros",
+          "comment": "Nome asteroide"
+        },
+        {
+          "name": "diameter",
+          "type": "double",
+          "value": "16.84",
+          "comment": "Diametro in km"
+        }
+      ]
+    },
+    {
+      "type": "search", 
+      "parameters": [
+        {
+          "name": "start_jd",
+          "type": "double",
+          "value": "2460675.5",
+          "comment": "Data inizio ricerca"
+        },
+        {
+          "name": "end_jd", 
+          "type": "double",
+          "value": "2460705.5",
+          "comment": "Data fine ricerca (30 giorni)"
+        },
+        {
+          "name": "step_days",
+          "type": "double", 
+          "value": "0.5",
+          "comment": "Passo temporale 0.5 giorni"
+        },
+        {
+          "name": "star_ra",
+          "type": "double",
+          "value": "45.5",
+          "comment": "RA stella target in gradi"
+        },
+        {
+          "name": "star_dec",
+          "type": "double",
+          "value": "23.8", 
+          "comment": "Dec stella target in gradi"
+        }
+      ]
+    },
+    {
+      "type": "operations",
+      "parameters": [
+        {
+          "name": "download_elements",
+          "type": "bool",
+          "value": "true",
+          "comment": "Scarica elementi da AstDyS"
+        },
+        {
+          "name": "use_high_precision", 
+          "type": "bool",
+          "value": "false",
+          "comment": "Usa calcoli alta precisione"
+        }
+      ]
+    }
+  ]
+}

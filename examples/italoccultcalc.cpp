@@ -20,6 +20,7 @@
 #include "ioccultcalc/config_manager.h"
 #include "ioccultcalc/asteroid_filter.h"
 #include "ioccultcalc/orbit_propagator.h"
+#include "ioccultcalc/astdys_client.h"  // Per aggiornare elementi da AstDys
 // IOC_GaiaLib - UnifiedGaiaCatalog per formato multifile_v2
 #include "ioc_gaialib/unified_gaia_catalog.h"
 #include "ioccultcalc/occultation_predictor.h"
@@ -517,6 +518,73 @@ std::vector<AsteroidCandidate> selectAsteroids(const ConfigManager& config) {
         candidate.elements.G = astJson.value("G", 0.15);
         candidate.elements.diameter = estimatedDiameter;
         
+        // ======================================================================
+        // PATCH 17030: USA ASTDYS PER ELEMENTI AGGIORNATI
+        // ======================================================================
+        if (asteroidNumber == 17030) {
+            std::cout << "\n[ASTDYS] Aggiornamento elementi orbitali per 17030 da AstDys...\n";
+            
+            try {
+                AstDysClient astdys;
+                astdys.setTimeout(30);  // 30 secondi timeout
+                
+                // Scarica elementi KEPLERIAN recenti da AstDys
+                auto astdysElements = astdys.getRecentElements("17030");
+                
+                std::cout << "[ASTDYS] ✓ Elementi scaricati da AstDys:\n";
+                std::cout << "  Epoca: JD " << std::fixed << std::setprecision(2) << astdysElements.epoch.jd << "\n";
+                std::cout << "  a = " << std::setprecision(6) << astdysElements.a << " AU\n";
+                std::cout << "  e = " << astdysElements.e << "\n";
+                std::cout << "  i = " << (astdysElements.i * 180.0 / M_PI) << "°\n";
+                std::cout << "  Ω = " << (astdysElements.Omega * 180.0 / M_PI) << "°\n";
+                std::cout << "  ω = " << (astdysElements.omega * 180.0 / M_PI) << "°\n";
+                std::cout << "  M = " << (astdysElements.M * 180.0 / M_PI) << "°\n";
+                
+                // Sovrascrivi elementi JSON con quelli di AstDys
+                candidate.elements = astdysElements;
+                candidate.elements.H = H;  // Mantieni H dal JSON
+                candidate.elements.G = astJson.value("G", 0.15);
+                candidate.elements.diameter = estimatedDiameter;
+                
+                std::cout << "[ASTDYS] ✓ Usando elementi AstDys per propagazione\n\n";
+                
+                // NUOVA API: Prova a scaricare Chebyshev ephemeris direttamente
+                std::cout << "[ASTDYS CHEBYSHEV] Provo a scaricare effemeridi Chebyshev...\n";
+                try {
+                    // Scarica Chebyshev per intervallo ricerca
+                    // Note: startJd/endJd non ancora definiti qui, useremo window fissa
+                    double testStartJD = 2460638.5;  // 2025-11-24
+                    double testEndJD = 2460645.5;    // 2025-12-01
+                    
+                    auto chebEph = astdys.getChebyshevEphemeris("17030", 
+                                                                testStartJD, 
+                                                                testEndJD,
+                                                                15);  // Order 15
+                    
+                    std::cout << "[ASTDYS CHEBYSHEV] ✓ Scaricato Chebyshev order=" << chebEph.order 
+                              << " interval=[" << chebEph.startJD << ", " << chebEph.endJD << "]\n";
+                    
+                    // Test: Valuta posizione al centro dell'intervallo
+                    double testJD = (testStartJD + testEndJD) / 2.0;
+                    auto [ra, dec, dist] = chebEph.getRADecDist(testJD);
+                    std::cout << "[ASTDYS CHEBYSHEV] Test JD=" << testJD 
+                              << " → RA=" << ra << "° Dec=" << dec << "° dist=" << dist << " AU\n";
+                    
+                    // Salva per uso successivo (NOTA: questo richiede storage a livello di candidato)
+                    // Per ora solo test, integrazione completa successiva
+                    
+                } catch (const std::exception& e) {
+                    std::cout << "[ASTDYS CHEBYSHEV] ⚠️  Non disponibile: " << e.what() << "\n";
+                    std::cout << "[ASTDYS CHEBYSHEV] Uso propagazione classica\n";
+                }
+                
+            } catch (const std::exception& e) {
+                std::cerr << "[ASTDYS] ✗ Errore: " << e.what() << "\n";
+                std::cerr << "[ASTDYS] Uso elementi JSON come fallback\n\n";
+            }
+        }
+        // ======================================================================
+        
         // Get designation and name (support MPC format)
         std::string designation = "";
         std::string name = "Unknown";
@@ -755,11 +823,16 @@ std::vector<StarData> queryCatalog(const ConfigManager& config,
         magLimit = searchSection->getParameter("mag_limit")->asDouble();
     }
     
-    // Epoca target dalla configurazione
-    double targetJD = 2460676.5;  // Default 2026-01-01
+    // Periodo di ricerca dalla configurazione
+    double startJd = 2460676.5;  // Default 2026-01-01
+    double endJd = 2461041.5;    // Default 2026-12-31
     if (searchSection && searchSection->hasParameter("start_jd")) {
-        targetJD = searchSection->getParameter("start_jd")->asDouble();
+        startJd = searchSection->getParameter("start_jd")->asDouble();
     }
+    if (searchSection && searchSection->hasParameter("end_jd")) {
+        endJd = searchSection->getParameter("end_jd")->asDouble();
+    }
+    double targetJD = startJd;  // Per compatibilità con codice esistente
     JulianDate targetEpoch;
     targetEpoch.jd = targetJD;
     
@@ -838,7 +911,7 @@ std::vector<StarData> queryCatalog(const ConfigManager& config,
     // ============================================================================
     
     std::set<std::string> uniqueStarIds;  // Deduplica
-    const double searchRadiusDeg = 7.0;   // Raggio query
+    const double searchRadiusDeg = 1.0;   // Raggio query (1 grado)
     const double batchMergeDistDeg = 15.0; // Merge regioni entro 15°
     
     // Inizializza UnifiedGaiaCatalog (IOC_GaiaLib)
@@ -941,129 +1014,208 @@ std::vector<StarData> queryCatalog(const ConfigManager& config,
         std::cout << "✓ Raggruppati " << asteroids.size() << " asteroidi in " 
                  << regions.size() << " regioni celesti\n";
         std::cout << "  Riduzione query: " << asteroids.size() << " → " << regions.size()
-                 << " (" << (100 - 100*regions.size()/asteroids.size()) << "% risparmio)\n\n";
-        std::cout << "Fase 2: Query catalogo locale per " << regions.size() << " regioni";
+                 << " (" << (100 - 100*regions.size()/asteroids.size()) << "% risparmio)\n";
+        
+        // DEBUG: Mostra coordinate query
+        for (size_t i = 0; i < std::min(regions.size(), size_t(3)); i++) {
+            std::cout << "  [REGION " << i << "] RA=" << std::fixed << std::setprecision(2) 
+                      << regions[i].ra << "° Dec=" << regions[i].dec << "° radius=" << searchRadiusDeg << "°\n";
+        }
+        
+        std::cout << "\nFase 2: Query catalogo locale per " << regions.size() << " regioni";
 #ifdef _OPENMP
         std::cout << " (parallel)";
 #endif
         std::cout << "...\n";
     }
     
-    // STEP 2: Query per regioni (FASE 2 OPTIMIZATION: parallel loading)
+    // STEP 2: Query con CORRIDOR API (molto più efficiente del cono!)
     auto query_start = std::chrono::high_resolution_clock::now();
     
-    // Pre-alloca vettori per risultati paralleli
-    std::vector<std::vector<ioc::gaia::GaiaStar>> region_results(regions.size());
-
-#ifdef _OPENMP
-    #pragma omp parallel for schedule(dynamic)
-    for (size_t r = 0; r < regions.size(); r++) {
-        const auto& region = regions[r];
+    // Per ogni asteroide, crea un corridor lungo il suo percorso nel periodo di ricerca
+    for (size_t astIdx = 0; astIdx < asteroids.size(); astIdx++) {
+        const auto& ast = asteroids[astIdx];
         
-        // Query catalogo con UnifiedGaiaCatalog API
-        ioc::gaia::QueryParams qparams;
-        qparams.ra_center = region.ra;
-        qparams.dec_center = region.dec;
-        qparams.radius = searchRadiusDeg;
-        qparams.max_magnitude = magLimit;
+        // Crea ephemeris per questo asteroide
+        EquinoctialElements astElem = EquinoctialElements::fromKeplerian(ast.elements);
+        Ephemeris ephemeris(astElem);
         
-        region_results[r] = catalog.queryCone(qparams);
+        // Campiona posizioni lungo il periodo di ricerca
+        ioc::gaia::CorridorQueryParams corridorParams;
+        int nSamples = 10;  // Punti lungo il percorso
         
-        #pragma omp critical
-        {
-            if (!g_verbose && r % 5 == 0) {
-                std::cout << "  [" << r << "/" << regions.size() << "] "
-                         << "Query in corso...\r" << std::flush;
+        std::cout << "  [CORRIDOR PATH] Asteroide " << ast.elements.designation 
+                  << " - Sampling " << nSamples << " punti da JD " << std::fixed << std::setprecision(2) 
+                  << startJd << " a " << endJd << "\n";
+        
+        for (int i = 0; i < nSamples; i++) {
+            double jd = startJd + (endJd - startJd) * i / (nSamples - 1);
+            JulianDate epoch;
+            epoch.jd = jd;
+            
+            try {
+                EphemerisData ephData = ephemeris.compute(epoch);
+                double ra = ephData.geocentricPos.ra * RAD_TO_DEG;
+                double dec = ephData.geocentricPos.dec * RAD_TO_DEG;
+                
+                corridorParams.path.push_back(ioc::gaia::CelestialPoint(ra, dec));
+                
+                // DEBUG: Stampa TUTTI i punti per verifica completa
+                std::cout << "    [PUNTO " << i << "] JD=" << std::fixed << std::setprecision(2) 
+                          << jd << " → RA=" << std::setprecision(4) << ra 
+                          << "° Dec=" << dec << "°\n";
+            } catch (const std::exception& e) {
+                std::cerr << "  [WARN] Errore calcolo ephemeris per " << ast.elements.designation 
+                          << " a JD=" << jd << ": " << e.what() << "\n";
             }
         }
-    }
-#else
-    // Sequential fallback
-    for (size_t r = 0; r < regions.size(); r++) {
-        const auto& region = regions[r];
         
-        ioc::gaia::QueryParams qparams;
-        qparams.ra_center = region.ra;
-        qparams.dec_center = region.dec;
-        qparams.radius = searchRadiusDeg;
-        qparams.max_magnitude = magLimit;
+        if (corridorParams.path.size() < 2) {
+            std::cerr << "  [ERROR] Corridor path troppo corto per " << ast.elements.designation << "\n";
+            continue;
+        }
         
-        region_results[r] = catalog.queryCone(qparams);
+        // Imposta parametri corridor
+        // IMPORTANTE: width è HALF-WIDTH, quindi total = 2 * width
+        // Per cercare entro 1° dall'asteroide, width deve essere >= 1°
+        corridorParams.width = 5.0;  // 5° half-width = 10° total (largo per test 17030)
+        corridorParams.max_magnitude = magLimit;
+        corridorParams.min_parallax = -1.0;      // No limit
+        corridorParams.max_results = 0;          // No limit
         
-        if (!g_verbose && r % 5 == 0) {
-            std::cout << "  [" << r << "/" << regions.size() << "] "
-                     << "Query in corso...\r" << std::flush;
+        std::cout << "  [CORRIDOR] Query corridor: " << corridorParams.path.size() 
+                  << " punti, width=" << corridorParams.width << "° mag≤" << magLimit << "\n";
+        
+        // Esegui query corridor
+        auto corridorStars = catalog.queryCorridor(corridorParams);
+        
+        std::cout << "  [CORRIDOR] Trovate " << corridorStars.size() << " stelle\n";
+        
+        // DEBUG: Cerca stella target specifica
+        uint64_t targetStarId = 3411546266140512128ULL;
+        auto targetStar = catalog.queryBySourceId(targetStarId);
+        if (targetStar.has_value()) {
+            std::cout << "  [TARGET STAR] Stella " << targetStarId << " TROVATA nel catalogo:\n";
+            std::cout << "    RA=" << std::fixed << std::setprecision(4) << targetStar->ra 
+                      << "° Dec=" << targetStar->dec 
+                      << "° Mag=" << targetStar->phot_g_mean_mag << "\n";
+            
+            // Calcola distanza dal percorso
+            double minDist = 1e10;
+            for (const auto& pt : corridorParams.path) {
+                double dra = std::abs(targetStar->ra - pt.ra);
+                double ddec = std::abs(targetStar->dec - pt.dec);
+                double dist = std::sqrt(dra*dra + ddec*ddec);
+                if (dist < minDist) minDist = dist;
+            }
+            std::cout << "    Distanza minima dal percorso: " << minDist << "°\n";
+            
+            // Verifica se è nel risultato corridor
+            bool foundInCorridor = false;
+            for (const auto& s : corridorStars) {
+                if (s.source_id == targetStarId) {
+                    foundInCorridor = true;
+                    break;
+                }
+            }
+            std::cout << "    Presente nel corridor result: " << (foundInCorridor ? "SI ✓" : "NO ✗") << "\n";
+        } else {
+            std::cout << "  [TARGET STAR] Stella " << targetStarId << " NON PRESENTE nel catalogo locale!\n";
+        }
+        
+        // DEBUG: Verifica che le stelle siano REALMENTE vicine al percorso
+        if (corridorStars.size() > 0 && !g_verbose) {
+            std::cout << "  [DEBUG] Verifica distanza stelle dal percorso:\n";
+            
+            // Lambda per calcolare distanza minima da path
+            auto minDistFromPath = [&corridorParams](double star_ra, double star_dec) -> double {
+                double minDist = 999.0;
+                for (const auto& pt : corridorParams.path) {
+                    double dra = star_ra - pt.ra;
+                    double ddec = star_dec - pt.dec;
+                    double dist = std::sqrt(dra*dra + ddec*ddec);
+                    minDist = std::min(minDist, dist);
+                }
+                return minDist;
+            };
+            
+            size_t maxDebug = (corridorStars.size() < 5) ? corridorStars.size() : 5;
+            for (size_t i = 0; i < maxDebug; i++) {
+                const auto& s = corridorStars[i];
+                double minDist = minDistFromPath(s.ra, s.dec);
+                
+                std::cout << "    Stella " << i << ": ID=" << s.source_id 
+                          << " RA=" << std::fixed << std::setprecision(3) << s.ra 
+                          << "° Dec=" << s.dec << "° Mag=" << std::setprecision(1) << s.phot_g_mean_mag 
+                          << " MinDist=" << std::setprecision(3) << minDist << "°";
+                
+                if (minDist > corridorParams.width) {
+                    std::cout << " ⚠️ FUORI CORRIDOR!";
+                }
+                std::cout << "\n";
+            }
+            
+            // Verifica stella target
+            bool foundTarget = false;
+            for (const auto& s : corridorStars) {
+                if (s.source_id == 3411546266140512128) {
+                    double minDist = minDistFromPath(s.ra, s.dec);
+                    std::cout << "  [✓] TROVATA stella target 3411546266140512128! "
+                              << "RA=" << std::fixed << std::setprecision(3) << s.ra 
+                              << "° Dec=" << s.dec << "° MinDist=" << minDist << "°\n";
+                    foundTarget = true;
+                    break;
+                }
+            }
+            if (!foundTarget) {
+                std::cout << "  [✗] Stella target 3411546266140512128 NON trovata nel corridor\n";
+            }
+        }
+        
+        // Converti e aggiungi stelle ai risultati (deduplica per source_id)
+        for (const auto& gaiaStar : corridorStars) {
+            // Deduplica per source_id
+            std::string sidStr = std::to_string(gaiaStar.source_id);
+            if (uniqueStarIds.find(sidStr) != uniqueStarIds.end()) {
+                continue;  // Già processata
+            }
+            uniqueStarIds.insert(sidStr);
+            
+            // Converti ioc::gaia::GaiaStar a StarData
+            StarData star;
+            star.source_id = gaiaStar.source_id;
+            star.designation = "Gaia DR3 " + std::to_string(gaiaStar.source_id);
+            star.position.ra = gaiaStar.ra * M_PI / 180.0;  // Converti gradi → radianti
+            star.position.dec = gaiaStar.dec * M_PI / 180.0;
+            star.epoch.jd = 2457389.0;  // Gaia DR3 epoch (J2016.0)
+            star.properMotion.pmra = gaiaStar.pmra;
+            star.properMotion.pmdec = gaiaStar.pmdec;
+            star.properMotion.pmra_error = gaiaStar.pmra_error;
+            star.properMotion.pmdec_error = gaiaStar.pmdec_error;
+            star.properMotion.pmra_pmdec_corr = 0.0;
+            star.parallax = gaiaStar.parallax;
+            star.parallax_error = gaiaStar.parallax_error;
+            star.G_mag = gaiaStar.phot_g_mean_mag;
+            star.BP_mag = gaiaStar.phot_bp_mean_mag;
+            star.RP_mag = gaiaStar.phot_rp_mean_mag;
+            star.hasRadialVelocity = false;
+            star.radialVelocity = 0.0;
+            star.radialVelocity_error = 0.0;
+            star.astrometric_excess_noise = gaiaStar.astrometric_excess_noise;
+            star.astrometric_n_good_obs = gaiaStar.visibility_periods_used;
+            star.ruwe = gaiaStar.ruwe;
+            
+            stars.push_back(star);
         }
     }
-#endif
     
     auto query_end = std::chrono::high_resolution_clock::now();
     double query_time_ms = std::chrono::duration<double, std::milli>(query_end - query_start).count();
     
     if (!g_verbose) {
-        std::cout << "\n  ✓ Query parallele completate in " << (query_time_ms/1000.0) << " secondi\n\n";
-        std::cout << "Fase 3: Deduplica e conversione stelle...\n";
-    }
-    
-    // STEP 3: Deduplica e converti in parallelo
-    size_t debugCount = 0;
-    for (size_t r = 0; r < regions.size(); r++) {
-        const auto& region = regions[r];
-        const auto& regionStars = region_results[r];
-        
-        for (const auto& gaiaStar : regionStars) {
-            if (uniqueStarIds.insert(std::to_string(gaiaStar.source_id)).second) {
-                // DEBUG: Stampa prime 3 stelle per vedere coordinate
-                if (g_verbose && debugCount < 3) {
-                    std::cout << "  [DEBUG] Stella " << gaiaStar.source_id 
-                              << ": RA=" << std::fixed << std::setprecision(2) << gaiaStar.ra 
-                              << "° Dec=" << gaiaStar.dec << "° Mag=" << gaiaStar.phot_g_mean_mag << "\n";
-                    debugCount++;
-                }
-                
-                // Converti ioc::gaia::GaiaStar a StarData
-                StarData star;
-                star.source_id = gaiaStar.source_id;
-                star.designation = "Gaia DR3 " + std::to_string(gaiaStar.source_id);
-                star.position.ra = gaiaStar.ra;
-                star.position.dec = gaiaStar.dec;
-                star.epoch.jd = 2457389.0;  // Gaia DR3 epoch
-                star.properMotion.pmra = gaiaStar.pmra;
-                star.properMotion.pmdec = gaiaStar.pmdec;
-                star.properMotion.pmra_error = gaiaStar.pmra_error;
-                star.properMotion.pmdec_error = gaiaStar.pmdec_error;
-                star.properMotion.pmra_pmdec_corr = 0.0;
-                star.parallax = gaiaStar.parallax;
-                star.parallax_error = gaiaStar.parallax_error;
-                star.G_mag = gaiaStar.phot_g_mean_mag;
-                star.BP_mag = gaiaStar.phot_bp_mean_mag;
-                star.RP_mag = gaiaStar.phot_rp_mean_mag;
-                star.hasRadialVelocity = false;
-                star.radialVelocity = 0.0;
-                star.radialVelocity_error = 0.0;
-                star.astrometric_excess_noise = gaiaStar.astrometric_excess_noise;
-                star.astrometric_n_good_obs = gaiaStar.visibility_periods_used;
-                star.ruwe = gaiaStar.ruwe;
-                
-                stars.push_back(star);
-            }
-        }
-        
-        // Progress
-        if (!g_verbose && r % 5 == 0) {
-            int pct = (r + 1) * 100 / regions.size();
-            std::cout << "  [" << (r+1) << "/" << regions.size() << "] "
-                     << "Regione RA=" << std::fixed << std::setprecision(1) << region.ra 
-                     << "° Dec=" << region.dec << "° | "
-                     << "Totale uniche: " << stars.size() 
-                     << " (" << pct << "%)   \r" << std::flush;
-        }
-    }
-    
-    if (!g_verbose) {
-        std::cout << "\n\n✓ Completato: " << stars.size() 
+        std::cout << "\n✓ Completato: " << stars.size() 
                  << " stelle uniche da catalogo locale\n";
-        std::cout << "  Tempo query totale: " << std::fixed << std::setprecision(2)
+        std::cout << "  Tempo query corridor totale: " << std::fixed << std::setprecision(2)
                  << (query_time_ms/1000.0) << " secondi\n\n";
     }
     
@@ -1461,20 +1613,87 @@ std::vector<ItalOccultationEvent> detectOccultations(
             
             // Configura detector Chebyshev (FASE 1)
             ChebyshevOccultationDetector::Config detectorConfig;
-            detectorConfig.order = 11;             // Ordine polinomio (come LinOccult)
-            detectorConfig.segmentDays = 1.0;      // Un segmento al giorno
-            detectorConfig.thresholdArcsec = 300.0; // 5 arcmin threshold ricerca
+            detectorConfig.order = 15;             // Ordine 15 per precisione sub-arcsec
+            detectorConfig.segmentDays = 7.0;      // Segmenti di 7 giorni (ottimale)
+            detectorConfig.thresholdArcsec = searchRadius * 3600.0; // Usa searchRadius dalla config
             detectorConfig.refinementArcsec = 60.0; // 1 arcmin per refine
-            detectorConfig.verbose = false;
+            detectorConfig.verbose = true;
             
             ChebyshevOccultationDetector detector(detectorConfig);
-            detector.initialize(ephemeris, startJd, endJd);
+            bool chebInit = false;
             
-            // Prepara lista stelle come coppie (RA, Dec)
+            // PROVA 1: Usa AstDyn (scarica Chebyshev da AstDyS) - METODO PREFERITO
+            // Estrai numero asteroide dalla designation per test
+            std::string asteroidDesignation = astElem.designation;
+            if (!asteroidDesignation.empty() && asteroidDesignation == "17030") {  // Test con 17030
+                if (g_verbose) {
+                    std::cout << "\n[Chebyshev] Tentativo inizializzazione da AstDyn per " 
+                              << asteroidDesignation << "..." << std::flush;
+                }
+                
+                chebInit = detector.initializeFromAstDynMulti(
+                    asteroidDesignation,
+                    startJd,
+                    endJd,
+                    7.0  // Segmenti di 7 giorni
+                );
+                
+                if (chebInit) {
+                    if (g_verbose) {
+                        std::cout << " [AstDyn OK]" << std::flush;
+                    }
+                } else {
+                    if (g_verbose) {
+                        std::cout << " [AstDyn failed, fallback to classic]" << std::flush;
+                    }
+                }
+            }
+            
+            // PROVA 2: Fallback al metodo classico se AstDyn non disponibile
+            if (!chebInit) {
+                if (g_verbose) {
+                    std::cout << " [Cheby Classic]" << std::flush;
+                }
+                chebInit = detector.initialize(ephemeris, startJd, endJd);
+            }
+            
+            if (!chebInit) {
+                std::cerr << "❌ ERRORE: Chebyshev initialization FAILED (both methods)!\n";
+                throw std::runtime_error("Chebyshev detector initialization failed");
+            }
+            if (g_verbose) {
+                std::cout << " [Cheby OK]" << std::flush;
+            }
+            
+            // Crea anche un'approssimazione separata per confronti diretti
+            ChebyshevConfig chebConfig;
+            chebConfig.order = 11;
+            chebConfig.segmentDays = 1.0;
+            chebConfig.geocentric = true;
+            ChebyshevApproximation chebApprox(chebConfig);
+            chebApprox.generate(ephemeris, startJd, endJd);
+            
+            // Prepara lista stelle come coppie (RA, Dec) in GRADI (Chebyshev richiede gradi)
             std::vector<std::pair<double, double>> starCoords;
             starCoords.reserve(stars.size());
             for (const auto& s : stars) {
-                starCoords.push_back({s.position.ra, s.position.dec});
+                // StarData memorizza in RADIANTI, ma Chebyshev angularDistance converte da gradi
+                starCoords.push_back({s.position.ra * 180.0 / M_PI, s.position.dec * 180.0 / M_PI});
+            }
+            
+            // DEBUG: Verifica accuratezza Chebyshev vs Ephemeris reale
+            if (g_verbose) {
+                double testJD = startJd + 3.5;  // Punto centrale
+                JulianDate testEpoch;
+                testEpoch.jd = testJD;
+                EphemerisData realEph = ephemeris.compute(testEpoch);
+                
+                std::cout << "\n[DEBUG] Verifica accuratezza Chebyshev alla JD=" << testJD << ":\n";
+                std::cout << "  Real Ephemeris: RA=" << (realEph.geocentricPos.ra * 180.0 / M_PI) 
+                          << "° Dec=" << (realEph.geocentricPos.dec * 180.0 / M_PI) << "°\n";
+                
+                // Test Chebyshev (se disponibile tramite detector)
+                // Non possiamo accedere direttamente ad approximation_ ma possiamo testare una stella
             }
             
             // FASE 1: Trova candidati con algoritmo Chebyshev (veloce)
@@ -1501,10 +1720,11 @@ std::vector<ItalOccultationEvent> detectOccultations(
             // FASE 2: Per ogni candidato, refine con predictOccultation (preciso)
             std::vector<OccultationEvent> realEvents;
             
-            // Epoca di riferimento per predictOccultation (centro periodo)
-            JulianDate midEpoch;
-            midEpoch.jd = (startJd + endJd) / 2.0;
+            // DEBUG: SEMPRE mostra FASE 2 (non dipendere da g_verbose)
+            std::cout << "\n[FASE 2] Asteroide " << asteroid.elements.name << ": " 
+                      << candidates.size() << " candidati da raffinare\n" << std::flush;
             
+            int compareCount = 0;  // Contatore per confronti debug
             for (const auto& candidate : candidates) {
                 // Recupera dati stella dal catalogo
                 if (candidate.starIndex < 0 || candidate.starIndex >= (int)stars.size()) {
@@ -1524,9 +1744,59 @@ std::vector<ItalOccultationEvent> detectOccultations(
                 gaiaStar.phot_rp_mean_mag = starData.RP_mag;
                 
                 try {
+                    // CRITICAL FIX: Usa l'epoca del closest approach trovato da Chebyshev
+                    // Non usare midEpoch fisso che dà distanze enormi!
+                    JulianDate candidateEpoch;
+                    candidateEpoch.jd = candidate.jd;
+                    
+                    // DEBUG: Confronta Chebyshev vs Propagatore Preciso (primi 3 candidati)
+                    if (compareCount < 3) {
+                        double cheb_ra, cheb_dec, cheb_dist;
+                        if (chebApprox.evaluate(candidate.jd, cheb_ra, cheb_dec, cheb_dist)) {
+                            // Calcola posizione precisa con propagatore
+                            JulianDate testEpoch;
+                            testEpoch.jd = candidate.jd;
+                            EphemerisData preciseEph = ephemeris.compute(testEpoch);
+                            double precise_ra = preciseEph.geocentricPos.ra * 180.0 / M_PI;
+                            double precise_dec = preciseEph.geocentricPos.dec * 180.0 / M_PI;
+                            
+                            double delta_ra = (precise_ra - cheb_ra) * 3600.0;  // arcsec
+                            double delta_dec = (precise_dec - cheb_dec) * 3600.0;  // arcsec
+                            double error_arcsec = std::sqrt(delta_ra*delta_ra + delta_dec*delta_dec);
+                            
+                            // Calcola anche distanza dalla stella per debug
+                            // NOTA: starData.position è già in radianti
+                            double star_ra = starData.position.ra * 180.0 / M_PI;
+                            double star_dec = starData.position.dec * 180.0 / M_PI;
+                            // Distanza angolare usando formula haversine
+                            double dra = starData.position.ra - preciseEph.geocentricPos.ra;
+                            double ddec = starData.position.dec - preciseEph.geocentricPos.dec;
+                            double a = std::sin(ddec/2) * std::sin(ddec/2) + 
+                                      std::cos(starData.position.dec) * std::cos(preciseEph.geocentricPos.dec) *
+                                      std::sin(dra/2) * std::sin(dra/2);
+                            double sep_deg = 2 * std::atan2(std::sqrt(a), std::sqrt(1-a)) * 180.0 / M_PI;
+                            
+                            std::cout << "[COMPARE " << compareCount << "] JD=" << std::fixed << std::setprecision(2) << candidate.jd << "\n"
+                                      << "  Chebyshev:  RA=" << std::setprecision(4) << cheb_ra << "° Dec=" << cheb_dec << "°\n"
+                                      << "  Precise:    RA=" << precise_ra << "° Dec=" << precise_dec << "°\n"
+                                      << "  Error:      " << std::setprecision(2) << error_arcsec << "\" (ΔRA=" << delta_ra << "\" ΔDec=" << delta_dec << "\")\n"
+                                      << "  Star:       RA=" << std::setprecision(4) << star_ra << "° Dec=" << star_dec << "°\n"
+                                      << "  Separation: " << std::setprecision(1) << sep_deg << "° (" << (sep_deg * 3600.0) << "\")\n" << std::flush;
+                            compareCount++;
+                        }
+                    }
+                    
                     // Calcola occultazione con integratore preciso configurato
                     // (usa RKF78, GAUSS_RADAU o altro specificato nel config)
-                    OccultationEvent realEvent = predictor.predictOccultation(gaiaStar, midEpoch);
+                    OccultationEvent realEvent = predictor.predictOccultation(gaiaStar, candidateEpoch);
+                    
+                    // DEBUG: Mostra primi 5 candidati SEMPRE (non solo in verbose)
+                    if (compareCount <= 5) {
+                        std::cout << "[REFINE " << compareCount-1 << "] Star " << candidate.starIndex << " (ID=" << starData.source_id 
+                                  << ") CA=" << std::fixed << std::setprecision(1) 
+                                  << realEvent.closeApproachDistance << "\" prob=" << realEvent.probability 
+                                  << " JD=" << std::fixed << std::setprecision(2) << realEvent.timeCA.jd << "\n" << std::flush;
+                    }
                     
                     // Verifica se l'evento è nel periodo richiesto
                     if (realEvent.timeCA.jd >= startJd && realEvent.timeCA.jd <= endJd) {
@@ -1542,7 +1812,11 @@ std::vector<ItalOccultationEvent> detectOccultations(
                         }
                     }
                 } catch (const std::exception& e) {
-                    // Stella non produce occultazione - normale
+                    // DEBUG: Mostra primi errori per capire cosa fallisce
+                    if (candidate.starIndex < 3) {
+                        std::cerr << "[REFINE ERROR] Star " << candidate.starIndex 
+                                  << ": " << e.what() << "\n" << std::flush;
+                    }
                     continue;
                 }
             }
@@ -1639,6 +1913,9 @@ std::vector<ItalOccultationEvent> detectOccultations(
             }
             
         } catch (const std::exception& e) {
+            // DEBUG: Mostra l'eccezione che causa il salto
+            std::cerr << "\n❌ ECCEZIONE durante elaborazione asteroide " << asteroid.elements.name 
+                      << ":\n   " << e.what() << "\n" << std::flush;
 #ifdef _OPENMP
             #pragma omp atomic
 #endif

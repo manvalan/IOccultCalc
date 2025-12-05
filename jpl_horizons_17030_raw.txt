@@ -1,0 +1,137 @@
+API VERSION: 1.2
+API SOURCE: NASA/JPL Horizons API
+
+
+
+*******************************************************************************
+Ephemeris / API_USER Mon Dec  1 02:12:31 2025 Pasadena, USA      / Horizons    
+*******************************************************************************
+Target body name: 17030 Sierks (1999 FC9)         {source: JPL#63}
+Center body name: Earth (399)                     {source: DE441}
+Center-site name: GEOCENTRIC
+*******************************************************************************
+Start time      : A.D. 2025-Nov-26 00:00:00.0000 UT      
+Stop  time      : A.D. 2025-Nov-29 00:00:00.0000 UT      
+Step-size       : 360 minutes
+*******************************************************************************
+Target pole/equ : undefined
+Target radii    : undefined                                                    
+Center geodetic : 0.0, 0.0, -6378.137             {E-lon(deg),Lat(deg),Alt(km)}
+Center cylindric: 0.0, 0.0, 0.0                   {E-lon(deg),Dxy(km),Dz(km)}
+Center pole/equ : ITRF93                          {East-longitude positive}
+Center radii    : 6378.137, 6378.137, 6356.752 km {Equator_a, b, pole_c}       
+Target primary  : Sun
+Vis. interferer : MOON (R_eq= 1737.400) km        {source: DE441}
+Rel. light bend : Sun                             {source: DE441}
+Rel. lght bnd GM: 1.3271E+11 km^3/s^2                                          
+Small-body perts: Yes                             {source: SB441-N16}
+Atmos refraction: NO (AIRLESS)
+RA format       : DEG
+Time format     : CAL 
+Calendar mode   : Mixed Julian/Gregorian
+EOP file        : eop.251128.p260224                                           
+EOP coverage    : DATA-BASED 1962-JAN-20 TO 2025-NOV-28. PREDICTS-> 2026-FEB-23
+Units conversion: 1 au= 149597870.700 km, c= 299792.458 km/s, 1 day= 86400.0 s 
+Table cut-offs 1: Elevation (-90.0deg=NO ),Airmass (>38.000=NO), Daylight (NO )
+Table cut-offs 2: Solar elongation (  0.0,180.0=NO ),Local Hour Angle( 0.0=NO )
+Table cut-offs 3: RA/DEC angular rate (     0.0=NO )                           
+Table format    : Comma Separated Values (spreadsheet)
+*******************************************************************************
+Initial IAU76/J2000 heliocentric ecliptic osculating elements (au, days, deg.):
+  EPOCH=  2458193.5 ! 2018-Mar-16.00 (TDB)         Residual RMS= .26523        
+   EC= .04796607451625862  QR= 3.021270108215828   TP= 2457625.4440575945      
+   OM= 104.1845838362649   W=  102.1497438064497   IN= 2.904309538190326       
+  Equivalent ICRF heliocentric cartesian coordinates (au, au/d):
+   X= 2.089482932552649E+00  Y=-2.199143394304631E+00  Z=-1.032557863826481E+00
+  VX= 7.519734698236575E-03 VY= 5.580987883609442E-03 VZ= 1.936698072116726E-03
+Asteroid physical parameters (km, seconds, rotational period in hours):        
+   GM= n.a.                RAD= n.a.               ROTPER= 416.198             
+   H= 13.33                G= .150                 B-V= n.a.                   
+                           ALBEDO= n.a.            STYP= n.a.                  
+*******************************************************************************
+ Date__(UT)__HR:MN, , , R.A._(ICRF), DEC_(ICRF),             delta,     deldot,
+*******************************************************************************
+$$SOE
+ 2025-Nov-26 00:00, , ,    73.83782,   20.36117,  2.29741501418299, -5.1673385,
+ 2025-Nov-26 06:00, , ,    73.78616,   20.35761,  2.29667821568253, -5.0385249,
+ 2025-Nov-26 12:00, , ,    73.73437,   20.35404,  2.29596002809392, -4.9095465,
+ 2025-Nov-26 18:00, , ,    73.68246,   20.35046,  2.29526047475760, -4.7804096,
+ 2025-Nov-27 00:00, , ,    73.63044,   20.34687,  2.29457957808940, -4.6511207,
+ 2025-Nov-27 06:00, , ,    73.57830,   20.34327,  2.29391735958038, -4.5216862,
+ 2025-Nov-27 12:00, , ,    73.52606,   20.33967,  2.29327383979757, -4.3921125,
+ 2025-Nov-27 18:00, , ,    73.47371,   20.33605,  2.29264903838575, -4.2624059,
+ 2025-Nov-28 00:00, , ,    73.42125,   20.33243,  2.29204297407035, -4.1325728,
+ 2025-Nov-28 06:00, , ,    73.36870,   20.32880,  2.29145566466179, -4.0026196,
+ 2025-Nov-28 12:00, , ,    73.31605,   20.32516,  2.29088712706141, -3.8725524,
+ 2025-Nov-28 18:00, , ,    73.26330,   20.32152,  2.29033737726918, -3.7423776,
+ 2025-Nov-29 00:00, , ,    73.21047,   20.31786,  2.28980643039339, -3.6121012,
+$$EOE
+*******************************************************************************
+Column meaning:
+ 
+TIME
+
+  Times PRIOR to 1962 are UT1, a mean-solar time closely related to the
+prior but now-deprecated GMT. Times AFTER 1962 are in UTC, the current
+civil or "wall-clock" time-scale. UTC is kept within 0.9 seconds of UT1
+using integer leap-seconds for 1972 and later years.
+
+  Conversion from the internal Barycentric Dynamical Time (TDB) of solar
+system dynamics to the non-uniform civil UT time-scale requested for output
+has not been determined for UTC times after the next July or January 1st.
+Therefore, the last known leap-second is used as a constant over future
+intervals.
+
+  Time tags refer to the UT time-scale conversion from TDB on Earth
+regardless of observer location within the solar system, although clock
+rates may differ due to the local gravity field and no analog to "UT"
+may be defined for that location.
+
+  Any 'b' symbol in the 1st-column denotes a B.C. date. First-column blank
+(" ") denotes an A.D. date.
+ 
+CALENDAR SYSTEM
+
+  Mixed calendar mode was active such that calendar dates after AD 1582-Oct-15
+(if any) are in the modern Gregorian system. Dates prior to 1582-Oct-5 (if any)
+are in the Julian calendar system, which is automatically extended for dates
+prior to its adoption on 45-Jan-1 BC.  The Julian calendar is useful for
+matching historical dates. The Gregorian calendar more accurately corresponds
+to the Earth's orbital motion and seasons. A "Gregorian-only" calendar mode is
+available if such physical events are the primary interest.
+
+  NOTE: "n.a." in output means quantity "not available" at the print-time.
+ 
+ 'R.A._(ICRF), DEC_(ICRF),' =
+  Astrometric right ascension and declination of the target center with
+respect to the observing site (coordinate origin) in the reference frame of
+the planetary ephemeris (ICRF). Compensated for down-leg light-time delay
+aberration.
+
+  Units: RA  in decimal degrees,  ddd.fffff{ffff}
+         DEC in decimal degrees,  sdd.fffff{ffff}
+ 
+ 'delta,     deldot,' =
+   Apparent range ("delta", light-time aberrated) and range-rate ("delta-dot")
+of the target center relative to the observer. A positive "deldot" means the
+target center is moving away from the observer, negative indicates movement
+toward the observer.  Units: AU and KM/S
+
+Computations by ...
+
+    Solar System Dynamics Group, Horizons On-Line Ephemeris System
+    4800 Oak Grove Drive, Jet Propulsion Laboratory
+    Pasadena, CA  91109   USA
+
+    General site: https://ssd.jpl.nasa.gov/
+    Mailing list: https://ssd.jpl.nasa.gov/email_list.html
+    System news : https://ssd.jpl.nasa.gov/horizons/news.html
+    User Guide  : https://ssd.jpl.nasa.gov/horizons/manual.html
+    Connect     : browser        https://ssd.jpl.nasa.gov/horizons/app.html#/x
+                  API            https://ssd-api.jpl.nasa.gov/doc/horizons.html
+                  command-line   telnet ssd.jpl.nasa.gov 6775
+                  e-mail/batch   https://ssd.jpl.nasa.gov/ftp/ssd/horizons_batch.txt
+                  scripts        https://ssd.jpl.nasa.gov/ftp/ssd/SCRIPTS
+    Author      : Jon.D.Giorgini@jpl.nasa.gov
+
+*******************************************************************************

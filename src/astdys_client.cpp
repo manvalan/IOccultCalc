@@ -4,9 +4,12 @@
 #include "ioccultcalc/time_utils.h"
 #include <curl/curl.h>
 #include <sstream>
+#include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <regex>
+#include <cmath>
+#include <algorithm>
 
 namespace ioccultcalc {
 
@@ -349,6 +352,268 @@ OrbitState AstDysClient::getStateFromHorizons(const std::string& designation,
         throw std::runtime_error("Impossibile ottenere vettori da Horizons: " + 
                                 std::string(e.what()));
     }
+}
+
+// ============================================================================
+// IMPLEMENTAZIONE NUOVE API CHEBYSHEV
+// ============================================================================
+
+std::array<double, 3> ChebyshevEphemeris::evaluate(double jd) const {
+    if (!isValid(jd)) {
+        throw std::runtime_error("JD " + std::to_string(jd) + 
+                               " outside Chebyshev validity range [" +
+                               std::to_string(startJD) + ", " + 
+                               std::to_string(endJD) + "]");
+    }
+    
+    // Normalizza tempo a [-1, +1]
+    double t = 2.0 * (jd - startJD) / (endJD - startJD) - 1.0;
+    
+    // Valuta polinomi di Chebyshev: T_n(t) con ricorrenza
+    // T_0 = 1, T_1 = t, T_{n+1} = 2*t*T_n - T_{n-1}
+    
+    auto evaluatePoly = [](const std::vector<double>& coeff, double t) -> double {
+        if (coeff.empty()) return 0.0;
+        if (coeff.size() == 1) return coeff[0];
+        
+        double T_prev = 1.0;         // T_0
+        double T_curr = t;           // T_1
+        double result = coeff[0] * T_prev + coeff[1] * T_curr;
+        
+        for (size_t n = 2; n < coeff.size(); ++n) {
+            double T_next = 2.0 * t * T_curr - T_prev;
+            result += coeff[n] * T_next;
+            T_prev = T_curr;
+            T_curr = T_next;
+        }
+        
+        return result;
+    };
+    
+    return {
+        evaluatePoly(coeff_x, t),
+        evaluatePoly(coeff_y, t),
+        evaluatePoly(coeff_z, t)
+    };
+}
+
+std::array<double, 6> ChebyshevEphemeris::evaluateWithVelocity(double jd) const {
+    if (!isValid(jd)) {
+        throw std::runtime_error("JD outside Chebyshev validity range");
+    }
+    
+    // Normalizza tempo
+    double t = 2.0 * (jd - startJD) / (endJD - startJD) - 1.0;
+    double dt_dJD = 2.0 / (endJD - startJD);  // Chain rule: dt/dJD
+    
+    // Valuta posizione E derivata
+    auto evaluatePolyWithDeriv = [dt_dJD](const std::vector<double>& coeff, double t) 
+        -> std::pair<double, double> {
+        if (coeff.empty()) return {0.0, 0.0};
+        if (coeff.size() == 1) return {coeff[0], 0.0};
+        
+        double T_prev = 1.0, T_curr = t;
+        double dT_prev = 0.0, dT_curr = 1.0;
+        
+        double pos = coeff[0] * T_prev + coeff[1] * T_curr;
+        double vel = coeff[0] * dT_prev + coeff[1] * dT_curr;
+        
+        for (size_t n = 2; n < coeff.size(); ++n) {
+            double T_next = 2.0 * t * T_curr - T_prev;
+            double dT_next = 2.0 * T_curr + 2.0 * t * dT_curr - dT_prev;
+            
+            pos += coeff[n] * T_next;
+            vel += coeff[n] * dT_next;
+            
+            T_prev = T_curr; T_curr = T_next;
+            dT_prev = dT_curr; dT_curr = dT_next;
+        }
+        
+        vel *= dt_dJD;  // Converti dCoord/dt → dCoord/dJD
+        return {pos, vel};
+    };
+    
+    auto [x, vx] = evaluatePolyWithDeriv(coeff_x, t);
+    auto [y, vy] = evaluatePolyWithDeriv(coeff_y, t);
+    auto [z, vz] = evaluatePolyWithDeriv(coeff_z, t);
+    
+    return {x, y, z, vx, vy, vz};
+}
+
+std::array<double, 3> ChebyshevEphemeris::getRADecDist(double jd) const {
+    auto [x, y, z] = evaluate(jd);
+    
+    // Distanza
+    double dist = std::sqrt(x*x + y*y + z*z);
+    
+    // RA, Dec da coordinate cartesiane
+    double ra = std::atan2(y, x) * 180.0 / M_PI;
+    if (ra < 0.0) ra += 360.0;
+    
+    double dec = std::asin(z / dist) * 180.0 / M_PI;
+    
+    return {ra, dec, dist};
+}
+
+ChebyshevEphemeris AstDysClient::getChebyshevEphemeris(const std::string& designation,
+                                                       double startJD,
+                                                       double endJD,
+                                                       int order) {
+    // URL per Chebyshev da AstDyS:
+    // https://newton.spacedys.com/~astdys2/cgi-bin/astdys?objects=<num>;
+    //   epochs=<startJD>:<endJD>:<step>;chebyshev=<order>
+    
+    // Estrai numero asteroide
+    std::string asteroidNum = designation;
+    // Rimuovi eventuali parentesi: "(433)" → "433"
+    if (asteroidNum.find('(') != std::string::npos) {
+        size_t start = asteroidNum.find('(');
+        size_t end = asteroidNum.find(')');
+        if (end != std::string::npos) {
+            asteroidNum = asteroidNum.substr(start + 1, end - start - 1);
+        }
+    }
+    
+    // Costruisci URL (NOTA: sintassi ipotetica, da verificare con docs AstDyS)
+    std::ostringstream url;
+    url << pImpl->baseURL << "cgi-bin/astdys?";
+    url << "objects=" << asteroidNum << ";";
+    url << "epochs=" << std::fixed << std::setprecision(1) 
+        << startJD << ":" << endJD << ":1;";
+    url << "chebyshev=" << order << ";";
+    url << "format=text";
+    
+    std::cout << "[ASTDYS CHEBYSHEV] Downloading from: " << url.str() << std::endl;
+    
+    try {
+        std::string response = pImpl->httpGet(url.str());
+        
+        // Parsing della risposta (formato da definire in base a docs AstDyS)
+        // Per ora, implementazione placeholder
+        ChebyshevEphemeris cheb;
+        cheb.startJD = startJD;
+        cheb.endJD = endJD;
+        cheb.order = order;
+        cheb.geocentric = true;
+        cheb.frame = "ICRF";
+        
+        // TODO: Parse response e popola coeff_x, coeff_y, coeff_z
+        // Formato atteso (esempio):
+        // CHEBYSHEV COEFFICIENTS
+        // Order: 15
+        // Interval: [2460638.5, 2460645.5]
+        // X: 0.123 -0.456 0.789 ...
+        // Y: 0.234 -0.567 0.890 ...
+        // Z: 0.345 -0.678 0.901 ...
+        
+        std::cout << "[ASTDYS CHEBYSHEV] Parsing coefficients..." << std::endl;
+        std::cout << "[ASTDYS CHEBYSHEV] Response preview:\n" 
+                  << response.substr(0, std::min(size_t(500), response.size())) 
+                  << std::endl;
+        
+        // FALLBACK: Se AstDyS non supporta ancora, usa Horizons per generare dati
+        std::cout << "[ASTDYS CHEBYSHEV] ⚠️  API Chebyshev non ancora disponibile su AstDyS" << std::endl;
+        std::cout << "[ASTDYS CHEBYSHEV] Uso fallback: genero coefficienti da Horizons" << std::endl;
+        
+        // Genera coefficienti da sample points via Horizons
+        JPLHorizonsClient horizons;
+        int nSamples = order + 5;  // Sovracampionamento per stabilità
+        std::vector<double> samplesX, samplesY, samplesZ;
+        
+        for (int i = 0; i < nSamples; ++i) {
+            double jd = startJD + (endJD - startJD) * i / (nSamples - 1);
+            JulianDate epoch;
+            epoch.jd = jd;
+            
+            auto [pos, vel] = horizons.getStateVectors(asteroidNum, epoch, "@geocenter");
+            samplesX.push_back(pos.x);
+            samplesY.push_back(pos.y);
+            samplesZ.push_back(pos.z);
+        }
+        
+        // Fit Chebyshev (metodo dei minimi quadrati)
+        auto fitChebyshev = [nSamples, order](const std::vector<double>& samples) {
+            std::vector<double> coeffs(order + 1, 0.0);
+            
+            // Matrice Chebyshev: T_n(t_i) per t_i distribuiti uniformemente
+            for (int n = 0; n <= order; ++n) {
+                double sum = 0.0;
+                double norm = 0.0;
+                
+                for (int i = 0; i < nSamples; ++i) {
+                    double t = 2.0 * i / (nSamples - 1) - 1.0;  // [-1, +1]
+                    
+                    // Valuta T_n(t)
+                    double T_prev = 1.0, T_curr = t;
+                    double T_n = (n == 0) ? T_prev : ((n == 1) ? T_curr : 0.0);
+                    
+                    for (int k = 2; k <= n; ++k) {
+                        double T_next = 2.0 * t * T_curr - T_prev;
+                        if (k == n) T_n = T_next;
+                        T_prev = T_curr;
+                        T_curr = T_next;
+                    }
+                    
+                    sum += samples[i] * T_n;
+                    norm += T_n * T_n;
+                }
+                
+                coeffs[n] = (norm > 1e-15) ? (sum / norm) : 0.0;
+            }
+            
+            return coeffs;
+        };
+        
+        cheb.coeff_x = fitChebyshev(samplesX);
+        cheb.coeff_y = fitChebyshev(samplesY);
+        cheb.coeff_z = fitChebyshev(samplesZ);
+        
+        std::cout << "[ASTDYS CHEBYSHEV] ✓ Generated " << (order + 1) 
+                  << " Chebyshev coefficients from " << nSamples << " samples" << std::endl;
+        
+        return cheb;
+        
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Failed to get Chebyshev ephemeris: " + std::string(e.what()));
+    }
+}
+
+std::vector<ChebyshevEphemeris> AstDysClient::getChebyshevEphemerisMultiSegment(
+    const std::string& designation,
+    double startJD,
+    double endJD,
+    double segment_days,
+    int order) {
+    
+    std::vector<ChebyshevEphemeris> segments;
+    
+    double currentJD = startJD;
+    while (currentJD < endJD) {
+        double segmentEnd = std::min(currentJD + segment_days, endJD);
+        
+        std::cout << "[ASTDYS CHEBYSHEV MULTI] Segment [" 
+                  << currentJD << ", " << segmentEnd << "]" << std::endl;
+        
+        auto segment = getChebyshevEphemeris(designation, currentJD, segmentEnd, order);
+        segments.push_back(segment);
+        
+        currentJD = segmentEnd;
+    }
+    
+    std::cout << "[ASTDYS CHEBYSHEV MULTI] Generated " << segments.size() 
+              << " segments" << std::endl;
+    
+    return segments;
+}
+
+std::array<double, 3> AstDysClient::getRADecChebyshev(const std::string& designation,
+                                                      double jd) {
+    // Window di 1 giorno centrato su jd
+    double startJD = jd - 0.5;
+    double endJD = jd + 0.5;
+    
+    auto cheb = getChebyshevEphemeris(designation, startJD, endJD, 10);  // Order 10 sufficiente per 1 giorno
+    return cheb.getRADecDist(jd);
 }
 
 } // namespace ioccultcalc

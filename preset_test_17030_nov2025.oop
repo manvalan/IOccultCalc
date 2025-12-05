@@ -1,0 +1,76 @@
+! IOccultCalc Configuration File - Asteroid 17030
+! Test periodo 24 Nov - 1 Dic 2025 (centrato su 28 Nov evento reale)
+! Evento: 2025-11-28 10:20 UTC @ JD 2461007.9306 (MJD 61007.4306)
+! Created: 4 December 2025 - DATE CORRETTE!
+
+object.
+        .id = '17030'
+        .name = 'Asteroid 17030 Sierks'
+        .max_asteroids = 1
+
+asteroids.
+        .selection_mode = 'file'
+        .additional_files = ['asteroid_17030_only.txt']
+        .file_format = 'auto_detect'
+
+propag.
+        .start_jd = 2461003.500000  ! 2025-11-24 00:00 UTC → MJD 61003.0
+        .end_jd = 2461010.500000    ! 2025-12-01 00:00 UTC → MJD 61010.0 (7 giorni)
+        .step_size = 0.010000       ! 0.01 days = 14.4 minutes
+        .type = 'RKF78'
+
+ephemeris.
+        .jpl_version = 'DE441'
+        .ast17_file = '~/.ioccultcalc/ephemerides/codes_300ast_20100725.bsp'
+
+output.
+        .file = 'occultations_17030_nov2025.json'
+        .format = 'JSON'
+        .verbosity = 2
+
+perturbations.
+        .planets = .TRUE.
+        .relativity = .FALSE.
+        .asteroid_count = 17
+
+search.
+        .start_jd = 2461003.500000  ! 2025-11-24 00:00 UTC → MJD 61003.0
+        .end_jd = 2461010.500000    ! 2025-12-01 00:00 UTC → MJD 61010.0
+        .mag_limit = 16.0           ! Magnitudine limite
+        .max_separation = 5.0       ! Raggio ricerca (gradi)
+        .step_days = 0.25           ! Step di ricerca (6 ore)
+        ! Evento atteso: 2025-11-28 10:20 UTC @ JD 2461007.9306 (MJD 61007.4306)
+        ! Stella: Gaia 3411546266140512128, RA=4.894407°, Dec=20.331662°, Mag=13.36
+        .min_duration = 0.1         ! Durata minima secondi
+        .max_duration = 300.0       ! Durata massima secondi
+
+database.
+        .min_perihelion = 0.5       ! AU
+        .max_aphelion = 50.0        ! AU
+        .min_observations = 10
+        .max_uncertainty = 50.0
+        .require_diameter = .FALSE.
+        .min_number = 17029
+        .max_number = 17031
+
+filtering.
+        .min_magnitude_drop = 0.1
+        .min_altitude = 0.0
+        .sun_elevation_limit = -18.0
+
+observer.
+        .latitude = 0.0
+        .longitude = 0.0
+        .altitude = 0.0
+        .name = 'Global Search'
+
+gaia.
+        .use_local_cache = .TRUE.
+        .cache_directory = '~/.catalog'
+        .max_stars = 1000000
+
+report.
+        .generate_xml = .TRUE.
+        .generate_text = .TRUE.
+        .generate_json = .TRUE.
+        .top_events = 50

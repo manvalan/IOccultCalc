@@ -1,0 +1,113 @@
+# IOccultCalc Preset - Precisione Finale
+# Configurazione massima precisione per occultazioni finali importanti
+
+general.
+    .propagator = 'astdyn'
+    .step_size_days = 0.001
+    .tolerance = 1e-14
+    .search_radius_deg = 0.5
+    .precision_mode = 'precise'
+    .verbose = .TRUE.
+    .parallel = .TRUE.
+
+orbit_source.
+    .type = 'astdys'
+    .cache_expire_hours = 6  # Aggiorna frequentemente
+    .update_auto = .TRUE.
+
+orbit_fitting.
+    .mode = 'always'  # Sempre orbit fitting
+    .observations_source = 'astdys'
+    .min_observations = 10
+    .min_arc_days = 90  # Arco lungo per stabilità
+    .outlier_threshold = 2.5  # Soglia rigida outlier
+    .max_iterations = 30
+    .convergence_tolerance = 1e-8
+    .log_details = .TRUE.
+
+asteroids.
+    .selection_mode = 'list'
+    .list = [433, 1036, 25143, 101955, 162173]  # Asteroidi target specifici
+    .priority = [433, 1036]
+
+time.
+    .start_date = '2026-06-01'
+    .end_date = '2026-08-31'  # Stagione osservativa estiva
+    .time_zone = 'UTC'
+    .step_size_hours = 0.5  # Risoluzione temporale alta
+
+observer.
+    .location_type = 'topocentric'
+    .longitude = 11.2558    # Roma
+    .latitude = 41.9028
+    .altitude = 50
+    .name = 'Osservatorio Roma'
+
+search.
+    .max_magnitude = 16.0   # Stelle deboli
+    .min_magnitude = 6.0    # No stelle troppo brillanti
+    .search_radius_deg = 0.02  # Ricerca molto mirata
+    .min_probability = 0.1     # Solo eventi probabili
+    .min_duration_sec = 0.1
+    .max_duration_sec = 60.0
+    .min_drop_mag = 0.5
+    .solar_elongation_min = 30.0  # Lontano dal Sole
+    .lunar_distance_min = 15.0    # Lontano dalla Luna
+    .altitude_min = 25.0          # Alta nel cielo
+
+star_catalogs.
+    .primary = 'gaia_dr3'
+    .secondary = 'gaia_dr2'
+    .download_auto = .TRUE.
+    .proper_motion = .TRUE.      # Massima accuratezza
+    .parallax_correction = .TRUE.
+
+astdyn.
+    .tolerance = 1e-14
+    .min_step_days = 1e-8
+    .max_step_days = 1.0
+    .use_planets = .TRUE.
+    .use_asteroids = .TRUE.
+    .use_relativity = .TRUE.
+    .asteroid_perturbers = [1,2,4,10,15,16,18,29,52,511,704,911,1036,1627,2060,3200,4179]
+    .coordinate_system = 'ecliptic'
+
+output.
+    .format = 'iota'
+    .directory = './results/precision/'
+    .filename = 'precisione_finale_2026'
+    .include_header = .TRUE.
+    .include_statistics = .TRUE.
+    .include_elements = .TRUE.
+    .include_fitting_info = .TRUE.
+    .precision_coordinates = 4  # Massima precisione
+    .precision_time = 3
+    .sort_by = 'probability'
+    .sort_order = 'desc'
+    .compression = 'none'
+
+performance.
+    .parallel_asteroids = .FALSE.  # Sequenziale per debug
+    .parallel_stars = .TRUE.
+    .memory_limit_gb = 32
+    .cache_strategy = 'disk'
+    .prefetch_catalogs = .TRUE.
+
+debug.
+    .log_level = 'debug'
+    .log_file = './logs/precisione_finale.log'
+    .log_propagation = .TRUE.
+    .log_fitting = .TRUE.
+    .log_performance = .TRUE.
+    .save_intermediate = .TRUE.
+    .validate_input = .TRUE.
+
+advanced.
+    .coordinate_frame = 'icrs'
+    .time_scale = 'tdb'
+    .aberration_correction = .TRUE.
+    .light_time_correction = .TRUE.
+    .nutation_model = 'iau2000'
+    .precession_model = 'iau2000'
+    .planetary_ephemeris = 'de440'
+    .error_control = 'strict'

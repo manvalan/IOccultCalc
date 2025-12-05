@@ -1,0 +1,73 @@
+{
+  "metadata": {
+    "created_by": "StarScreening Phase 0 Test - Real Occultation",
+    "version": "2.0", 
+    "date": "2025-11-30",
+    "description": "Test con asteroide 17030 e stella Gaia 3411546266140512128"
+  },
+  "sections": [
+    {
+      "type": "object",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "value": "17030",
+          "comment": "Asteroide 17030"
+        },
+        {
+          "name": "diameter",
+          "type": "double",
+          "value": "5.2",
+          "comment": "Diametro stimato in km"
+        }
+      ]
+    },
+    {
+      "type": "search", 
+      "parameters": [
+        {
+          "name": "start_jd",
+          "type": "double",
+          "value": "2461000.5",
+          "comment": "21 novembre 2025 00:00 UT"
+        },
+        {
+          "name": "end_jd", 
+          "type": "double",
+          "value": "2461015.5",
+          "comment": "6 dicembre 2025 00:00 UT (15 giorni)"
+        },
+        {
+          "name": "step_days",
+          "type": "double", 
+          "value": "0.1",
+          "comment": "Passo temporale 0.1 giorni (2.4 ore)"
+        },
+        {
+          "name": "star_ra",
+          "type": "double",
+          "value": "73.8063",
+          "comment": "RA stella Gaia 3411546266140512128: 04h 55m 13s.5006 (apparente)"
+        },
+        {
+          "name": "star_dec",
+          "type": "double", 
+          "value": "20.3754",
+          "comment": "Dec stella Gaia 3411546266140512128: +20° 22' 31\".430 (apparente)"
+        }
+      ]
+    },
+    {
+      "type": "operations",
+      "parameters": [
+        {
+          "name": "download_elements",
+          "type": "bool",
+          "value": "true",
+          "comment": "Scarica elementi da AstDyS"
+        }
+      ]
+    }
+  ]
+}

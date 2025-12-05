@@ -1,0 +1,23 @@
+{
+  "object": {
+    "id": "433",
+    "name": "Eros",
+    "diameter": 16.84
+  },
+  "search": {
+    "start_jd": 2460675.5,
+    "end_jd": 2460705.5,
+    "step_days": 0.5,
+    "star_ra": 45.5,
+    "star_dec": 23.8
+  },
+  "operations": {
+    "download_elements": true,
+    "use_high_precision": false
+  },
+  "output": {
+    "format": "console",
+    "show_details": true,
+    "max_results": 20
+  }
+}

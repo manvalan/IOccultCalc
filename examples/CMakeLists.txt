@@ -280,3 +280,7 @@ target_link_libraries(test_output_formats ioccultcalc)
 # Genera scheda IOTA per Hygiea
 add_executable(generate_hygiea_iota_card generate_hygiea_iota_card.cpp)
 target_link_libraries(generate_hygiea_iota_card ioccultcalc)
+
+# Esempio ChebyshevOccultationManager con AstDyn RKF78 integrato
+add_executable(example_chebyshev_manager example_chebyshev_manager.cpp)
+target_link_libraries(example_chebyshev_manager ioccultcalc)

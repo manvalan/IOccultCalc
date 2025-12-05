@@ -1,0 +1,31 @@
+{
+  "description": "Asteroid 17030 test - Very close star coordinates to trigger Phase 1",
+  "object": {
+    "type": "asteroid",
+    "id": "17030"
+  },
+  "star": {
+    "ra_degrees": 85.5000,
+    "dec_degrees": 18.8000,
+    "epoch": "J2000"
+  },
+  "time_range": {
+    "start": "2025-11-27T12:00:00",
+    "end": "2025-11-29T12:00:00",
+    "step_days": 0.1
+  },
+  "screening_config": {
+    "threshold_arcsec": 60,
+    "use_chebyshev": false,
+    "fast_threshold_arcsec": 120,
+    "fast_grid_points": 20,
+    "use_approximate_distance": true
+  },
+  "asteroid_config": {
+    "diameter_km": 5.2,
+    "method": "standard"
+  },
+  "output": {
+    "level": "detailed"
+  }
+}

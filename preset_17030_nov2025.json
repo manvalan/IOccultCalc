@@ -1,0 +1,157 @@
+{
+  "metadata": {
+    "created_by": "Manual",
+    "version": "1.0",
+    "date": "2025-11-29",
+    "description": "Asteroide 17030 Sierks - 25 Nov-2 Dic 2025"
+  },
+  "sections": [
+    {
+      "type": "object",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "value": "17030",
+          "comment": "Asteroide 17030 Sierks"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "17030 Sierks",
+          "comment": "Nome"
+        },
+        {
+          "name": "specific_list",
+          "type": "string",
+          "value": "17030",
+          "comment": "Numero specifico"
+        }
+      ]
+    },
+    {
+      "type": "search",
+      "parameters": [
+        {
+          "name": "start_jd",
+          "type": "double",
+          "value": "2460638.5",
+          "comment": "2025-11-25 00:00 UTC"
+        },
+        {
+          "name": "end_jd",
+          "type": "double",
+          "value": "2460645.5",
+          "comment": "2025-12-02 00:00 UTC (7 giorni)"
+        },
+        {
+          "name": "step_days",
+          "type": "double",
+          "value": "0.25",
+          "comment": "6 ore"
+        },
+        {
+          "name": "mag_limit",
+          "type": "double",
+          "value": "16.0",
+          "comment": "Mag limite"
+        }
+      ]
+    },
+    {
+      "type": "propag",
+      "parameters": [
+        {
+          "name": "type",
+          "type": "string",
+          "value": "RKF78",
+          "comment": "RKF78 alta precisione"
+        },
+        {
+          "name": "start_jd",
+          "type": "double",
+          "value": "2460638.5",
+          "comment": "2025-11-25"
+        },
+        {
+          "name": "end_jd",
+          "type": "double",
+          "value": "2460645.5",
+          "comment": "2025-12-02"
+        },
+        {
+          "name": "step_size",
+          "type": "double",
+          "value": "0.01",
+          "comment": "Step fine"
+        }
+      ]
+    },
+    {
+      "type": "ephemeris",
+      "parameters": [
+        {
+          "name": "jpl_version",
+          "type": "string",
+          "value": "DE441",
+          "comment": "JPL DE441"
+        }
+      ]
+    },
+    {
+      "type": "perturbations",
+      "parameters": [
+        {
+          "name": "planets",
+          "type": "bool",
+          "value": "true"
+        },
+        {
+          "name": "asteroid_count",
+          "type": "int",
+          "value": "17"
+        },
+        {
+          "name": "relativity",
+          "type": "bool",
+          "value": "false"
+        }
+      ]
+    },
+    {
+      "type": "database",
+      "parameters": [
+        {
+          "name": "min_perihelion",
+          "type": "double",
+          "value": "0.5"
+        },
+        {
+          "name": "max_aphelion",
+          "type": "double",
+          "value": "50.0"
+        }
+      ]
+    },
+    {
+      "type": "output",
+      "parameters": [
+        {
+          "name": "format",
+          "type": "string",
+          "value": "JSON"
+        },
+        {
+          "name": "file",
+          "type": "string",
+          "value": "occultations_17030_nov2025.json"
+        },
+        {
+          "name": "verbosity",
+          "type": "int",
+          "value": "2"
+        }
+      ]
+    }
+  ]
+}

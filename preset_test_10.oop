@@ -1,0 +1,67 @@
+! IOccultCalc Configuration File - Test 10 Asteroids
+! Test veloce con Chebyshev attivo
+! Created: 29 November 2025
+
+object.
+        .id = '0'
+        .name = 'Test 10 Asteroids'
+        .min_diameter = 50.0
+        .max_diameter = 1000.0
+        .max_asteroids = 10
+
+propag.
+        .start_jd = 2460676.500000  ! 2026-01-01 00:00 UTC
+        .end_jd = 2460707.500000    ! 2026-02-01 00:00 UTC (31 days)
+        .step_size = 0.050000       ! 0.05 days = 1.2 hours
+        .type = 'RK4'
+
+ephemeris.
+        .jpl_version = 'DE441'
+        .ast17_file = '~/.ioccultcalc/ephemerides/codes_300ast_20100725.bsp'
+
+output.
+        .file = 'occultations_test_10.json'
+        .format = 'JSON'
+        .verbosity = 2
+
+perturbations.
+        .planets = .TRUE.
+        .relativity = .TRUE.
+        .asteroid_count = 17
+
+search.
+        .start_jd = 2460676.500000  ! 2026-01-01 00:00 UTC
+        .end_jd = 2460707.500000    ! 2026-02-01 00:00 UTC
+        .mag_limit = 14.0           ! Magnitudine limite
+        .step_days = 0.5            ! Step di ricerca (12 ore)
+        .min_duration = 0.5         ! Durata minima secondi
+        .max_duration = 300.0       ! Durata massima secondi
+
+database.
+        .min_perihelion = 1.0       ! AU
+        .max_aphelion = 5.0         ! AU
+        .min_observations = 50
+        .max_uncertainty = 10.0
+        .require_diameter = .TRUE.
+
+filtering.
+        .min_magnitude_drop = 0.5
+        .min_altitude = 20.0
+        .sun_elevation_limit = -12.0
+
+observer.
+        .latitude = 41.9028
+        .longitude = 12.4964
+        .altitude = 20.0
+        .name = 'Roma'
+
+gaia.
+        .use_local_cache = .TRUE.
+        .cache_directory = '~/.catalog'
+        .max_stars = 10000
+
+report.
+        .generate_xml = .TRUE.
+        .generate_text = .TRUE.
+        .generate_json = .TRUE.
+        .top_events = 20

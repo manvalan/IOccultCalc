@@ -1,0 +1,30 @@
+# Coefficienti astrometrici Chebyshev per test
+# Formato: order_u order_v alpha_base delta_base
+# Seguito da matrice coefficienti a_ij (RA) e b_ij (Dec)
+
+# Ordine del polinomio
+3 3
+
+# Coordinate di riferimento (centro campo) in radianti
+0.794516129032  # 45.5° RA
+0.450560748476  # 25.8° Dec
+
+# Coefficienti a_ij per RA (4x4 = ordine 3+1)
+# a00  a01  a02  a03
+  0.0  0.0  0.0  0.0
+# a10  a11  a12  a13  
+  0.017453293  0.0  0.0  0.0
+# a20  a21  a22  a23
+  0.0  0.0  0.0001  0.0
+# a30  a31  a32  a33
+  0.0  0.0  0.0  0.0
+
+# Coefficienti b_ij per Dec (4x4 = ordine 3+1)
+# b00  b01  b02  b03
+  0.0  0.0  0.0  0.0
+# b10  b11  b12  b13
+  0.0  0.017453293  0.0  0.0
+# b20  b21  b22  b23
+  0.0  0.0  0.0001  0.0
+# b30  b31  b32  b33
+  0.0  0.0  0.0  0.0

@@ -1,0 +1,41 @@
+! IOccultCalc Configuration File - Test Diretto 17030
+! Usa elementi da file locale invece di catalogo completo
+! Created: 30 November 2025
+
+object.
+        .id = '17030'
+        .name = 'Asteroid 17030 Sierks'
+        .orbital_elements_file = '17030_orbfit.oel'
+
+propag.
+        .start_jd = 2460638.500000  ! 2025-11-25 00:00 UTC
+        .end_jd = 2460645.500000    ! 2025-12-02 00:00 UTC (7 days)
+        .step_size = 0.010000       ! 0.01 days = 14.4 minutes
+        .type = 'RKF78'
+
+ephemeris.
+        .jpl_version = 'DE441'
+
+output.
+        .file = 'occultations_17030_direct.json'
+        .format = 'JSON'
+        .verbosity = 2
+
+perturbations.
+        .planets = .TRUE.
+        .relativity = .FALSE.
+        .asteroid_count = 0
+
+search.
+        .start_jd = 2460638.500000  ! 2025-11-25 00:00 UTC
+        .end_jd = 2460645.500000    ! 2025-12-02 00:00 UTC
+        .mag_limit = 16.0
+        .step_days = 0.25
+
+database.
+        .use_local_elements = .TRUE.
+
+gaia.
+        .use_local_cache = .TRUE.
+        .cache_directory = '~/.catalog'
+        .max_stars = 100000

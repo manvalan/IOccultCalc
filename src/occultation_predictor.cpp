@@ -5,6 +5,7 @@
 #include <cmath>
 #include <algorithm>
 #include <stdexcept>
+#include <iostream>
 
 namespace ioccultcalc {
 
@@ -305,6 +306,19 @@ void OccultationPredictor::calculateGeometry(const EphemerisData& asteroidPos,
     
     separation = Coordinates::angularSeparation(asteroidPos.geocentricPos, starPos);
     posAngle = Coordinates::positionAngle(asteroidPos.geocentricPos, starPos);
+    
+    // DEBUG: Prime 3 stelle
+    static int debugCount = 0;
+    if (debugCount < 3) {
+        double astRA = asteroidPos.geocentricPos.ra * 180.0 / M_PI;
+        double astDec = asteroidPos.geocentricPos.dec * 180.0 / M_PI;
+        double starRA = starPos.ra * 180.0 / M_PI;
+        double starDec = starPos.dec * 180.0 / M_PI;
+        std::cout << "[GEOM " << debugCount << "] JD=" << time.jd << " Ast=(RA=" << astRA 
+                  << "° Dec=" << astDec << "°) Star=(RA=" << starRA 
+                  << "° Dec=" << starDec << "°) Sep=" << (separation * 180.0 / M_PI * 3600.0) << "\"\n";
+        debugCount++;
+    }
 }
 
 double OccultationPredictor::calculateProbability(double separationArcsec,
