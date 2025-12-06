@@ -63,6 +63,11 @@ struct CandidateStar {
     double ra_deg;                         ///< Right Ascension [degrees]
     double dec_deg;                        ///< Declination [degrees]
     double phot_g_mean_mag;                ///< Gaia G magnitude
+   
+    double pmra_mas_per_yr;      ///< Proper motion RA * cos(Dec) [mas/yr]
+    double pmdec_mas_per_yr;     ///< Proper motion Dec [mas/yr]
+    double ref_epoch_yr;         ///< Reference epoch (2016.0 for Gaia DR3)
+   
     double closest_approach_arcsec;        ///< Distanza minima dal path [arcsec]
     double closest_approach_mjd;           ///< Epoca del closest approach [MJD TDB]
     int closest_segment_index;             ///< Indice segmento path con CA minimo

@@ -338,8 +338,27 @@ Phase2GeocentricResult Phase2Geocentric::refineCandidate(
         return result;
     }
     
+    //double star_ra = candidate.ra_deg;
+    //double star_dec = candidate.dec_deg;
+    // Applica proper motion stellare
     double star_ra = candidate.ra_deg;
     double star_dec = candidate.dec_deg;
+
+    // Anni dall'epoca di riferimento all'evento
+    double mjd_ref = (candidate.ref_epoch_yr - 2000.0) * 365.25 + 51544.5;
+    double years = (candidate.closest_approach_mjd - mjd_ref) / 365.25;
+
+    // Converti proper motion in gradi e applica
+    double delta_ra_mas = candidate.pmra_mas_per_yr * years;
+    double delta_dec_mas = candidate.pmdec_mas_per_yr * years;
+    star_ra += (delta_ra_mas / 1000.0) / 3600.0 / cos(star_dec * DEG_TO_RAD);
+    star_dec += (delta_dec_mas / 1000.0) / 3600.0;
+
+    std::cout << ">>> PM: star " << candidate.source_id 
+          << ", years=" << years 
+          << ", ΔRA=" << delta_ra_mas << " mas"
+          << ", ΔDec=" << delta_dec_mas << " mas\n";
+
     
     double mjd_start = candidate.closest_approach_mjd - config.time_window_minutes / 1440.0;
     double mjd_end = candidate.closest_approach_mjd + config.time_window_minutes / 1440.0;

@@ -401,6 +401,11 @@ std::vector<CandidateStar> Phase1CandidateScreening::queryCorridor(
         cs.ra_deg = gs.ra;
         cs.dec_deg = gs.dec;
         cs.phot_g_mean_mag = gs.phot_g_mean_mag;
+
+        cs.pmra_mas_per_yr = gs.pmra;
+        cs.pmdec_mas_per_yr = gs.pmdec;
+        cs.ref_epoch_yr = 2016.0;  // Gaia DR3 epoch
+
         cs.closest_approach_arcsec = 0.0;  // Calcolato dopo
         cs.closest_approach_mjd = 0.0;
         cs.closest_segment_index = -1;
