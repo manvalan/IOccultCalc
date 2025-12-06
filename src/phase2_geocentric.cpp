@@ -387,6 +387,11 @@ Phase2GeocentricResult Phase2Geocentric::refineCandidate(
     double diameter_rad = pimpl_->asteroid_diameter_km / (best_dist * AU_TO_KM);
     result.asteroid_angular_diameter_mas = diameter_rad * RAD_TO_ARCSEC * 1000.0;
     
+    
+    std::cout << "DEBUG: diameter_km=" << pimpl_->asteroid_diameter_km 
+              << " dist_au=" << best_dist 
+              << " diameter_mas=" << result.asteroid_angular_diameter_mas << "\n";
+
     double dt = 1.0 / 86400.0;
     double ra1, dec1, dist1, ra2, dec2, dist2;
     pimpl_->computeGeocentricPosition(best_mjd - dt/2, ra1, dec1, dist1);
@@ -412,6 +417,7 @@ Phase2GeocentricResults Phase2Geocentric::refineAllCandidates(
     Phase2GeocentricResults results;
     results.total_candidates = static_cast<int>(candidates.size());
     results.results.reserve(candidates.size());
+    pimpl_->asteroid_diameter_km = config.asteroid_diameter_km;
     
     // Se richiesto, esegui orbital fitting PRIMA di processare le candidate
     if (config.fit_orbit_from_rwo && !config.asteroid_designation.empty()) {
