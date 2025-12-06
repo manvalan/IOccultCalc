@@ -388,9 +388,6 @@ Phase2GeocentricResult Phase2Geocentric::refineCandidate(
     result.asteroid_angular_diameter_mas = diameter_rad * RAD_TO_ARCSEC * 1000.0;
     
     
-    std::cout << "DEBUG: diameter_km=" << pimpl_->asteroid_diameter_km 
-              << " dist_au=" << best_dist 
-              << " diameter_mas=" << result.asteroid_angular_diameter_mas << "\n";
 
     double dt = 1.0 / 86400.0;
     double ra1, dec1, dist1, ra2, dec2, dist2;

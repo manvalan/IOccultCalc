@@ -25,6 +25,7 @@ struct OccultationSearchConfig {
     double search_end_mjd = 0.0;
     
     // Phase 1
+    double corridor_width_deg = 0.005;      // Search corridor width (default ±18")
     double max_approach_arcsec = 2.0;
     double min_star_magnitude = 0.0;
     double max_star_magnitude = 16.0;
