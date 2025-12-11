@@ -15,6 +15,12 @@
 #include <memory>
 #include <optional>
 #include <nlohmann/json.hpp>
+#ifdef IOC_CONFIG_AVAILABLE
+#include "ioc_config/oop_parser.h"
+namespace ioc_config {
+    class OopParser;
+}
+#endif
 
 namespace ioccultcalc {
 
@@ -116,6 +122,8 @@ private:
 class ConfigManager {
 public:
     ConfigManager();
+    ConfigManager(const ConfigManager& other);
+    ConfigManager& operator=(const ConfigManager& other);
     
     // Section management
     void addSection(const ConfigSectionData& section);
@@ -152,6 +160,12 @@ public:
 private:
     std::map<ConfigSection, ConfigSectionData> sections_;
     std::map<std::string, std::string> metadata_;
+    
+#ifdef IOC_CONFIG_AVAILABLE
+    mutable std::unique_ptr<ioc_config::OopParser> parser_;
+    void syncFromIOCConfig();
+    void syncToIOCConfig();
+#endif
     
     void parseOopLine(const std::string& line, ConfigSection& currentSection, 
                       std::string& currentSectionName);

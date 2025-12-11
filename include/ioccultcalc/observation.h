@@ -102,6 +102,9 @@ struct Observatory {
     static Observatory fromMPCCode(const std::string& code);
 };
 
+// Alias per compatibilità con codice esistente
+using Observation = AstrometricObservation;
+
 } // namespace ioccultcalc
 
 #endif // IOCCULTCALC_OBSERVATION_H

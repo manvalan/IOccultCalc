@@ -106,15 +106,36 @@ public:
     // Nome/numero asteroide
     std::string asteroid_designation;
     
+    // Parametri fisici asteroide (LinOccult method)
+    double asteroid_diameter_km = 0.0;      ///< Diametro asteroide (km), 0 = usa placeholder
+    double orbital_uncertainty_km = 100.0;  ///< Incertezza orbitale (km, 1-sigma)
+    
     Impl() {
         // Inizializza propagatore con parametri ad alta precisione
+        // Usa RKF78 con tutte le perturbazioni e correzioni
         auto ephemeris = std::make_shared<astdyn::ephemeris::PlanetaryEphemeris>();
         auto integrator = std::make_unique<astdyn::propagation::RKF78Integrator>(0.1, 1e-12);
         
+        // Configurazione completa con TUTTE le perturbazioni
         astdyn::propagation::PropagatorSettings settings;
-        settings.include_planets = true;  // ← ATTIVA perturbazioni per Phase 2
+        
+        // Perturbazioni planetarie
+        settings.include_planets = true;
         settings.include_moon = true;
-        settings.include_asteroids = false;  // Ceres, Vesta, ecc. (opzionale)
+        settings.include_asteroids = true;  // AST17: Ceres, Vesta, ecc.
+        
+        // Correzioni relativistiche
+        settings.include_relativity = true;
+        
+        // Tutti i pianeti attivi
+        settings.perturb_mercury = true;
+        settings.perturb_venus = true;
+        settings.perturb_earth = true;
+        settings.perturb_mars = true;
+        settings.perturb_jupiter = true;
+        settings.perturb_saturn = true;
+        settings.perturb_uranus = true;
+        settings.perturb_neptune = true;
         
         propagator = std::make_unique<astdyn::propagation::Propagator>(
             std::move(integrator), ephemeris, settings);
@@ -273,6 +294,14 @@ Phase2OccultationGeometry::getOrbitalElements() const {
         throw std::runtime_error("Phase2: Elementi orbitali non caricati");
     }
     return pimpl_->keplerian_elements;
+}
+
+void Phase2OccultationGeometry::setAsteroidDiameter(double diameter_km) {
+    pimpl_->asteroid_diameter_km = diameter_km;
+}
+
+void Phase2OccultationGeometry::setOrbitalUncertainty(double uncertainty_km) {
+    pimpl_->orbital_uncertainty_km = uncertainty_km;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -615,6 +644,19 @@ Phase2Results Phase2OccultationGeometry::calculateGeometry(
             std::cout << "  ✓ CA: " << event.closest_approach_mas << " mas @ MJD " 
                      << std::fixed << std::setprecision(6) << event.time_ca_mjd_utc << "\n";
             std::cout << "  Duration: " << event.max_duration_sec << " sec\n";
+            std::cout << "  Position Angle: " << std::setprecision(2) << event.position_angle_deg << " deg\n";
+            
+            // Output logica LinOccult
+            std::cout << "  [LinOccult] Angular radius: " << std::setprecision(3) 
+                     << event.angular_radius_arcsec << " arcsec\n";
+            std::cout << "  [LinOccult] Total uncertainty: " << event.total_uncertainty_arcsec 
+                     << " arcsec\n";
+            std::cout << "  [LinOccult] Shadow threshold: " << event.shadow_threshold_arcsec 
+                     << " arcsec\n";
+            std::cout << "  [LinOccult] Probability: " << std::setprecision(4) 
+                     << event.occultation_probability * 100.0 << "%\n";
+            std::cout << "  [LinOccult] Is occultation: " 
+                     << (event.is_occultation ? "YES" : "NO") << "\n";
             std::cout << "  Shadow path: " << event.path_length_km << " km\n\n";
             
         } catch (const std::exception& e) {
@@ -663,10 +705,49 @@ OccultationEvent Phase2OccultationGeometry::calculateSingleEvent(
     std::cout << "  Usando: " << elements_source << "\n";
     
     // ═══════════════════════════════════════════════════════════════
-    // STEP 1: PROPAGAZIONE DENSA ATTORNO AL CA
+    // STEP 0: CORREZIONI ASTROMETRICHE (LINOCCULT METHOD)
     // ═══════════════════════════════════════════════════════════════
     
+    // Proper Motion stella (da Gaia DR3 a epoca evento)
+    // TODO: prendere PM da Gaia catalog se disponibile
+    double star_pm_ra_mas_yr = 0.0;   // TODO: da Gaia
+    double star_pm_dec_mas_yr = 0.0;  // TODO: da Gaia
+    
+    // Epoch Gaia DR3: J2016.0 = MJD 57532.0
     double ca_mjd = candidate.closest_approach_mjd;
+    double gaia_epoch_mjd = 57532.0;
+    double years_from_gaia = (ca_mjd - gaia_epoch_mjd) / 365.25;
+    
+    // Applica proper motion
+    double star_ra_corrected_deg = candidate.ra_deg + 
+                                   (star_pm_ra_mas_yr / 1000.0 / 3600.0) * years_from_gaia / 
+                                   std::cos(candidate.dec_deg * DEG_TO_RAD);
+    double star_dec_corrected_deg = candidate.dec_deg + 
+                                    (star_pm_dec_mas_yr / 1000.0 / 3600.0) * years_from_gaia;
+    
+    // ═══════════════════════════════════════════════════════════════
+    // CORREZIONI ASTROMETRICHE (LINOCCULT METHOD)
+    // ═══════════════════════════════════════════════════════════════
+    
+    // NOTA IMPORTANTE:
+    // - Le coordinate Gaia DR3 sono già corrette per aberrazione stellare
+    //   (epoca J2016.0, frame ICRS). Non serve correzione aggiuntiva.
+    // - L'aberrazione planetaria per l'asteroide è già gestita da AstDyn
+    //   nella propagazione geocentrica.
+    
+    // 1. Proper Motion: già applicato sopra (star_ra_corrected_deg, star_dec_corrected_deg)
+    
+    // 2. Light-time correction (tempo di viaggio luce stella-Terra)
+    // Per stelle lontane (>100 pc), correzione trascurabile (<0.1 mas)
+    // Se parallasse disponibile: light_time_days = parallasse_mas / (1000.0 * 206265.0)
+    // Per ora assumiamo stella all'infinito (correzione trascurabile)
+    
+    // Le coordinate finali della stella sono quelle con proper motion applicato
+    // (star_ra_corrected_deg, star_dec_corrected_deg)
+    
+    // ═══════════════════════════════════════════════════════════════
+    // STEP 1: PROPAGAZIONE DENSA ATTORNO AL CA
+    // ═══════════════════════════════════════════════════════════════
     double time_window_days = config.time_window_minutes / 1440.0;  // min → days
     double step_days = config.time_step_seconds / 86400.0;          // sec → days
     
@@ -689,24 +770,44 @@ OccultationEvent Phase2OccultationGeometry::calculateSingleEvent(
         auto kep_prop = pimpl_->propagator->propagate_keplerian(elements_to_use, mjd);
         auto cart = astdyn::propagation::keplerian_to_cartesian(kep_prop);
         
-        // Converti eclittica → equatoriale ICRF
-        Eigen::Vector3d pos_ecl = cart.position;
-        Eigen::Vector3d pos_eq;
-        pos_eq[0] = pos_ecl[0];
-        pos_eq[1] = pos_ecl[1] * std::cos(EPSILON_J2000) - pos_ecl[2] * std::sin(EPSILON_J2000);
-        pos_eq[2] = pos_ecl[1] * std::sin(EPSILON_J2000) + pos_ecl[2] * std::cos(EPSILON_J2000);
+        // cart.position è BARICENTRICO ECLITTICO (come in AstDynPropagationHelper::getRADec)
+        // Converti da baricentrico eclittico a geocentrico ICRF
         
-        positions_icrf.push_back(pos_eq);
+        // 1. Converti asteroide baricentrico da eclittico a equatoriale ICRF
+        Eigen::Vector3d asteroid_bary_ecl = cart.position;
+        Eigen::Vector3d asteroid_bary_icrf;
+        asteroid_bary_icrf[0] = asteroid_bary_ecl[0];
+        asteroid_bary_icrf[1] = asteroid_bary_ecl[1] * std::cos(EPSILON_J2000) - asteroid_bary_ecl[2] * std::sin(EPSILON_J2000);
+        asteroid_bary_icrf[2] = asteroid_bary_ecl[1] * std::sin(EPSILON_J2000) + asteroid_bary_ecl[2] * std::cos(EPSILON_J2000);
+        
+        // 2. Calcola posizione Terra baricentrica ICRF (come in AstDynPropagationHelper::getRADec)
+        double jd_tdb = mjd + 2400000.5;
+        Eigen::Vector3d earth_helio_ecl = 
+            astdyn::ephemeris::PlanetaryEphemeris::getPosition(
+                astdyn::ephemeris::CelestialBody::EARTH, jd_tdb);
+        Eigen::Vector3d sun_bary_ecl = 
+            astdyn::ephemeris::PlanetaryEphemeris::getSunBarycentricPosition(jd_tdb);
+        Eigen::Vector3d earth_bary_ecl = earth_helio_ecl - sun_bary_ecl;
+        
+        Eigen::Vector3d earth_bary_icrf;
+        earth_bary_icrf[0] = earth_bary_ecl[0];
+        earth_bary_icrf[1] = earth_bary_ecl[1] * std::cos(EPSILON_J2000) - earth_bary_ecl[2] * std::sin(EPSILON_J2000);
+        earth_bary_icrf[2] = earth_bary_ecl[1] * std::sin(EPSILON_J2000) + earth_bary_ecl[2] * std::cos(EPSILON_J2000);
+        
+        // 3. Posizione geocentrica dell'asteroide = asteroide_baricentrico - terra_baricentrica
+        Eigen::Vector3d geocentric_icrf = asteroid_bary_icrf - earth_bary_icrf;
+        
+        positions_icrf.push_back(geocentric_icrf);
     }
     
     // ═══════════════════════════════════════════════════════════════
     // STEP 2: TROVA ISTANTE ESATTO CLOSEST APPROACH
     // ═══════════════════════════════════════════════════════════════
     
-    // Coordinate stella (J2000)
+    // Coordinate stella corrette (J2000, con proper motion applicato)
     Eigen::Vector3d star_unit;
-    double ra_rad = candidate.ra_deg * DEG_TO_RAD;
-    double dec_rad = candidate.dec_deg * DEG_TO_RAD;
+    double ra_rad = star_ra_corrected_deg * DEG_TO_RAD;
+    double dec_rad = star_dec_corrected_deg * DEG_TO_RAD;
     star_unit[0] = std::cos(dec_rad) * std::cos(ra_rad);
     star_unit[1] = std::cos(dec_rad) * std::sin(ra_rad);
     star_unit[2] = std::sin(dec_rad);
@@ -735,7 +836,7 @@ OccultationEvent Phase2OccultationGeometry::calculateSingleEvent(
              << std::fixed << std::setprecision(8) << min_time_mjd << "\n";
     
     // ═══════════════════════════════════════════════════════════════
-    // STEP 3: CALCOLA PARAMETRI GEOMETRICI
+    // STEP 4: CALCOLA PARAMETRI GEOMETRICI
     // ═══════════════════════════════════════════════════════════════
     
     // Distanza asteroide dalla Terra al CA
@@ -751,17 +852,122 @@ OccultationEvent Phase2OccultationGeometry::calculateSingleEvent(
         angular_velocity_rad_day = sep_rad / dt_days;
     }
     
-    // Durata massima (assumendo diametro asteroide ~10 km per ora)
-    // TODO: usare diametro reale da database
-    double asteroid_diameter_km = 10.0;  // Placeholder
+    // ═══════════════════════════════════════════════════════════════
+    // CALCOLO PARAMETRI OCCULTAZIONE (LINOCCULT METHOD)
+    // ═══════════════════════════════════════════════════════════════
+    
+    // Usa diametro reale se disponibile, altrimenti placeholder
+    double asteroid_diameter_km = pimpl_->asteroid_diameter_km > 0.0 
+        ? pimpl_->asteroid_diameter_km 
+        : 10.0;  // Fallback placeholder
+    
+    // Diametro angolare asteroide
     double angular_diameter_rad = asteroid_diameter_km / (earth_distance_au * AU_TO_KM);
+    double angular_diameter_arcsec = angular_diameter_rad * RAD_TO_DEG * 3600.0;
+    double angular_radius_arcsec = angular_diameter_arcsec / 2.0;
+    
+    // Durata massima teorica
     double max_duration_sec = 0.0;
     if (angular_velocity_rad_day > 0) {
         max_duration_sec = (angular_diameter_rad / angular_velocity_rad_day) * 86400.0;
     }
     
     // ═══════════════════════════════════════════════════════════════
-    // STEP 4: CREA EVENTO
+    // CALCOLO POSITION ANGLE (LINOCCULT METHOD)
+    // ═══════════════════════════════════════════════════════════════
+    
+    // Position angle: angolo tra direzione Nord e direzione del moto relativo
+    // Formula: PA = atan2(dRA*cos(Dec), dDec) [radianti]
+    // Convertito in gradi Est da Nord
+    
+    double position_angle_deg = 0.0;
+    if (min_index > 0 && min_index < static_cast<int>(positions_icrf.size()) - 1) {
+        // Calcola direzione del moto relativo
+        Eigen::Vector3d dir_before = positions_icrf[min_index - 1].normalized();
+        Eigen::Vector3d dir_after = positions_icrf[min_index + 1].normalized();
+        Eigen::Vector3d motion_dir = (dir_after - dir_before).normalized();
+        
+        // Converti in coordinate sferiche per calcolare PA
+        // RA e Dec del punto prima e dopo
+        double ra_before = std::atan2(dir_before[1], dir_before[0]);
+        double dec_before = std::asin(dir_before[2]);
+        double ra_after = std::atan2(dir_after[1], dir_after[0]);
+        double dec_after = std::asin(dir_after[2]);
+        
+        // Differenze
+        double delta_ra = ra_after - ra_before;
+        double delta_dec = dec_after - dec_before;
+        
+        // Normalizza delta_ra
+        while (delta_ra > M_PI) delta_ra -= 2.0 * M_PI;
+        while (delta_ra < -M_PI) delta_ra += 2.0 * M_PI;
+        
+        // Position angle: atan2(dRA*cos(Dec), dDec)
+        double dec_avg = (dec_before + dec_after) / 2.0;
+        position_angle_deg = std::atan2(delta_ra * std::cos(dec_avg), delta_dec) * RAD_TO_DEG;
+        
+        // Converti da radianti a gradi Est da Nord (0° = Nord, 90° = Est)
+        // LinOccult usa convenzione: 0° = Nord, positivo verso Est
+        if (position_angle_deg < 0) position_angle_deg += 360.0;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // VERIFICA OCCULTAZIONE (LINOCCULT METHOD)
+    // ═══════════════════════════════════════════════════════════════
+    
+    // LinOccult usa shadow_threshold_factor = 3.0
+    // Criterio: closest_approach < (angular_radius + 3*uncertainty)
+    constexpr double SHADOW_THRESHOLD_FACTOR = 3.0;  // Standard LinOccult
+    
+    // Incertezza orbitale angolare
+    double orbital_uncertainty_km = pimpl_->orbital_uncertainty_km;
+    double angular_uncertainty_arcsec = (orbital_uncertainty_km / (earth_distance_au * AU_TO_KM)) 
+                                        * RAD_TO_DEG * 3600.0;
+    
+    // Incertezza stellare (da Gaia, se disponibile)
+    // Base: 7 mas per Gaia EDR3, degradazione con proper motion
+    double star_uncertainty_base_mas = 7.0;  // Gaia EDR3 baseline
+    double star_pm_degradation_mas_per_year = 2.5;
+    double years_from_epoch = (min_time_mjd - 51544.5) / 365.25;  // Epoch J2016.0
+    double star_uncertainty_mas = star_uncertainty_base_mas + 
+                                  star_pm_degradation_mas_per_year * std::abs(years_from_epoch);
+    double star_uncertainty_arcsec = star_uncertainty_mas / 1000.0;
+    
+    // Incertezza totale (quadratura)
+    double total_uncertainty_arcsec = std::sqrt(
+        angular_uncertainty_arcsec * angular_uncertainty_arcsec +
+        star_uncertainty_arcsec * star_uncertainty_arcsec
+    );
+    
+    // Threshold LinOccult
+    double shadow_threshold_arcsec = angular_radius_arcsec + 
+                                     SHADOW_THRESHOLD_FACTOR * total_uncertainty_arcsec;
+    double closest_approach_arcsec = min_distance_mas / 1000.0;
+    
+    bool is_occultation = closest_approach_arcsec < shadow_threshold_arcsec;
+    
+    // ═══════════════════════════════════════════════════════════════
+    // CALCOLO PROBABILITÀ OCCULTAZIONE (LINOCCULT CDF METHOD)
+    // ═══════════════════════════════════════════════════════════════
+    
+    double probability = 0.0;
+    if (total_uncertainty_arcsec > 0) {
+        // Usa CDF della distribuzione normale (come LinOccult)
+        // Probabilità che la vera posizione cada entro il raggio dell'asteroide
+        double z = (angular_radius_arcsec - closest_approach_arcsec) / total_uncertainty_arcsec;
+        
+        // CDF normale standard: 0.5 * (1 + erf(z / sqrt(2)))
+        double prob = 0.5 * (1.0 + std::erf(z / std::sqrt(2.0)));
+        
+        // Limita a [0, 1]
+        probability = std::max(0.0, std::min(1.0, prob));
+    } else {
+        // Senza incertezza, probabilità binaria
+        probability = (closest_approach_arcsec <= angular_radius_arcsec) ? 1.0 : 0.0;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // STEP 5: CREA EVENTO
     // ═══════════════════════════════════════════════════════════════
     
     OccultationEvent event;
@@ -770,29 +976,204 @@ OccultationEvent Phase2OccultationGeometry::calculateSingleEvent(
     event.star_source_id = candidate.source_id;
     event.asteroid_name = pimpl_->asteroid_designation;
     
-    // Dati stella
-    event.star_ra_deg = candidate.ra_deg;
-    event.star_dec_deg = candidate.dec_deg;
+    // Dati stella (usando coordinate corrette per proper motion)
+    event.star_ra_deg = star_ra_corrected_deg;
+    event.star_dec_deg = star_dec_corrected_deg;
     event.star_magnitude = candidate.phot_g_mean_mag;
-    event.star_pm_ra_mas_yr = 0.0;   // TODO: prendere da Gaia
-    event.star_pm_dec_mas_yr = 0.0;
+    event.star_pm_ra_mas_yr = star_pm_ra_mas_yr;
+    event.star_pm_dec_mas_yr = star_pm_dec_mas_yr;
     
     // Geometria
     event.time_ca_mjd_utc = min_time_mjd;  // TODO: convertire TDB→UTC
     event.closest_approach_mas = min_distance_mas;
     event.max_duration_sec = max_duration_sec;
     event.asteroid_distance_au = earth_distance_au;
-    event.position_angle_deg = 0.0;  // TODO: calcolare
+    event.position_angle_deg = position_angle_deg;
     
-    // Shadow path
-    event.chord_length_km = 0.0;     // TODO: calcolare proiezione su Terra
+    // Verifica occultazione (LinOccult method)
+    event.is_occultation = is_occultation;
+    event.occultation_probability = probability;
+    event.shadow_threshold_arcsec = shadow_threshold_arcsec;
+    event.angular_radius_arcsec = angular_radius_arcsec;
+    event.total_uncertainty_arcsec = total_uncertainty_arcsec;
+    
+    // Inizializza campi non ancora implementati
+    event.star_distance_au = 0.0;  // TODO: calcolare da parallasse Gaia
+    event.sun_target_elongation_deg = 0.0;  // TODO: calcolare
+    event.snr = 0.0;  // TODO: calcolare
+    
+    // ═══════════════════════════════════════════════════════════════
+    // CALCOLO SHADOW PATH SU TERRA (LINOCCULT METHOD)
+    // ═══════════════════════════════════════════════════════════════
+    
+    // Calcola percorso dell'ombra sulla superficie terrestre (WGS84)
+    // Metodo: intersezione raggio asteroide-stella con ellissoide terrestre
+    
+    event.shadow_path.clear();
     event.shadow_width_km = asteroid_diameter_km;
-    event.path_length_km = 0.0;      // TODO: calcolare
+    
+    // Direzione stella (unit vector in ICRF)
+    Eigen::Vector3d star_dir = star_unit;
+    
+    // Calcola shadow path per finestra temporale estesa (±30 minuti attorno CA)
+    double path_window_minutes = 30.0;  // ±30 minuti
+    double path_step_seconds = 10.0;    // Step 10 secondi
+    double path_start_mjd = min_time_mjd - path_window_minutes / 1440.0;
+    double path_end_mjd = min_time_mjd + path_window_minutes / 1440.0;
+    int path_num_steps = static_cast<int>((path_end_mjd - path_start_mjd) * 86400.0 / path_step_seconds) + 1;
+    
+    double path_length_km = 0.0;
+    Eigen::Vector3d prev_shadow_point;
+    bool has_prev = false;
+    
+    for (int i = 0; i < path_num_steps; ++i) {
+        double path_mjd = path_start_mjd + i * (path_end_mjd - path_start_mjd) / (path_num_steps - 1);
+        
+        // Propaga asteroide a questo istante
+        auto kep_path = pimpl_->propagator->propagate_keplerian(elements_to_use, path_mjd);
+        auto cart_path = astdyn::propagation::keplerian_to_cartesian(kep_path);
+        
+        // Converti a geocentrico ICRF (come prima)
+        Eigen::Vector3d ast_bary_ecl = cart_path.position;
+        Eigen::Vector3d ast_bary_icrf;
+        ast_bary_icrf[0] = ast_bary_ecl[0];
+        ast_bary_icrf[1] = ast_bary_ecl[1] * std::cos(EPSILON_J2000) - ast_bary_ecl[2] * std::sin(EPSILON_J2000);
+        ast_bary_icrf[2] = ast_bary_ecl[1] * std::sin(EPSILON_J2000) + ast_bary_ecl[2] * std::cos(EPSILON_J2000);
+        
+        double jd_path = path_mjd + 2400000.5;
+        Eigen::Vector3d earth_helio_ecl = 
+            astdyn::ephemeris::PlanetaryEphemeris::getPosition(
+                astdyn::ephemeris::CelestialBody::EARTH, jd_path);
+        Eigen::Vector3d sun_bary_ecl = 
+            astdyn::ephemeris::PlanetaryEphemeris::getSunBarycentricPosition(jd_path);
+        Eigen::Vector3d earth_bary_ecl = earth_helio_ecl - sun_bary_ecl;
+        
+        Eigen::Vector3d earth_bary_icrf;
+        earth_bary_icrf[0] = earth_bary_ecl[0];
+        earth_bary_icrf[1] = earth_bary_ecl[1] * std::cos(EPSILON_J2000) - earth_bary_ecl[2] * std::sin(EPSILON_J2000);
+        earth_bary_icrf[2] = earth_bary_ecl[1] * std::sin(EPSILON_J2000) + earth_bary_ecl[2] * std::cos(EPSILON_J2000);
+        
+        Eigen::Vector3d ast_geo_icrf = ast_bary_icrf - earth_bary_icrf;
+        
+        // Converti da AU a km
+        Eigen::Vector3d ast_geo_km = ast_geo_icrf * AU_TO_KM;
+        
+        // Raggio asteroide-stella: r(s) = ast_geo_km + s * star_dir
+        // Trova intersezione con ellissoide WGS84
+        // Equazione ellissoide: x²/a² + y²/a² + z²/b² = 1
+        // dove a = EARTH_EQUATORIAL_RADIUS_KM, b = EARTH_POLAR_RADIUS_KM
+        
+        // Parametro s per intersezione con ellissoide
+        // Sostituisci r(s) nell'equazione ellissoide e risolvi per s
+        double a = EARTH_EQUATORIAL_RADIUS_KM;
+        double b = EARTH_POLAR_RADIUS_KM;
+        
+        // Coefficienti equazione quadratica: A*s² + B*s + C = 0
+        double A = (star_dir[0]*star_dir[0] + star_dir[1]*star_dir[1]) / (a*a) + 
+                   (star_dir[2]*star_dir[2]) / (b*b);
+        double B = 2.0 * ((ast_geo_km[0]*star_dir[0] + ast_geo_km[1]*star_dir[1]) / (a*a) +
+                          (ast_geo_km[2]*star_dir[2]) / (b*b));
+        double C = (ast_geo_km[0]*ast_geo_km[0] + ast_geo_km[1]*ast_geo_km[1]) / (a*a) +
+                   (ast_geo_km[2]*ast_geo_km[2]) / (b*b) - 1.0;
+        
+        double discriminant = B*B - 4.0*A*C;
+        
+        if (discriminant >= 0 && A != 0) {
+            // Due soluzioni: prendi quella più vicina (s negativo = verso Terra)
+            double s1 = (-B - std::sqrt(discriminant)) / (2.0 * A);
+            double s2 = (-B + std::sqrt(discriminant)) / (2.0 * A);
+            
+            // Prendi s negativo (verso Terra) o quello più piccolo
+            double s = (s1 < s2) ? s1 : s2;
+            
+            // Punto sulla superficie terrestre (star_dir è già unitario, s è in km)
+            Eigen::Vector3d shadow_point_icrf = ast_geo_km + s * star_dir;
+            
+            // Converti ICRF a coordinate geografiche (WGS84)
+            // ICRF è approssimativamente equatoriale, quindi:
+            // x = R*cos(lat)*cos(lon)
+            // y = R*cos(lat)*sin(lon)
+            // z = R*sin(lat)
+            
+            double R = shadow_point_icrf.norm();
+            if (R > 0) {
+                double lat_rad = std::asin(shadow_point_icrf[2] / R);
+                double lon_rad = std::atan2(shadow_point_icrf[1], shadow_point_icrf[0]);
+                
+                ShadowPathPoint path_point;
+                path_point.time_mjd_utc = path_mjd;
+                path_point.latitude_deg = lat_rad * RAD_TO_DEG;
+                path_point.longitude_deg = lon_rad * RAD_TO_DEG;
+                
+                // Calcola velocità ombra (differenza finita)
+                if (has_prev) {
+                    double dx = shadow_point_icrf[0] - prev_shadow_point[0];
+                    double dy = shadow_point_icrf[1] - prev_shadow_point[1];
+                    double dz = shadow_point_icrf[2] - prev_shadow_point[2];
+                    double dt = path_step_seconds;
+                    path_point.speed_km_s = std::sqrt(dx*dx + dy*dy + dz*dz) / dt;
+                    
+                    // Accumula lunghezza path
+                    path_length_km += std::sqrt(dx*dx + dy*dy + dz*dz);
+                } else {
+                    path_point.speed_km_s = 0.0;
+                }
+                
+                path_point.position_angle_deg = position_angle_deg;
+                
+                event.shadow_path.push_back(path_point);
+                prev_shadow_point = shadow_point_icrf;
+                has_prev = true;
+            }
+        }
+    }
+    
+    // Chord length: distanza tra primo e ultimo punto del path
+    if (event.shadow_path.size() >= 2) {
+        const auto& first = event.shadow_path.front();
+        const auto& last = event.shadow_path.back();
+        
+        // Distanza geodetica approssimata (formula di Haversine)
+        double lat1_rad = first.latitude_deg * DEG_TO_RAD;
+        double lon1_rad = first.longitude_deg * DEG_TO_RAD;
+        double lat2_rad = last.latitude_deg * DEG_TO_RAD;
+        double lon2_rad = last.longitude_deg * DEG_TO_RAD;
+        
+        double dlat = lat2_rad - lat1_rad;
+        double dlon = lon2_rad - lon1_rad;
+        
+        double a_hav = std::sin(dlat/2) * std::sin(dlat/2) +
+                       std::cos(lat1_rad) * std::cos(lat2_rad) *
+                       std::sin(dlon/2) * std::sin(dlon/2);
+        double c_hav = 2 * std::atan2(std::sqrt(a_hav), std::sqrt(1 - a_hav));
+        
+        // Raggio medio Terra (approssimazione)
+        double R_mean_km = (EARTH_EQUATORIAL_RADIUS_KM + EARTH_POLAR_RADIUS_KM) / 2.0;
+        event.chord_length_km = R_mean_km * c_hav;
+    } else {
+        event.chord_length_km = 0.0;
+    }
+    
+    event.path_length_km = path_length_km;
+    
+    // Durata attraversamento Terra: tempo tra primo e ultimo punto
+    if (event.shadow_path.size() >= 2) {
+        event.path_duration_sec = (event.shadow_path.back().time_mjd_utc - 
+                                   event.shadow_path.front().time_mjd_utc) * 86400.0;
+    } else {
     event.path_duration_sec = 0.0;
+    }
     
     // Quality
     event.high_confidence = pimpl_->has_refined_elements;
     event.notes = elements_source;
+    
+    // Aggiungi note sulla verifica occultazione
+    if (is_occultation) {
+        event.notes += " [OCCULTATION CONFIRMED]";
+    } else {
+        event.notes += " [Close approach only]";
+    }
     
     return event;
 }

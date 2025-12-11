@@ -1,0 +1,113 @@
+{
+  "metadata": {
+    "created_by": "ITALOccultCalc",
+    "version": "1.0",
+    "date": "2025-12-04",
+    "description": "Test Phase2 integration - Asteroide 17030"
+  },
+  "sections": [
+    {
+      "type": "object",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "value": "17030",
+          "comment": "Asteroide 17030 Sierks"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "17030 Sierks",
+          "comment": "Test asteroid"
+        }
+      ]
+    },
+    {
+      "type": "search",
+      "parameters": [
+        {
+          "name": "start_jd",
+          "type": "double",
+          "value": "2461008.0",
+          "comment": "26 Nov 2025"
+        },
+        {
+          "name": "end_jd",
+          "type": "double",
+          "value": "2461012.0",
+          "comment": "30 Nov 2025"
+        },
+        {
+          "name": "mag_limit",
+          "type": "double",
+          "value": "18.0",
+          "comment": "Magnitudine limite"
+        },
+        {
+          "name": "max_separation",
+          "type": "double",
+          "value": "0.1",
+          "comment": "Raggio ricerca 0.1 gradi"
+        },
+        {
+          "name": "min_probability",
+          "type": "double",
+          "value": "0.01",
+          "comment": "Probabilità minima 1%"
+        }
+      ]
+    },
+    {
+      "type": "propag",
+      "parameters": [
+        {
+          "name": "type",
+          "type": "string",
+          "value": "RKF78",
+          "comment": "RKF78 high precision"
+        },
+        {
+          "name": "step_size",
+          "type": "double",
+          "value": "0.1",
+          "comment": "Step size days"
+        }
+      ]
+    },
+    {
+      "type": "gaia",
+      "parameters": [
+        {
+          "name": "catalog_type",
+          "type": "string",
+          "value": "multifile_v2",
+          "comment": "Multifile catalog"
+        },
+        {
+          "name": "multifile_directory",
+          "type": "string",
+          "value": "~/.catalog/gaia_mag18_v2_multifile",
+          "comment": "Local catalog path"
+        }
+      ]
+    },
+    {
+      "type": "output",
+      "parameters": [
+        {
+          "name": "format",
+          "type": "string",
+          "value": "JSON",
+          "comment": "JSON output"
+        },
+        {
+          "name": "verbosity",
+          "type": "int",
+          "value": "2",
+          "comment": "Verbose mode"
+        }
+      ]
+    }
+  ]
+}

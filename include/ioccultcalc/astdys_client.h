@@ -10,11 +10,16 @@ namespace ioccultcalc {
 
 // Forward declarations
 struct OrbitState;
+struct AstDySElements;  // ← AGGIUNGI forward declaration
 
 class AstDysClient {
 public:
     AstDysClient();
     ~AstDysClient();
+    
+    // Metodi statici per compatibilità con AstDySClient API
+    static AstDySElements downloadElements(int asteroid_number);
+    static AstDySElements downloadElements(const std::string& designation);
     
     // Scarica elementi orbitali equinoziali per un asteroide specifico
     // designation può essere numero (es. "433") o designazione (es. "2024 AA")

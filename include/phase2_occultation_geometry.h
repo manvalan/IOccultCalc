@@ -141,6 +141,13 @@ struct OccultationEvent {
     double star_distance_au;          ///< Distanza stella (se nota)
     double sun_target_elongation_deg; ///< Elongazione dal Sole
     
+    // Verifica occultazione (LinOccult method)
+    bool is_occultation;              ///< True se c'è occultazione (shadow_threshold_factor = 3.0)
+    double occultation_probability;   ///< Probabilità occultazione (CDF method)
+    double shadow_threshold_arcsec;   ///< Soglia shadow (angular_radius + 3*uncertainty)
+    double angular_radius_arcsec;      ///< Raggio angolare asteroide
+    double total_uncertainty_arcsec;  ///< Incertezza totale (orbitale + stellare)
+    
     // Quality flags
     bool high_confidence;             ///< True se geometria affidabile
     double snr;                       ///< Signal-to-noise ratio stima
@@ -269,6 +276,18 @@ public:
      * @brief Ottiene elementi orbitali correnti
      */
     const astdyn::propagation::KeplerianElements& getOrbitalElements() const;
+    
+    /**
+     * @brief Imposta diametro asteroide (km) per calcoli LinOccult
+     * @param diameter_km Diametro in km (0 = usa placeholder)
+     */
+    void setAsteroidDiameter(double diameter_km);
+    
+    /**
+     * @brief Imposta incertezza orbitale (km) per calcoli LinOccult
+     * @param uncertainty_km Incertezza orbitale in km (1-sigma)
+     */
+    void setOrbitalUncertainty(double uncertainty_km);
     
     /**
      * @brief Calcola geometria per lista candidati

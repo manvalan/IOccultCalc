@@ -1,0 +1,172 @@
+{
+  "metadata": {
+    "created_by": "ITALOccultCalc",
+    "version": "1.0",
+    "date": "2025-12-04",
+    "description": "Test completo - Asteroide 17030 dal 25 al 30 novembre 2025"
+  },
+  "sections": [
+    {
+      "type": "object",
+      "name": "object",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "value": "17030"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "17030 Sierks"
+        }
+      ]
+    },
+    {
+      "type": "search",
+      "name": "search",
+      "parameters": [
+        {
+          "name": "start_mjd_tdb",
+          "type": "double",
+          "value": "60309.0"
+        },
+        {
+          "name": "end_mjd_tdb",
+          "type": "double",
+          "value": "60314.0"
+        },
+        {
+          "name": "phase1_config.search_radius_deg",
+          "type": "double",
+          "value": "5.0"
+        },
+        {
+          "name": "phase1_config.path_resolution_hours",
+          "type": "double",
+          "value": "0.008333"
+        },
+        {
+          "name": "phase1_config.corridor_width_deg",
+          "type": "double",
+          "value": "0.008333"
+        },
+        {
+          "name": "phase1_config.closest_approach_threshold_arcsec",
+          "type": "double",
+          "value": "3600.0"
+        },
+        {
+          "name": "phase2_config.time_step_seconds",
+          "type": "double",
+          "value": "60.0"
+        },
+        {
+          "name": "phase2_config.min_probability",
+          "type": "double",
+          "value": "0.01"
+        },
+        {
+          "name": "phase2_config.shadow_threshold_factor",
+          "type": "double",
+          "value": "3.0"
+        }
+      ]
+    },
+    {
+      "type": "propagation",
+      "name": "propag",
+      "parameters": [
+        {
+          "name": "type",
+          "type": "string",
+          "value": "RKF78"
+        },
+        {
+          "name": "step_size",
+          "type": "double",
+          "value": "0.1"
+        }
+      ]
+    },
+    {
+      "type": "ephemeris",
+      "name": "ephemeris",
+      "parameters": [
+        {
+          "name": "type",
+          "type": "string",
+          "value": "JPL441"
+        }
+      ]
+    },
+    {
+      "type": "perturbations",
+      "name": "perturbations",
+      "parameters": [
+        {
+          "name": "planets",
+          "type": "bool",
+          "value": "true"
+        },
+        {
+          "name": "moon",
+          "type": "bool",
+          "value": "true"
+        },
+        {
+          "name": "relativity",
+          "type": "bool",
+          "value": "true"
+        },
+        {
+          "name": "asteroids",
+          "type": "bool",
+          "value": "false"
+        }
+      ]
+    },
+    {
+      "type": "output",
+      "name": "output",
+      "parameters": [
+        {
+          "name": "format",
+          "type": "string",
+          "value": "JSON"
+        },
+        {
+          "name": "file",
+          "type": "string",
+          "value": "output_17030_25_30nov.json"
+        },
+        {
+          "name": "verbosity",
+          "type": "int",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "type": "gaia",
+      "name": "gaia",
+      "parameters": [
+        {
+          "name": "catalog_type",
+          "type": "string",
+          "value": "multifile_v2"
+        },
+        {
+          "name": "multifile_directory",
+          "type": "string",
+          "value": "~/.catalog/gaia_mag18_v2_multifile"
+        },
+        {
+          "name": "max_magnitude",
+          "type": "double",
+          "value": "18.0"
+        }
+      ]
+    }
+  ]
+}

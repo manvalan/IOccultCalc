@@ -32,3 +32,4 @@ examples/example_*
 
 # macOS
 .DS_Store
+external/ITALOccultLibrary/

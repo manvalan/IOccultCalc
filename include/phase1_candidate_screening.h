@@ -87,6 +87,9 @@ struct Phase1Config {
     // === PARAMETRI FILTRO ===
     double closest_approach_threshold_arcsec; ///< Soglia CA per filtrare candidate [arcsec]
     
+    // === PARAMETRI QUERY ===
+    bool use_chebyshev_orbit_query;           ///< Usa queryOrbit con Chebyshev invece di queryCorridor (default: false)
+    
     // Costruttore con valori di default ottimizzati
     Phase1Config() 
         : start_mjd_tdb(0.0)
@@ -96,6 +99,7 @@ struct Phase1Config {
         , max_magnitude(18.0)                 // Stelle visibili da terra con setup amatoriale
         , min_parallax(-1.0)                  // Nessun limite su parallasse
         , closest_approach_threshold_arcsec(15.0)  // Solo CA < 15 arcsec (3x ombra tipica)
+        , use_chebyshev_orbit_query(false)    // Usa queryCorridor di default (più testato)
     {}
     
     /**
@@ -253,6 +257,26 @@ private:
     std::vector<CandidateStar> queryCorridor(const std::vector<PathPoint>& path,
                                               const Phase1Config& config,
                                               double& time_ms);
+    
+    /**
+     * @brief Query orbit usando polinomi di Chebyshev (nuova API ottimizzata)
+     * @param path Path dell'asteroide (usato per generare polinomi)
+     * @param config Configurazione
+     * @param time_ms Tempo impiegato [ms]
+     * @return Stelle candidate trovate
+     */
+    std::vector<CandidateStar> queryOrbit(const std::vector<PathPoint>& path,
+                                          const Phase1Config& config,
+                                          double& time_ms);
+    
+    /**
+     * @brief Query orbit per giorno: genera un polinomio per ogni giorno e query stelle
+     * @param config Configurazione
+     * @param time_ms Tempo impiegato [ms]
+     * @return Stelle candidate trovate (deduplicate)
+     */
+    std::vector<CandidateStar> queryOrbitPerDay(const Phase1Config& config,
+                                                double& time_ms);
     
     /**
      * @brief Calcola closest approach per ogni stella

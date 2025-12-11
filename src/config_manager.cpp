@@ -1,9 +1,14 @@
 /**
  * @file config_manager.cpp
  * @brief Implementation of configuration management system
+ * 
+ * Uses IOC_Config library internally when available
  */
 
 #include "ioccultcalc/config_manager.h"
+#ifdef IOC_CONFIG_AVAILABLE
+#include "ioc_config/oop_parser.h"
+#endif
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -287,6 +292,24 @@ ConfigSection ConfigSectionData::stringToSectionType(const std::string& str) {
 // ============================================================================
 
 ConfigManager::ConfigManager() {
+// Temporarily disabled IOC_Config integration due to compilation issues
+// #ifdef IOC_CONFIG_AVAILABLE
+//     parser_ = std::make_unique<ioc_config::OopParser>();
+// #endif
+}
+
+ConfigManager::ConfigManager(const ConfigManager& other)
+    : sections_(other.sections_), metadata_(other.metadata_) {
+    // parser_ is not copied - will be created on demand if needed
+}
+
+ConfigManager& ConfigManager::operator=(const ConfigManager& other) {
+    if (this != &other) {
+        sections_ = other.sections_;
+        metadata_ = other.metadata_;
+        // parser_ is not copied - will be created on demand if needed
+    }
+    return *this;
 }
 
 void ConfigManager::addSection(const ConfigSectionData& section) {
@@ -333,6 +356,18 @@ std::optional<ConfigParameter> ConfigManager::findParameter(const std::string& n
 }
 
 void ConfigManager::loadFromJson(const std::string& filepath) {
+// Temporarily using native JSON parser
+// #ifdef IOC_CONFIG_AVAILABLE
+//     if (!parser_) {
+//         parser_ = std::make_unique<ioc_config::OopParser>();
+//     }
+//     
+//     if (!parser_->loadFromJson(filepath)) {
+//         throw std::runtime_error("Failed to load JSON: " + parser_->getLastError());
+//     }
+//     
+//     syncFromIOCConfig();
+// #else
     std::ifstream file(filepath);
     if (!file.is_open()) {
         throw std::runtime_error("Cannot open file: " + filepath);
@@ -342,6 +377,7 @@ void ConfigManager::loadFromJson(const std::string& filepath) {
     file >> j;
     
     *this = fromJson(j);
+// #endif
 }
 
 void ConfigManager::saveToJson(const std::string& filepath) const {
@@ -355,6 +391,18 @@ void ConfigManager::saveToJson(const std::string& filepath) const {
 }
 
 void ConfigManager::loadFromOop(const std::string& filepath) {
+// Temporarily using native OOP parser
+// #ifdef IOC_CONFIG_AVAILABLE
+//     if (!parser_) {
+//         parser_ = std::make_unique<ioc_config::OopParser>();
+//     }
+//     
+//     if (!parser_->loadFromOop(filepath)) {
+//         throw std::runtime_error("Failed to load OOP: " + parser_->getLastError());
+//     }
+//     
+//     syncFromIOCConfig();
+// #else
     std::ifstream file(filepath);
     if (!file.is_open()) {
         throw std::runtime_error("Cannot open file: " + filepath);
@@ -367,6 +415,7 @@ void ConfigManager::loadFromOop(const std::string& filepath) {
     while (std::getline(file, line)) {
         parseOopLine(line, currentSection, currentSectionName);
     }
+// #endif
 }
 
 void ConfigManager::saveToOop(const std::string& filepath) const {
@@ -776,5 +825,63 @@ ConfigBuilder& ConfigBuilder::enableOccultationSearch(bool enable) {
 ConfigManager ConfigBuilder::build() const {
     return config_;
 }
+
+#ifdef IOC_CONFIG_AVAILABLE
+// ============================================================================
+// IOC_Config Integration - Sync methods
+// ============================================================================
+
+void ConfigManager::syncFromIOCConfig() {
+    if (!parser_) return;
+    
+    sections_.clear();
+    
+    // Get all sections from IOC_Config
+    auto iocSections = parser_->getAllSections();
+    for (const auto& iocSection : iocSections) {
+        std::string sectionName = iocSection.name;
+        
+        // Convert section name to ConfigSection enum
+        ConfigSection sectionType = ConfigSectionData::stringToSectionType(sectionName);
+        
+        // Create ConfigSectionData
+        ConfigSectionData section(sectionType, sectionName);
+        
+        // Copy parameters
+        for (const auto& [key, iocParam] : iocSection.parameters) {
+            // Remove leading dot from key if present
+            std::string cleanKey = key;
+            if (!cleanKey.empty() && cleanKey[0] == '.') {
+                cleanKey = cleanKey.substr(1);
+            }
+            section.setParameter(cleanKey, iocParam.value);
+        }
+        
+        sections_[sectionType] = section;
+    }
+}
+
+void ConfigManager::syncToIOCConfig() {
+    if (!parser_) {
+        parser_ = std::make_unique<ioc_config::OopParser>();
+    }
+    
+    // Clear parser
+    parser_->clear();
+    
+    // Add all sections to IOC_Config
+    for (const auto& [type, section] : sections_) {
+        std::string sectionName = section.getName();
+        if (sectionName.empty()) {
+            sectionName = section.sectionTypeToString();
+        }
+        
+        // Add parameters to IOC_Config
+        for (const auto& [key, param] : section.getAllParameters()) {
+            parser_->setParameter(sectionName, key, param.value);
+        }
+    }
+}
+#endif
 
 } // namespace ioccultcalc

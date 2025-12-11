@@ -25,6 +25,7 @@
 #include <optional>
 #include "orbital_elements.h"
 #include "observation.h"
+#include "ioccultcalc/astdys_client.h"
 
 namespace ioccultcalc {
 
@@ -86,7 +87,7 @@ struct RWOObservation {
     bool is_outlier;               // Flag outlier (> 3σ)
     
     // Conversione a Observation di IOccultCalc
-    Observation toObservation() const;
+    AstrometricObservation toObservation() const;
     
     // Carica da file .rwo
     static std::vector<RWOObservation> fromFile(const std::string& filename);
@@ -97,10 +98,10 @@ struct RWOObservation {
 };
 
 /**
- * @struct OrbitFitResult
- * @brief Risultato del fitting orbitale con statistiche
+ * @struct AstDynOrbitFitResult
+ * @brief Risultato del fitting orbitale con statistiche (AstDyn)
  */
-struct OrbitFitResult {
+struct AstDynOrbitFitResult {
     AstDySElements fitted_elements;       // Elementi migliorati
     
     // Statistiche globali
@@ -242,7 +243,7 @@ public:
      * @param observations Osservazioni RWO da fittare
      * @return Risultato con elementi migliorati e statistiche
      */
-    OrbitFitResult fit(const AstDySElements& initial_elements,
+    AstDynOrbitFitResult fit(const AstDySElements& initial_elements,
                        const std::vector<RWOObservation>& observations);
     
     /**
@@ -251,7 +252,7 @@ public:
      * @param observations Osservazioni da testare
      * @return Statistiche residui
      */
-    OrbitFitResult computeResidualsOnly(
+    AstDynOrbitFitResult computeResidualsOnly(
         const AstDySElements& elements,
         const std::vector<RWOObservation>& observations);
     
@@ -261,42 +262,15 @@ private:
 };
 
 /**
- * @class AstDySClient
  * @brief Client per download dati da AstDyS
+ * 
+ * AstDySClient è un alias di AstDysClient definito in astdys_client.h
+ * per mantenere compatibilità con il codice esistente.
  */
-class AstDySClient {
-public:
-    /**
-     * @brief Download elementi orbitali (.eq1)
-     * @param asteroid_number Numero asteroide
-     * @return Elementi orbitali
-     */
-    static AstDySElements downloadElements(int asteroid_number);
-    static AstDySElements downloadElements(const std::string& designation);
-    
-    /**
-     * @brief Download osservazioni con residui (.rwo)
-     * @param asteroid_number Numero asteroide
-     * @return Lista osservazioni
-     */
-    static std::vector<RWOObservation> downloadObservations(int asteroid_number);
-    static std::vector<RWOObservation> downloadObservations(const std::string& designation);
-    
-    /**
-     * @brief Costruisce URL per download
-     */
-    static std::string getElementsURL(int asteroid_number);
-    static std::string getObservationsURL(int asteroid_number);
-    
-    /**
-     * @brief Verifica disponibilità AstDyS online
-     */
-    static bool isOnline();
-    
-    // Cache locale
-    static void setCacheDirectory(const std::string& dir);
-    static std::string getCacheDirectory();
-};
+// RIMUOVI la dichiarazione class AstDySClient { ... }; (linee 264-300)
+
+// Alias per compatibilità
+using AstDySClient = AstDysClient;
 
 /**
  * @brief Utility per conversione tra formati
@@ -308,8 +282,8 @@ namespace astdyn_utils {
     OrbitalElements fromAstDySElements(const AstDySElements& elem);
     
     // Converti osservazioni IOccultCalc ↔ RWO
-    RWOObservation toRWOObservation(const Observation& obs);
-    Observation fromRWOObservation(const RWOObservation& rwo);
+    RWOObservation toRWOObservation(const AstrometricObservation& obs);
+    AstrometricObservation fromRWOObservation(const RWOObservation& rwo);
     
     // Formato → stringa
     std::string formatResidual(double arcsec);
