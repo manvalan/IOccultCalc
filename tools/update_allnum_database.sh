@@ -39,3 +39,4 @@ else
     echo "❌ Allnum database update failed (exit code: $EXIT_CODE)"
     exit $EXIT_CODE
 fi
+

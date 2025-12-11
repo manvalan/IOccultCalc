@@ -15,6 +15,7 @@ option(BUILD_EXAMPLES "Build examples" ON)
 # Find required packages
 find_package(CURL REQUIRED)
 find_package(LibXml2 REQUIRED)
+find_package(SQLite3 REQUIRED)
 
 # OpenMP support (macOS requires libomp from Homebrew)
 if(APPLE)
@@ -279,6 +280,7 @@ endif()
 target_link_libraries(ioccultcalc
     CURL::libcurl
     ${LIBXML2_LIBRARIES}
+    SQLite::SQLite3
     ${CSPICE_LIB}
     ${ASTDYN_LIB}
     ${ORBFIT_ALL_LIBS}

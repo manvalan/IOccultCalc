@@ -66,9 +66,9 @@ public:
                 a REAL NOT NULL,
                 e REAL NOT NULL,
                 i REAL NOT NULL,
-                Omega REAL NOT NULL,
-                omega REAL NOT NULL,
-                M REAL NOT NULL,
+                node_longitude REAL NOT NULL,
+                perihelion_argument REAL NOT NULL,
+                mean_anomaly REAL NOT NULL,
                 H REAL,
                 G REAL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -159,7 +159,7 @@ public:
     void insertAsteroid(const OrbitalElements& elem, int number) {
         const char* sql = R"(
             INSERT OR REPLACE INTO allnum_asteroids 
-            (number, designation, epoch_mjd, a, e, i, Omega, omega, M, H, G, updated_at)
+            (number, designation, epoch_mjd, a, e, i, node_longitude, perihelion_argument, mean_anomaly, H, G, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         )";
         
@@ -527,8 +527,8 @@ int main(int argc, char* argv[]) {
     
     // Default database path
     if (db_path.empty()) {
-        DataManager dm;
-        db_path = dm.getDatabasePath() + "/allnum.db";
+        auto& dm = DataManager::instance();
+        db_path = dm.getDatabaseDir() + "/allnum.db";
     }
     
     try {
@@ -623,3 +623,4 @@ int main(int argc, char* argv[]) {
     
     return 0;
 }
+

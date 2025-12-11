@@ -70,3 +70,4 @@ private:
 } // namespace ioccultcalc
 
 #endif // IOCCULTCALC_ALLNUM_DATABASE_H
+

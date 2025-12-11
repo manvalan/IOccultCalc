@@ -11,8 +11,8 @@
 namespace ioccultcalc {
 
 AllnumDatabaseReader::AllnumDatabaseReader() {
-    DataManager dm;
-    std::string default_path = dm.getDatabasePath() + "/allnum.db";
+    auto& dm = DataManager::instance();
+    std::string default_path = dm.getDatabaseDir() + "/allnum.db";
     initializeDatabase(default_path);
 }
 
@@ -77,7 +77,7 @@ std::optional<OrbitalElements> AllnumDatabaseReader::getElement(const std::strin
     }
     
     const char* sql = R"(
-        SELECT number, designation, epoch_mjd, a, e, i, Omega, omega, M, H, G
+        SELECT number, designation, epoch_mjd, a, e, i, node_longitude, perihelion_argument, mean_anomaly, H, G
         FROM allnum_asteroids
         WHERE number = ?
         LIMIT 1
@@ -172,3 +172,4 @@ std::string AllnumDatabaseReader::getLastUpdateDate() const {
 }
 
 } // namespace ioccultcalc
+
